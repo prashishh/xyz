@@ -1,6 +1,6 @@
 ---
 title: AI Politics Problem
-date: 2025-09-07T00:00:00Z
+date: 2025-09-11T00:00:00Z
 author: Prashish
 ---
 
