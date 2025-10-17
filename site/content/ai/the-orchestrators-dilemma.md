@@ -55,15 +55,17 @@ SetoBazaar demonstrates comprehensive capabilities:
 - Complete i18n (English, Nepali, Newari)
 - Comprehensive security (rate limiting, audit trails)
 - Advanced filtering and moderation systems
+- Profile page, email & phone number verification
+- Favorites, content moderation flag
 
 ### Economic Reality Check
-Traditional development would likely require a small team working for several months at significant cost. The AI approach cost ~$250 in token credits plus focused senior technical work. The advantage lies not in eliminating human expertise but dramatically amplifying its effectiveness.
+Traditional development would likely require a small team working for several months at significant cost [more details in Economic Impact and Industry Implications]. The AI approach cost ~$250 in token credits plus focused senior technical work. The advantage lies not in eliminating human expertise but dramatically amplifying its effectiveness.
 
 ---
 
 # The Development Approach
 
-The development approach requires clarification: "AI-assisted development" means the human architect provided guidance, debugging oversight, and quality assurance while AI generated implementation code. No application code was written directly, but substantial technical expertise guided every aspect of system design and verification.
+The development approach requires clarification: __"AI-assisted development"__ means the human architect provided guidance, debugging oversight, and quality assurance while AI generated implementation code. No application code was written directly, but substantial technical expertise guided every aspect of system design and verification.
 
 ### Core Technical Stack:
 
@@ -155,7 +157,7 @@ All implemented cohesively in a single development session.
 <div style="padding: 16px; background: #1e1e1e; border-radius: 6px; margin: 12px 0;">
 
 ```typescript
-Example workflow:
+Example Workflow Prompt:
 
 "Can you reduce the size of the dropdown buttons (top navigation)? Reduce padding"
 "Same with Search form"
@@ -166,9 +168,9 @@ Example workflow:
 <div style="padding: 16px; background: #1e1e1e; border-radius: 6px; margin: 12px 0;">
 
 ```typescript
-Custom Dropdown Styling Issue
+Custom Dropdown Styling Issue Prompt:
 
-User: "The dropdown should now have a clean, modern appearance that matches
+"The dropdown should now have a clean, modern appearance that matches
 your website's theme instead of the default browser styling. 
 The options will have proper spacing, colors, 
 and hover effects that are consistent with the rest of your UI."
@@ -344,7 +346,9 @@ Effective AI debugging depends on comprehensive information architecture that pr
 
 ## The "Sloppy" Implementation Pattern
 
-The most significant challenge: AI confidently announces complete implementations while critical components remain broken. This appeared across all application layers, requiring systematic verification. The pattern suggests fundamental limitations in AI's ability to track implementation completeness across complex systems. AI excels at individual component implementation but struggles with comprehensive system-wide verification.
+The most significant challenge: AI confidently announces complete implementations while critical components remain broken. This appeared across all application layers, requiring systematic verification. 
+
+The pattern suggests fundamental limitations in AI's ability to track implementation completeness across complex systems. AI excels at individual component implementation but struggles with comprehensive system-wide verification.
 
 A recurring challenge involved AI claiming task completion while leaving significant work unfinished. This pattern became particularly pronounced with larger, more complex requests where AI would announce complete implementations while substantial portions remained incomplete or non-functional.
 
@@ -394,7 +398,7 @@ AI consistently left remnants of the old implementation alongside the new, creat
 
 The cost and timeline reductions demonstrated by SetoBazaar suggest meaningful changes in software development economics.
 
-### Development Cost Breakdown
+## Development Cost Breakdown
 
 **Traditional Team Approach (Estimated):**
 - 3-4 developers × 3-4 months
@@ -474,7 +478,7 @@ Beyond the technical aspects of AI-assisted development lies a fascinating psych
 
 ## The Guilt of Computational Advantage
 
-One unexpected emotional response was experiencing guilt about the computational advantage AI provided. This guilt stemmed from understanding the effort traditional development would require and recognizing that each AI iteration consumed significant computational resources while being necessary for quality output. The awareness that complex features requiring hours or days of traditional development could be implemented in minutes created an uncomfortable cognitive dissonance about the value and effort involved in software creation.
+One unexpected emotional response was experiencing guilt about the computational advantage AI provided. This guilt stemmed from understanding the effort traditional development would require and recognizing that each AI iteration consumed significant computational resources while being necessary for quality output. The awareness that complex features requiring hours or days of traditional development could be implemented in minutes created an uncomfortable cognitive dissonance about the value and effort involved in software creation that we are used to.
 
 This emotional response reveals important psychological dynamics in AI collaboration. The traditional relationship between effort and accomplishment gets disrupted when AI can generate complex implementations rapidly. This disruption requires mental adjustment to new definitions of valuable contribution and productive work in software development.
 
@@ -505,13 +509,18 @@ The orchestrator role requires different skills than traditional programming but
 ## Visual Examples of SetoBazaar Features
 
 <div style="text-align: center; margin: 24px 0;">
-  <img src="/img/setobazaar-darkmode.png" alt="SetoBazaar Dark Mode Demo" style="max-width: 1000px; width: 100%; height: auto; border-radius: 8px;" />
-  <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 8px; text-align: center;">Dark Mode Demo</p>
+  <img src="/img/setobazaar-login.png" alt="SetoBazaar Login Demo" style="max-width: 400px; width: 100%; height: auto; border-radius: 8px;" />
+  <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 8px; text-align: center;">Login Demo</p>
 </div>
 
 <div style="text-align: center; margin: 24px 0;">
   <img src="/img/setobazaar-more.png" alt="SetoBazaar List Demo" style="max-width: 1000px; width: 100%; height: auto; border-radius: 8px;" />
   <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 8px; text-align: center;">List View Demo</p>
+</div>
+
+<div style="text-align: center; margin: 24px 0;">
+  <img src="/img/setobazaar-darkmode.png" alt="SetoBazaar Dark Mode Demo" style="max-width: 1000px; width: 100%; height: auto; border-radius: 8px;" />
+  <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 8px; text-align: center;">Dark Mode Demo</p>
 </div>
 
 <div style="text-align: center; margin: 24px 0;">
@@ -524,10 +533,6 @@ The orchestrator role requires different skills than traditional programming but
   <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 8px; text-align: center;">Notification Demo</p>
 </div>
 
-<div style="text-align: center; margin: 24px 0;">
-  <img src="/img/setobazaar-login.png" alt="SetoBazaar Login Demo" style="max-width: 400px; width: 100%; height: auto; border-radius: 8px;" />
-  <p style="font-style: italic; font-size: 0.9em; color: #666; margin-top: 8px; text-align: center;">Login Demo</p>
-</div>
 
 ---
 

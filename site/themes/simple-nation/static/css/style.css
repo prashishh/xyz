@@ -612,6 +612,11 @@ img {
   margin-bottom: 40px;
 }
 
+.common-list ol li {
+  line-height: 2rem;
+  margin-bottom: 0.8rem;
+}
+
 .bookshelf-list ul, .people-list ul {
   margin-top: 0.1em;
 }
