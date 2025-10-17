@@ -534,6 +534,7 @@ hr {
   border-top: 1px solid var(--hr-top);
   border-bottom: 1px solid var(--hr-bottom);
   margin-top: 30px;
+  margin-bottom: 30px;
   width: 80%;
 }
 
@@ -695,6 +696,47 @@ p.title-margin-top {
   font-size: 16px;
 }
 
+/* Code block styling - Very specific targeting */
+.common-body pre, 
+.common-body code,
+.main-body pre,
+.main-body code,
+.top-div pre,
+.top-div code,
+div pre,
+div code {
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+  max-width: 100% !important;
+  display: block !important;
+}
+
+.common-body pre,
+.main-body pre,
+.top-div pre,
+div pre {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  border-radius: 4px !important;
+  padding: 1.5rem !important;
+  margin: 1rem 0 !important;
+  font-family: 'Courier New', monospace !important;
+  line-height: 1.5 !important;
+}
+
+.common-body code,
+.main-body code,
+.top-div code,
+div code {
+  background-color: #f8f9fa !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 3px !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 0.9em !important;
+}
+
 .common-body ul li, .common-body ol li {
   font-size: 16px;
 }
@@ -752,8 +794,22 @@ html[data-theme="dark"] .dark-mode-toggle:focus,
 }
 
 .ui.secondary.pointing.menu .header.item:hover {
-  color: var(--accent-color) !important;
-  background: transparent !important;
+  
+}
+
+/* Force code block styling - match architecture file styling */
+.common-body pre {
+  padding: 16px !important;
+  background-color: #1e1e1e !important;
+  border-radius: 6px !important;
+  margin: 12px 0 !important;
+  line-height: 1.5 !important;
+  font-family: 'Courier New', monospace !important;
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-all !important;
+  color: #ffffff !important;
 }
 
 .ui.secondary.pointing.menu .active.item {
