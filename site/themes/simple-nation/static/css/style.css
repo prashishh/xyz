@@ -823,3 +823,10 @@ img + em {
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
 }
+
+/* Center align images in content */
+.main-body img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}

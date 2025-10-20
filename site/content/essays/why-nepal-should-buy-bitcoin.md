@@ -11,7 +11,7 @@ Nepal stands at a critical economic crossroads. While maintaining a blanket ban 
 
 The strategic case rests on five pillars: protection against fiat currency debasement and global inflation, monetization of surplus hydropower into digital assets, reduction of remittance costs for millions of Nepali families, attraction of foreign direct investment in green technology, and establishment of genuine financial sovereignty independent of larger neighboring economies.
 
-## Understanding Bitcoin: A Primer
+## Understanding Bitcoin
 
 Before examining Nepal's opportunity, understanding what Bitcoin actually is and why it matters becomes essential.
 
@@ -36,6 +36,9 @@ The cryptocurrency market represents a significant and rapidly growing sector of
 
 ![Cryptocurrency Total Value Locked](/img/crypto-tvl.png)
 *Total value locked in cryptocurrency protocols demonstrates the maturation of the digital asset ecosystem*
+
+![Bitcoin Compared to Global Assets](/img/bitcoin_global_asset_comparison.png)
+*Bitcoin's market capitalization compared to other major global asset classes*
 
 ### The Case for National Bitcoin Reserves
 
@@ -77,6 +80,9 @@ Nepal's economy runs on money sent home by workers abroad, creating an extraordi
 | Reserve Composition | 78% convertible currencies, 22% INR | Heavy exposure to USD/INR monetary policies |
 | Gold Reserves | 7.99 tonnes (~$1.03 billion) | Minimal precious metal hedge (4% of reserves) |
 | GDP Growth Forecast | 4.9% (FY2025) | Moderate but structurally constrained |
+
+![Remittance Dependency Regional Comparison](/img/remittance_dependency_comparison_peers.png)
+*Nepal's remittance dependency of 26.9% ranks second highest among South/Central Asian peers, exceeded only by Tajikistan*
 
 Over half of all Nepali households receive remittances, with more than 2 million Nepali workers currently employed abroad. This means Nepal's economic stability is fundamentally determined by job markets in Gulf states, Malaysia, and India that could change rapidly, immigration policies in destination countries Nepal cannot influence, and economic conditions in foreign economies over which Nepal has zero control.
 
@@ -362,50 +368,84 @@ For readers seeking deeper understanding of Bitcoin economics and monetary theor
 
 - **"Layered Money"** by Nik Bhatia - Understanding the evolution of monetary systems and Bitcoin's role
 
-- **"Bitcoin as a Reserve Asset"** - Fidelity Digital Assets [(White Paper)](https://www.fidelitydigitalassets.com/research-and-insights) - Portfolio allocation framework and institutional analysis
+- **"Bitcoin as a Reserve Asset"** - Fidelity Digital Assets [(White Paper)](https://www.fidelitydigitalassets.com/research-and-insights)
 
-- **"Why India Should Buy Bitcoin"** by Balaji Srinivasan - [Regional analysis](https://balajis.com/p/why-india-should-buy-bitcoin) for South Asian context
+- **"Why India Should Buy Bitcoin"** by [Balaji Srinivasan](https://balajis.com/p/why-india-should-buy-bitcoin) 
 
-- **"When Bitcoin Wins"** by Balaji Srinivasan [(Thread)](https://x.com/balajis/status/1961529239993536687) - Strategic analysis of Bitcoin adoption trajectory
+- **"When Bitcoin Wins"** by Balaji Srinivasan [(Thread)](https://x.com/balajis/status/1961529239993536687)
 
 - **"The Bitcoin Standard"** by Saifedean Ammous - Comprehensive examination of Bitcoin as sound money
 
 ## Data Sources & Verification
 
-All major claims in this essay are based on publicly available data from authoritative sources:
+All major claims in this essay are based on publicly available data from authoritative sources. Key data points cited:
 
-**Nepal Economic Data:**
-- GDP, forex reserves, remittances, trade data: Nepal Rastra Bank monthly reports [(nrb.org.np)](https://www.nrb.org.np)
-- GDP growth forecasts: [World Bank](https://www.worldbank.org/en/country/nepal), [IMF](https://www.imf.org/en/Countries/NPL), [Asian Development Bank](https://www.adb.org/countries/nepal)
-- Gold reserves: Nepal Rastra Bank (7.99 tonnes as of 2025)
-- Remittance costs: [World Bank Remittance Prices Worldwide](https://remittanceprices.worldbank.org) database (3.7% average)
+Nepal Economic Data:
+- GDP (2024): $43 billion - Nepal Rastra Bank [(nrb.org.np)](https://www.nrb.org.np)
+- Foreign Exchange Reserves (May 2025): $18.40 billion (covers 14.3 months of imports) - Nepal Rastra Bank monthly reports
+- Remittances (FY 2024/25): Rs. 1,723 billion (28-33% of GDP) - Nepal Rastra Bank
+- Gold Reserves: 7.99 tonnes (~$1.03 billion, representing 4% of total reserves) - Nepal Rastra Bank 2025
+- Reserve Composition: 78% convertible currencies (primarily USD), 22% Indian Rupees - Nepal Rastra Bank
+- GDP Growth Forecast (FY2025): 4.9% - [World Bank](https://www.worldbank.org/en/country/nepal), [IMF](https://www.imf.org/en/Countries/NPL), [Asian Development Bank](https://www.adb.org/countries/nepal)
+- Average Remittance Cost: 3.7% of transaction value - [World Bank Remittance Prices Worldwide](https://remittanceprices.worldbank.org) database
+- Nepali Workers Abroad: 2+ million workers currently employed overseas - Various government sources
 
-**Cryptocurrency Market Data:**
-- Market capitalization, trading volume: [CoinMarketCap](https://coinmarketcap.com), [CoinGecko](https://www.coingecko.com) (October 2025)
-- Global user statistics: Crypto.com Global Adoption Report, [Chainalysis](https://www.chainalysis.com)
-- Illicit activity percentage: [Chainalysis 2024 Crypto Crime Report](https://www.chainalysis.com/blog/2024-crypto-crime-report-introduction/) (0.34%)
-- Institutional holdings: Various industry reports (estimates)
+Cryptocurrency Market Data:
+- Bitcoin Market Cap: $2.1+ trillion (October 2025) - [CoinMarketCap](https://coinmarketcap.com), [CoinGecko](https://www.coingecko.com)
+- Bitcoin Price (October 2025): ~$107,000 per BTC - Market data aggregators
+- Daily Trading Volume: $180+ billion - CoinMarketCap, CoinGecko
+- Global Cryptocurrency Users: 580 million (approximately 7% of world population) - Crypto.com Global Adoption Report
+- Total Crypto Market Size: $2.8 trillion - Market data (October 2025)
+- Illicit Activity Percentage: 0.34% of total cryptocurrency volume - [Chainalysis 2024 Crypto Crime Report](https://www.chainalysis.com/blog/2024-crypto-crime-report-introduction/)
+- Bitcoin Appreciation (2015-2025): From $430 to $107,000 (24,800% increase over 10 years) - Historical price data
+- Institutional Holdings: Estimated hundreds of billions in Bitcoin ETPs - Various industry reports
 
-**Bhutan Bitcoin Holdings:**
-- Holdings estimates: [Bitcoin Treasuries](https://bitcointreasuries.net) (July 2025), Arkham Intelligence
-- Transaction data: Public blockchain records
+Cryptocurrency Investment Flows (2024):
+- Total VC Investment: $24.8 billion (45% YoY growth) - Industry reports
+- Mining Infrastructure Investment: $8.2 billion (67% growth) - Industry reports  
+- Blockchain Development Investment: $15.3 billion (52% growth) - Industry reports
+- Regional Distribution: North America 42%, Europe 28%, Asia-Pacific 24% - Venture capital data
 
-**Gold Market Data:**
-- Gold prices and central bank holdings: [World Gold Council](https://www.gold.org), [Kitco](https://www.kitco.com), Bloomberg
-- Central bank survey data: World Gold Council October 2025 survey
+Bhutan Bitcoin Holdings:
+- Estimated Holdings: 11,000-13,000 BTC (~$1.2-1.4 billion at current prices) - [Bitcoin Treasuries](https://bitcointreasuries.net), Arkham Intelligence (July 2025)
+- Percentage of Bhutan GDP: 35-40% (Bhutan GDP ~$3.3 billion) - Calculated from holdings data
+- Program Start: 2017-2019, entry at $4,000-10,000 per BTC - Public blockchain records
+- Mining Method: 100% hydropower via Druk Holding and Investments - Government statements
+- Estimated Daily Production: 3-5 BTC ($317,400-$529,000 daily) - Based on publicly reported capacity
+- Known Sales: $33.5 million (367 BTC) in November 2024, plus $66 million earlier (~$100 million total realized gains) - Blockchain transaction records
+- Appreciation: 900%+ since 2020 - Calculated from entry and current prices
+- Note: Bhutan government has not officially disclosed complete program details; estimates based on blockchain analysis
 
-**Hydropower Data:**
-- Capacity and potential: [Nepal Electricity Authority](https://www.nea.org.np) reports
-- Export agreements: Public bilateral agreements, news reports
+Gold Market Data:
+- Gold Price (July 2024): $2,421/oz - [Kitco](https://www.kitco.com), [World Gold Council](https://www.gold.org)
+- Gold Price (July 2025): $3,324/oz (37% annual increase) - Market data
+- Gold Price (October 2025): $4,000+/oz - Bloomberg, market data
+- In Nepali Terms: July 2024: Rs. 128,000/tola, July 2025: Rs. 175,800/tola, October 2025: Rs. 211,500/tola
+- Central Bank Survey: 95% of central banks planning to expand gold reserves - World Gold Council October 2025 survey
+- Global Gold Holdings: US (8,133 tonnes), Germany (3,352 tonnes), Italy (2,452 tonnes), France (2,437 tonnes), Russia (2,332 tonnes), China (2,337 tonnes), India (822 tonnes) - World Gold Council 2025
 
-**Reserve Custody Examples:**
-- Russian reserves: Widely reported by international financial press (2022)
-- Afghan reserves: Reported by major news outlets and US government (2021)
+Hydropower Data:
+- Total Theoretical Potential: 83,000 MW - [Nepal Electricity Authority](https://www.nea.org.np)
+- Economically Viable Potential: 44,000 MW - NEA reports
+- Current Installed Capacity: 3,256 MW (7.4% of viable potential utilized) - NEA 2025
+- 2035 Development Target: 28,500 MW - National energy strategy
+- India Export Agreement: 10,000 MW over next decade - Public bilateral agreements
+- Bhutan Hydropower (Comparison): 30,000 MW total potential, ~23,000 MW viable, ~3,000 MW installed - Various sources
 
-**IT Sector:**
-- Formal and informal estimates: Institute for Integrated Development Studies (IIDS) 2022 report
+Monetary Policy & Currency Data:
+- US M2 Expansion (2020-2022): 40% increase in money supply - Federal Reserve data
+- Dollar Purchasing Power Loss (1971-2025): 95%+ decline since leaving gold standard - Historical inflation data
 
-**Note**: Mining revenue projections are calculated estimates based on current Bitcoin prices (~$107,000), network hashrate, and hardware efficiency. Actual results would vary with market conditions.
+Mining Revenue Projections:
+- 30 MW Operation: $12.8-25.6 million annually (conservative estimate)
+- 60 MW Operation: $25.6-51.2 million annually
+- 150 MW Operation: $65.7-127.8 million annually
+- Everest Permit Revenue (Comparison): $5.7-5.9 million annually
+- Tourism Revenue (FY 2024/25): ~$643 million (6-7% of GDP)
+- IT Service Exports: $515+ million - IIDS 2022 report
+- Assumptions: Bitcoin @ $107,000, current network hashrate, current mining hardware efficiency (Antminer S21 class, ~17.5 J/TH), Nepal hydropower cost $0.02-0.04/kWh
+
+Note on Mining Calculations: Revenue projections are estimates based on October 2025 market conditions. Actual results would vary significantly with Bitcoin price changes, network difficulty adjustments, hardware efficiency improvements, and operational costs. A 50% Bitcoin price decline would reduce revenues proportionally.
 
 ---
 
