@@ -2,10 +2,14 @@ table
 {
   border-radius: var(--border-radius);
   overflow: hidden;
+  border-collapse: collapse;
+  border: 1px solid #d0d0d0;
+  margin-bottom: 2rem;
 }
 
 td, th {
   padding: $spacing-medium;
+  border: 1px solid #d0d0d0;
 }
 
 th:not(:first-child), td:not(:first-child) {
@@ -16,9 +20,7 @@ th {
   color: var(--grey-3);
   font-weight: 700;
   white-space: nowrap;
-   {
-    white-space: wrap;
-  }
+  background-color: #f5f5f5;
 }
 
 tr th {
