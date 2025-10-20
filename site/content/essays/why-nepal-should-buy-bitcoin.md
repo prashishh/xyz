@@ -286,10 +286,6 @@ __Clear regulatory frameworks, competitive hydropower costs, and government supp
 
 Reversing the ban and establishing thoughtful regulation would transform Nepal from completely excluded to potentially competitive for blockchain-related investment flowing to Asia-Pacific. The combination of surplus renewable energy, technical workforce, and strategic location creates value proposition for international blockchain companies seeking operational bases in the region.
 
-Here's the version with more natural paragraph breaks and no dashes:
-
----
-
 ## Addressing Common Concerns
 
 ### Volatility Considerations
@@ -302,7 +298,7 @@ Despite crashes, Bitcoin recovered to new highs every time, growing 24,800% from
 
 Major universities and companies hold Bitcoin despite volatility. These conservative institutions managing billions with fiduciary responsibilities haven't found volatility disqualifying when properly sized. The key is conservative allocation representing prudent diversification rather than reckless speculation.
 
-### Illigal Activity Concerns
+### Illegal Activity Concerns
 
 The [2024 Chainalysis report](https://go.chainalysis.com/2025-Crypto-Crime-Report.html) found only 0.34% of cryptocurrency transactions involve crime. The UN estimates 2 to 5% of cash facilitates illegal activity. Cryptocurrency is actually cleaner than cash because every Bitcoin transaction records permanently on a public ledger anyone can check.
 
@@ -393,7 +389,6 @@ All major claims in this essay are based on publicly available data from authori
 **Bhutan Bitcoin Holdings:**
 - Holdings estimates: [Bitcoin Treasuries](https://bitcointreasuries.net) (July 2025), Arkham Intelligence
 - Transaction data: Public blockchain records
-- Note: Bhutan government has not officially disclosed complete program details
 
 **Gold Market Data:**
 - Gold prices and central bank holdings: [World Gold Council](https://www.gold.org), [Kitco](https://www.kitco.com), Bloomberg
