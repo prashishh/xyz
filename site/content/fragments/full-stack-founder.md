@@ -6,7 +6,9 @@ author: Prashish
 
 ## The Full Stack Founder
 
-A full stack founder is someone who has enough skills across many parts of a company, from product and engineering to team and capital. It is not about mastery in every area, but about knowing enough to follow what is going on and to join the work when needed. Just like a full stack engineer works across the entire technical stack, a full stack founder works across the entire company stack.
+A full stack founder is someone who has enough skills across many parts of a company, from product and engineering to team and capital. It is not about mastery in every area, but about knowing enough to follow what is going on and to join the work when needed. 
+
+Just like a full stack engineer works across the entire technical stack, a full stack founder works across the entire company stack.
 
 It starts with **I am an engineer**, then **I can build a product**, then **I can bring people together and lead a team**, then **I can bring in revenue**, then **I can raise money**, and finally **I can carry the whole idea forward**.
 
