@@ -20,6 +20,6 @@ A full stack founder knows enough in each area to sit with any part of the team,
 
 ---
 
-*Yusuf Goolamabbas ([@yusufg](https://x.com/yusufg)) mentioned the phrase (Full Stack Founder) in one of our conversations and the word just stuck with me.*
+*Yusuf Goolamabbas ([@yusufg](https://x.com/yusufg)) mentioned the term (Full Stack Founder) in one of our conversations and the word just stuck with me.*
 
 <div class="image-wrapper" style="margin: 12px auto;"><img src="/img/multiple-heads.jpg"></div>
