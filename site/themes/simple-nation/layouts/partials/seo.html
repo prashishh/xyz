@@ -4,13 +4,24 @@
   - Uses .Params.image (or cover/featured_image) when available, else default theme image
 */}}
 
-{{- $isArticle := or (eq .Section "essays") (eq .Section "fragments") -}}
+{{- $isSection := and (ne .IsHome true) (eq .Kind "section") -}}
+{{- $isArticle := and (not $isSection) (or (eq .Section "essays") (eq .Section "fragments")) -}}
 {{- $title := .Title -}}
 {{- $desc := cond (gt (len (.Summary | plainify)) 0) ((.Summary | plainify) | truncate 200) (.Site.Title) -}}
 {{- $url := .Permalink -}}
 
 {{- if .IsHome -}}
   {{- $desc = "Stories, ideas, and notes from my life, work, and beyond." -}}
+{{- else if $isSection -}}
+  {{- if eq .Section "fragments" -}}
+    {{- $desc = "Short thoughts, observations, and fragmented ideas on technology, life, and everything in between." -}}
+  {{- else if eq .Section "essays" -}}
+    {{- $desc = "Long-form essays exploring ideas, experiences, and deeper thoughts." -}}
+  {{- else if eq .Section "ai" -}}
+    {{- $desc = "Essays and articles about AI, machine learning, and artificial intelligence." -}}
+  {{- else -}}
+    {{- $desc = printf "Collection of %s from %s" (.Section | title) .Site.Title -}}
+  {{- end -}}
 {{- end -}}
 
 {{/* Resolve social image in a way compatible with older Hugo */}}
@@ -42,7 +53,7 @@
 <meta property="og:site_name" content="{{ .Site.Title }}"/>
 <meta property="og:title" content="{{ $title }}"/>
 <meta property="og:description" content="{{ $desc }}"/>
-<meta property="og:type" content="{{ if $isArticle }}article{{ else }}website{{ end }}"/>
+<meta property="og:type" content="{{ if $isArticle }}article{{ else if $isSection }}website{{ else }}website{{ end }}"/>
 <meta property="og:url" content="{{ $url }}"/>
 <meta property="og:image" content="{{ $img }}"/>
 {{ if $isArticle }}
@@ -56,8 +67,12 @@
 <meta name="twitter:description" content="{{ $desc }}"/>
 <meta name="twitter:image" content="{{ $img }}"/>
 
-{{/* RSS autodiscovery for convenience */}}
-<link rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}" href="{{ "index.xml" | relURL }}"/>
+{{/* RSS autodiscovery - section-aware */}}
+{{- $rssURL := "index.xml" | relURL -}}
+{{- if $isSection -}}
+  {{- $rssURL = printf "%s/index.xml" (.Section | relURL) -}}
+{{- end -}}
+<link rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}" href="{{ $rssURL }}"/>
 
 {{ if $isArticle }}
   {{/* JSON-LD Article schema */}}
@@ -73,6 +88,35 @@
     "datePublished": "{{ .PublishDate.UTC.Format "2006-01-02T15:04:05Z07:00" }}",
     "dateModified": "{{ .Lastmod.UTC.Format "2006-01-02T15:04:05Z07:00" }}",
     "mainEntityOfPage": { "@type": "WebPage", "@id": {{ $url | jsonify }} }
+  }
+  </script>
+{{ else if $isSection }}
+  {{/* JSON-LD CollectionPage schema for section listing pages */}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": {{ $title | jsonify }},
+    "description": {{ $desc | jsonify }},
+    "url": {{ $url | jsonify }},
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": {{ len .Data.Pages }},
+      "itemListElement": [
+        {{- range $index, $page := first 10 .Data.Pages.ByDate.Reverse -}}
+        {{- if $index }},{{- end }}
+        {
+          "@type": "ListItem",
+          "position": {{ add $index 1 }},
+          "item": {
+            "@type": "Article",
+            "name": {{ $page.Title | jsonify }},
+            "url": {{ $page.Permalink | jsonify }}
+          }
+        }
+        {{- end -}}
+      ]
+    }
   }
   </script>
 {{ end }}
