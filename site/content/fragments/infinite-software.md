@@ -17,3 +17,5 @@ Similarly, opening a physical store costs real money for inventory, rent and oth
 Software code, at its core, is compute. More AI models launch every few months, competition pushes prices down, data centers scale up around the world and chips get better. As compute gets cheaper, generating code gets cheaper. The marginal cost of creating software approaches zero.
 
 We'll have infinite software, but not infinite good software.
+
+<div class="image-wrapper" style="margin: 12px auto;"><img src="/img/infinite-sw.jpg"></div>
