@@ -6,7 +6,7 @@ tags:
   - ongoing
 ---
 
-In 2024, I used AI to generate a workout schedule that fit my personal goals and the equipment I had, and got **a PDF** I could print to follow my workouts. 
+In 2025, I used AI to generate a workout schedule that fit my personal goals and the equipment I had, and got **a PDF** I could print to follow my workouts. 
 
 In 2026, we'll be able to build a personalized workout **app** in a few hours and install it on our phones.
 
