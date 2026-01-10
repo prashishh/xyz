@@ -3,6 +3,9 @@ baseURL = "https://prashish.xyz/"
 languageCode = "en-us"
 title = "xyz prashish"
 
+# Summary settings for better social sharing
+summaryLength = 70
+
 [markup]
   [markup.goldmark]
     [markup.goldmark.renderer]

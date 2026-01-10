@@ -5,11 +5,40 @@
 */}}
 
 {{- $isSection := and (ne .IsHome true) (eq .Kind "section") -}}
-{{- $isArticle := and (not $isSection) (or (eq .Section "essays") (eq .Section "fragments")) -}}
+{{- $isArticle := and (not $isSection) (or (eq .Section "essays") (eq .Section "fragments") (eq .Section "ai")) -}}
 {{- $title := .Title -}}
-{{- $desc := cond (gt (len (.Summary | plainify)) 0) ((.Summary | plainify) | truncate 200) (.Site.Title) -}}
 {{- $url := .Permalink -}}
 
+{{/* Build description with multiple fallbacks */}}
+{{- $desc := "" -}}
+
+{{/* 1. First try explicit description from frontmatter */}}
+{{- with .Params.description -}}
+  {{- $desc = . -}}
+{{- end -}}
+
+{{/* 2. If no explicit description, try Hugo's Summary */}}
+{{- if eq $desc "" -}}
+  {{- $summary := .Summary | plainify | replaceRE `\s+` " " | strings.TrimSpace -}}
+  {{- if gt (len $summary) 10 -}}
+    {{- $desc = $summary | truncate 200 -}}
+  {{- end -}}
+{{- end -}}
+
+{{/* 3. If still empty, extract from plain content */}}
+{{- if eq $desc "" -}}
+  {{- $plainContent := .Content | plainify | replaceRE `\s+` " " | strings.TrimSpace -}}
+  {{- if gt (len $plainContent) 10 -}}
+    {{- $desc = $plainContent | truncate 200 -}}
+  {{- end -}}
+{{- end -}}
+
+{{/* 4. Final fallback to site title */}}
+{{- if eq $desc "" -}}
+  {{- $desc = .Site.Title -}}
+{{- end -}}
+
+{{/* Override for homepage and section pages */}}
 {{- if .IsHome -}}
   {{- $desc = "Stories, ideas, and notes from my life, work, and beyond." -}}
 {{- else if $isSection -}}
