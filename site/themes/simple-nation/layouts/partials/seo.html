@@ -19,7 +19,7 @@
 
 {{/* 2. If no explicit description, try Hugo's Summary */}}
 {{- if eq $desc "" -}}
-  {{- $summary := strings.TrimSpace (printf "%s" (.Summary | plainify | replaceRE `\s+` " ")) -}}
+  {{- $summary := trim (printf "%s" (.Summary | plainify | replaceRE `\s+` " ")) " \t\n\r" -}}
   {{- if gt (len $summary) 10 -}}
     {{- $desc = $summary | truncate 200 -}}
   {{- end -}}
@@ -27,7 +27,7 @@
 
 {{/* 3. If still empty, extract from plain content */}}
 {{- if eq $desc "" -}}
-  {{- $plainContent := strings.TrimSpace (printf "%s" (.Content | plainify | replaceRE `\s+` " ")) -}}
+  {{- $plainContent := trim (printf "%s" (.Content | plainify | replaceRE `\s+` " ")) " \t\n\r" -}}
   {{- if gt (len $plainContent) 10 -}}
     {{- $desc = $plainContent | truncate 200 -}}
   {{- end -}}
