@@ -1,6 +1,6 @@
 ---
 title: "Beyond Asanas"
-date: "2025-08-16T19:43:17.430Z"
+date: "2026-01-13T15:01:30.727Z"
 author: "Pragya Bhatt"
 read_year: "NO"
 recommendation: '3'
