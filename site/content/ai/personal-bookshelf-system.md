@@ -192,9 +192,9 @@ Traditional development without AI assistance would likely have taken two to thr
 
 # Broader Implications
 
-This project demonstrates a pattern applicable beyond book cataloging because the combination of vision AI accessibility, serverless simplicity, and AI-assisted development enables personal automation systems that would have required significant development effort just two years ago.
+This project demonstrates a pattern applicable beyond book cataloging because the combination of AI accessibility, serverless simplicity, and AI-assisted development enables personal automation systems that would have required significant development effort just two years ago.
 
-Free tier vision APIs from major providers make image understanding accessible for personal projects. **Cloudflare Workers** and similar platforms eliminate infrastructure management for low volume automation. Building systems through AI collaboration reduces development time from days to hours. Well-documented APIs for services like GitHub, Telegram, and various AI providers enable rapid integration across different domains.
+Free tier APIs from major providers make image understanding accessible for personal projects. **Cloudflare Workers** and similar platforms eliminate infrastructure management for low volume automation. Building systems through AI collaboration reduces development time from days to hours. Well-documented APIs for services like GitHub, Telegram, and various AI providers enable rapid integration across different domains.
 
 The friction between physical world actions and digital record keeping creates numerous opportunities for similar automation including receipt scanning for expense tracking, business card photography for contact management, plant identification for garden logging, and document photography for filing systems. Each follows the same pattern of capturing an image, extracting structured data via AI, and committing to a persistent system.
 
