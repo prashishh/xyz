@@ -2,7 +2,7 @@
 title: "A Personal Bookshelf System: Vision AI, Telegram, and Serverless Architecture"
 date: 2026-01-13T00:00:00Z
 author: Prashish
-description: "Building an automated book cataloging system using Telegram, Gemini Vision API, and Cloudflare Workers that reduces manual spreadsheet work to a three-message conversation."
+description: "Building an automated book cataloging system using Telegram, Gemini API, and Cloudflare Workers that reduces manual spreadsheet work to a three-message conversation."
 url: /ai/personal-bookshelf-system/
 tags:
   - ai
@@ -17,7 +17,7 @@ tags:
 
 My [bookshelf page](/bookshelf) serves as both a personal reading archive and a recommendation resource for visitors interested in similar topics. Over the years, it has grown to include more than 1000 books across philosophy, technology, business, spirituality, and fiction. Maintaining this list has become a recurring friction point because new books arrive frequently, sometimes many in a single week, and adding them to the website is quite a manual and extensive process.
 
-The workflow described in this article uses **Telegram**, **Cloudflare Workers**, **Cloudflare KV**, **Gemini Vision API** (with **Claude Haiku** and **GPT-4o-mini** as fallbacks), **GitHub**, and **Netlify** to reduce book cataloging to a three message conversation: photograph the books, confirm the details, and update my bookshelf on the website. The entire system runs on free tier services with zero monthly costs.
+The workflow described in this article uses **Telegram**, **Cloudflare Workers**, **Cloudflare KV**, **Gemini API** (with **Claude Haiku** and **GPT-4o-mini** as fallbacks), **GitHub**, and **Netlify** to reduce book cataloging to a three message conversation: photograph the books, confirm the details, and update my bookshelf on the website. The entire system runs on free tier services with zero monthly costs.
 
 <div style="text-align: center; margin: 24px 0;">
   <img src="/img/bookshelf-homepage.png" alt="Bookshelf Homepage" style="max-width: 600px; width: 100%; height: auto; border-radius: 8px;" />
@@ -76,7 +76,7 @@ The final architecture connects four external services through a Cloudflare Work
 
     📱 USER                  ☁️ CLOUDFLARE WORKER              📦 EXTERNAL SERVICES
   
-  1. Send Photo ──────────▶ Webhook receives image ──────────▶ Gemini Vision API
+  1. Send Photo ──────────▶ Webhook receives image ──────────▶ Gemini API
   
   2. Wait for response ◀── Extract books, store in KV ◀────── Returns book data
   
@@ -103,12 +103,12 @@ The final architecture connects four external services through a Cloudflare Work
   │  Photo Received │     │ Awaiting Rating │     │ Awaiting OTP    │     │    Deployed     │
   │                 │────▶│                 │────▶│                 │────▶│                 │
   │  Extract via    │     │  Parse natural  │     │  Validate OTP   │     │  Clear state    │
-  │  Gemini Vision  │     │  language input │     │  Commit to Git  │     │  Send confirm   │
+  │  Gemini API     │     │  language input │     │  Commit to Git  │     │  Send confirm   │
   └─────────────────┘     └─────────────────┘     └─────────────────┘     └─────────────────┘
 
 ```
 
-The entire system runs as a single script file deployed on **Cloudflare Workers**, which provides 100,000 free requests per day and global distribution. The worker receives webhooks from **Telegram**, calls **Gemini Vision API** to identify books from photos, manages conversation state in **Cloudflare KV**, and commits markdown files directly to **GitHub** which triggers the Netlify rebuild.
+The entire system runs as a single script file deployed on **Cloudflare Workers**, which provides 100,000 free requests per day and global distribution. The worker receives webhooks from **Telegram**, calls **Gemini API** to identify books from photos, manages conversation state in **Cloudflare KV**, and commits markdown files directly to **GitHub** which triggers the Netlify rebuild.
 
 The system includes automatic fallback to **Claude Haiku** and **GPT-4o-mini** if Gemini encounters rate limiting, ensuring the workflow never fails due to API availability. Fine-grained personal access tokens limit GitHub permissions to the specific repository and branch.
 
@@ -171,7 +171,7 @@ The entire system operates within free tier limits of all services involved, whi
 |---------|----------|--------------|
 | Cloudflare Workers | Bot logic and orchestration | $0 (100K requests/day free) |
 | Cloudflare KV | Conversation state storage | $0 (100K reads/day free) |
-| Gemini Vision API | Book identification from photos | $0 (15 requests/min free) |
+| Gemini API | Book identification from photos | $0 (15 requests/min free) |
 | Telegram Bot API | Conversation interface | $0 (unlimited) |
 | GitHub API | Markdown file commits | $0 (5K requests/hour free) |
 | Netlify | Hugo site rebuilds | $0 (300 build minutes/month free) |
