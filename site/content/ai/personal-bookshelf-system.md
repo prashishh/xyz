@@ -1,5 +1,5 @@
 ---
-title: "A Personal Bookshelf System: Gemini, Telegram, and Serverless Architecture"
+title: "A Personal Bookshelf System: Zero-Cost Automation with Telegram and Serverless Architecture"
 date: 2026-01-13T00:00:00Z
 author: Prashish
 description: "Building an automated book cataloging system using Telegram, Gemini API, and Cloudflare Workers that reduces manual spreadsheet work to a three-message conversation."
