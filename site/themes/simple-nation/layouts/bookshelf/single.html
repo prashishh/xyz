@@ -2,7 +2,7 @@
 
 	<div class="common-body content">
 		<h1><strong>{{ .Title }}</strong></h1>
-		{{ with .Params.author }}<p class="sub-header">by {{ . }}</p>{{ end }}
+		{{ with .Params.author }}{{ if ne . "Unknown" }}<p class="sub-header">by {{ . }}</p>{{ end }}{{ end }}
 		{{ with .Params.image }}<p><img src="{{ . | relURL }}" alt="{{ $.Title }}"></p>{{ end }}
 		{{ .Content }}
 	</div>

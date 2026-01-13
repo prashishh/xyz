@@ -8,7 +8,7 @@
 			
 			<ul>
 				{{ range .Pages }}
-					<li><span class="{{ if eq .Params.recommendation "4" }} bookshelf-book-green {{ else if eq .Params.recommendation "5" }} bookshelf-book-red {{ end }}">{{ .Title }}{{ with .Params.author }}, {{ . }}{{ end }}</span>{{ with .Params.description }}: {{ . }} {{ end }}</li>
+					<li><span class="{{ if eq .Params.recommendation "4" }} bookshelf-book-green {{ else if eq .Params.recommendation "5" }} bookshelf-book-red {{ end }}">{{ .Title }}{{ with .Params.author }}{{ if ne . "Unknown" }}, {{ . }}{{ end }}{{ end }}</span>{{ with .Params.description }}: {{ . }} {{ end }}</li>
 				{{ end }}
 			</ul>
 		</div>
