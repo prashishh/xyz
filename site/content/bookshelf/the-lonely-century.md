@@ -1,6 +1,6 @@
 ---
 title: "The Lonely Century"
-date: "2025-08-16T19:43:17.436Z"
+date: "2026-01-13T15:04:02.810Z"
 author: "Noreena Hertz"
 read_year: "NO"
 recommendation: '3'
