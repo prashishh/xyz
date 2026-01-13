@@ -212,4 +212,4 @@ For those considering similar personal automation projects, the key insight is t
 
 ---
 
-*The source code is available on request. If you are building something similar, reach out at namaste@prashish.xyz.*
+*If you are building something similar, reach out at namaste@prashish.xyz.*
