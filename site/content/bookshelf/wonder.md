@@ -1,8 +1,8 @@
 ---
-title: Wonder
-date: 2023-09-18T10:45:42.282Z
-read_year: 'NO'
+title: "Wonder"
+date: "2026-01-13T15:01:43.466Z"
+author: "R.j. Palacio"
+read_year: "NO"
 recommendation: '3'
-url: /bookshelf/wonder-book
+url: /bookshelf/wonder
 ---
-
