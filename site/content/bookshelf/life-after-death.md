@@ -1,6 +1,6 @@
 ---
 title: "Life After Death"
-date: "2025-08-16T19:43:17.432Z"
+date: "2026-01-13T15:01:25.848Z"
 author: "Deepak Chopra"
 read_year: "NO"
 recommendation: '3'
