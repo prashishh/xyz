@@ -251,14 +251,15 @@ margin-top: -15px;
 padding-bottom: 15px;
 }
 
-.ui.center.aligned.header.copyright {
+.ui.center.aligned.copyright {
 margin-top: -10px;
 font-size: 12px;
 font-weight: 300;
 color: var(--text-color-muted);
+text-align: center !important;
 }
 
-.ui.center.aligned.header.copyright a{
+.ui.center.aligned.copyright a{
 text-decoration: none;
 font-size: 12px !important;
 color: var(--accent-color);
@@ -266,7 +267,7 @@ transition: color 0.3s ease;
 font-weight: 300 !important;
 }
 
-.ui.center.aligned.header.copyright a:hover{
+.ui.center.aligned.copyright a:hover{
 color: var(--accent-color);
 opacity: 0.8;
 }

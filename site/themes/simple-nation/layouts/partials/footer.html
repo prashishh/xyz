@@ -4,15 +4,8 @@
       <div class="row">
         <div class="ui four wide column"></div>
         <div class="ui eight wide column">
-          <div class="row more" style="margin-bottom: 10px;">
-            <div class="ui medium header center aligned">
-              <!-- MailerLite Embedded Form (universal embed) -->
-              <div id="ml-container"><div class="ml-embedded" data-form="162923905868105137"></div></div>
-              <div id="ml-feedback" class="subscribe-feedback" aria-live="polite"></div>
-            </div>
-          </div>
           <div class="row more">
-            <div class="ui medium header center aligned copyright">&copy; {{ now.Format "2006"}} · Handmade using <a href="https://gohugo.io/" target="_blank">Hugo</a> · Refined using <a href="https://ai-2027.com/" target="_blank">AI</a> · Hosted in <a href="https://www.netlifycms.org/" target="_blank">Netlify</a> .</div>
+            <div class="ui center aligned copyright">&copy; {{ now.Format "2006"}} · Handmade using <a href="https://gohugo.io/" target="_blank">Hugo</a> · Refined using <a href="https://ai-2027.com/" target="_blank">AI</a> · Hosted in <a href="https://www.netlifycms.org/" target="_blank">Netlify</a> .</div>
           </div>
         </div>
 
@@ -27,57 +20,6 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="{{ "js/vendor/semantic.min.js" | relURL }}" type="text/javascript"></script>
 <script src="{{ "js/app.js" | relURL }}" type="text/javascript"></script>
-
-<!-- MailerLite Universal -->
-<script>
-  (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
-  .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
-  n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);})
-  (window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
-  ml('account', '1739419');
-  // Form: https://preview.mailerlite.io/forms/1739419/162923905868105137/share
-</script>
-
-<!-- Fallback inline subscribe (in case universal embed is blocked) -->
-<script>
-  (function(){
-    const JSONP_ENDPOINT = 'https://assets.mailerlite.com/jsonp/1739419/forms/162923905868105137/subscribe';
-    function injectFallback(){
-      var cont = document.getElementById('ml-container');
-      if(!cont) return;
-      // Detect if embed has rendered anything meaningful
-      var has = cont.querySelector('form, iframe, .ml-form-embedContainer, .ml-form-embedWrapper, input[type="email"]');
-      if(has) return; // embed loaded
-      cont.innerHTML = '<form class="subscribe-form" id="ml-fallback-form">\
-        <input type="email" name="email" placeholder="Your email" required>\
-        <button type="submit">Subscribe</button>\
-      </form>';
-      var form = document.getElementById('ml-fallback-form');
-      if(!form) return;
-      form.addEventListener('submit', function(e){
-        e.preventDefault();
-        var email = form.querySelector('input[name="email"]').value;
-        if(!email) return;
-        var cb = 'ml_cb_' + Math.random().toString(36).slice(2);
-        window[cb] = function(resp){
-          var ok = resp && resp.success;
-          var fb = document.getElementById('ml-feedback');
-          if(fb){ fb.textContent = ok ? 'Thanks! Please check your inbox to confirm.' : 'Sorry, subscription failed. Try again later.'; }
-          try{ delete window[cb]; }catch(_){ window[cb] = undefined; }
-        };
-        var s = document.createElement('script');
-        s.src = JSONP_ENDPOINT + '?fields[email]=' + encodeURIComponent(email) + '&callback=' + cb;
-        document.body.appendChild(s);
-      });
-    }
-    // Try fallback after a short delay to give universal embed time to load
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', function(){ setTimeout(injectFallback, 1500); });
-    } else {
-      setTimeout(injectFallback, 1500);
-    }
-  })();
-  </script>
 
 </body>
 </html>
