@@ -1,0 +1,16 @@
+{{- /*
+  Embeds a full-screen walkthrough page from /static inside a post.
+  Usage in a post:
+    {{< walkthrough src="/walkthroughs/your-body-sits-inside-you.html" title="Your body sits inside you" >}}
+  Optional: height="82vh"
+*/ -}}
+{{- $src := .Get "src" | relURL -}}
+{{- $title := .Get "title" | default "Interactive walkthrough" -}}
+{{- $height := .Get "height" | default "82vh" -}}
+<figure class="walkthrough" style="margin:2rem 0;">
+  <iframe src="{{ $src }}?embed" title="{{ $title }}" loading="lazy" allow="fullscreen; autoplay"
+    style="display:block;width:100%;height:{{ $height }};min-height:560px;max-height:820px;border:0;border-radius:12px;"></iframe>
+  <figcaption style="font-size:.9em;margin-top:.5rem;">
+    <a href="{{ $src }}" target="_blank" rel="noopener">Open full screen</a>
+  </figcaption>
+</figure>
