@@ -490,10 +490,11 @@ h1.ui.header {
   .side-list ul {
     margin: 0px;
     padding: 0px;
-  }
-
-  .side-list ul li {
-    display: inline-block;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 8px 16px;
   }
 
   .main-body {
@@ -1033,3 +1034,21 @@ img + em {
   margin-left: auto;
   margin-right: auto;
 }
+/* homepage and section lists: quieter titles and a system font (posts keep the site font) */
+.index-body, .index-body h3, .common-list {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
+.index-body { max-width: 640px; }
+.index-item { margin-top: 16px; }
+.index-item-title { justify-content: space-between; flex-wrap: nowrap; }
+.index-item-title a, .common-body .index-item-title a { color: var(--text-color); font-size: 1.05em; letter-spacing: 0; }
+.index-item-title a:hover { color: var(--accent-color); opacity: 1; }
+.index-item .list-date { font-style: normal; font-size: 0.8em; opacity: 0.65; white-space: nowrap; }
+.index-item-desc { font-size: 0.88em; opacity: 0.8; }
+.index-item-section { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 8px; }
+.index-sections { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border-color-light); }
+.index-sections a { color: var(--text-color); text-decoration: none; border-bottom: none; font-size: 0.95em; }
+.index-sections a:hover { color: var(--accent-color); }
+.index-sections a span { color: var(--text-color-light); font-size: 0.85em; margin-left: 5px; }
+.footer-links { margin-bottom: 8px; }
+.footer-links a { white-space: nowrap; }

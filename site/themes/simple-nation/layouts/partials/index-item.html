@@ -1,14 +1,17 @@
+{{- /* Takes a page, or a dict with "page" and an optional section "label" (used on the homepage). */ -}}
+{{ $p := . }}{{ $label := "" }}
+{{ if reflect.IsMap . }}{{ $p = .page }}{{ $label = .label }}{{ end }}
 <div class="index-item">
 	<div class="index-item-main">
 		<div class="index-item-title">
-			<a href="{{ .RelPermalink }}">{{ .Title }}</a>
-			<span class="list-date">{{ .PublishDate.Format "Jan 2006" }}</span>
+			<a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a>
+			<span class="list-date">{{ $p.PublishDate.Format "Jan 2006" }}</span>
 		</div>
-		{{ with .Params.description }}
-			<div class="index-item-desc">{{ . }}</div>
+		{{ if or $label $p.Params.description }}
+			<div class="index-item-desc">{{ with $label }}<span class="index-item-section">{{ . }}</span>{{ end }}{{ $p.Params.description }}</div>
 		{{ end }}
 	</div>
-	{{ with .Params.article_kind }}
+	{{ with $p.Params.article_kind }}
 		<div class="index-item-kinds">
 			{{ if reflect.IsSlice . }}
 				{{ range . }}

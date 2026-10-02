@@ -1,47 +1,21 @@
 {{ define "main" }}
-	{{ $fragments := where .Site.RegularPages.ByDate.Reverse "Section" "fragments" }}
+	{{ $sections := slice
+		(dict "key" "fragments" "label" "Fragment" "title" "Short-form Fragments")
+		(dict "key" "ai" "label" "AI" "title" "Essays on AI")
+		(dict "key" "seeking" "label" "Seeking" "title" "Inquiries on Self & Reality")
+		(dict "key" "essays" "label" "Essay" "title" "Long-form Essays") }}
+	{{ $labels := dict }}
+	{{ range $sections }}{{ $labels = merge $labels (dict .key .label) }}{{ end }}
+	{{ $latest := where .Site.RegularPages "Section" "in" (slice "fragments" "ai" "seeking" "essays") }}
 	<div class="index-body">
-		<a href="/fragments/" class="section-heading-link">
-			<h3 class="section-heading">Short-form Fragments <span class="section-count">{{ len $fragments }}</span></h3>
-		</a>
-		{{ range first 7 $fragments }}
-			{{ partial "index-item.html" . }}
+		<h3 class="section-heading">Latest</h3>
+		{{ range first 8 $latest.ByDate.Reverse }}
+			{{ partial "index-item.html" (dict "page" . "label" (index $labels .Section)) }}
 		{{ end }}
-	</div>
-
-	<hr />
-
-	{{ $ai := where .Site.RegularPages.ByDate.Reverse "Section" "ai" }}
-	<div class="index-body">
-		<a href="/ai/" class="section-heading-link">
-			<h3 class="section-heading">Essays on AI <span class="section-count">{{ len $ai }}</span></h3>
-		</a>
-		{{ range first 7 $ai }}
-			{{ partial "index-item.html" . }}
-		{{ end }}
-	</div>
-
-	<hr />
-
-	{{ $seeking := where .Site.RegularPages.ByDate.Reverse "Section" "seeking" }}
-	<div class="index-body">
-		<a href="/seeking/" class="section-heading-link">
-			<h3 class="section-heading">Inquiries on Self & Reality <span class="section-count">{{ len $seeking }}</span></h3>
-		</a>
-		{{ range first 7 $seeking }}
-			{{ partial "index-item.html" . }}
-		{{ end }}
-	</div>
-
-	<hr />
-
-	{{ $essays := where .Site.RegularPages.ByDate.Reverse "Section" "essays" }}
-	<div class="index-body">
-		<a href="/essays/" class="section-heading-link">
-			<h3 class="section-heading">Long-form Essays <span class="section-count">{{ len $essays }}</span></h3>
-		</a>
-		{{ range first 7 $essays }}
-			{{ partial "index-item.html" . }}
-		{{ end }}
+		<div class="index-sections">
+			{{ range $sections }}
+				<a href="/{{ .key }}/">{{ .title }}<span>{{ len (where $.Site.RegularPages "Section" .key) }}</span></a>
+			{{ end }}
+		</div>
 	</div>
 {{ end }}
