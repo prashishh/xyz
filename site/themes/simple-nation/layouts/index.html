@@ -1,21 +1,10 @@
 {{ define "main" }}
-	{{ $sections := slice
-		(dict "key" "fragments" "label" "Fragment" "title" "Short-form Fragments")
-		(dict "key" "ai" "label" "AI" "title" "Essays on AI")
-		(dict "key" "seeking" "label" "Seeking" "title" "Inquiries on Self & Reality")
-		(dict "key" "essays" "label" "Essay" "title" "Long-form Essays") }}
-	{{ $labels := dict }}
-	{{ range $sections }}{{ $labels = merge $labels (dict .key .label) }}{{ end }}
+	{{ $labels := dict "fragments" "Fragment" "ai" "AI" "seeking" "Seeking" "essays" "Essay" }}
 	{{ $latest := where .Site.RegularPages "Section" "in" (slice "fragments" "ai" "seeking" "essays") }}
 	<div class="index-body">
 		<h3 class="section-heading">Latest</h3>
-		{{ range first 8 $latest.ByDate.Reverse }}
+		{{ range first 12 $latest.ByDate.Reverse }}
 			{{ partial "index-item.html" (dict "page" . "label" (index $labels .Section)) }}
 		{{ end }}
-		<div class="index-sections">
-			{{ range $sections }}
-				<a href="/{{ .key }}/">{{ .title }}<span>{{ len (where $.Site.RegularPages "Section" .key) }}</span></a>
-			{{ end }}
-		</div>
 	</div>
 {{ end }}

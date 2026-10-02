@@ -17,7 +17,7 @@
 	  <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
 		
 	  <link href="{{ "css/vendor/semantic.min.css" | relURL }}" rel='stylesheet' type='text/css'>
-	  <link href="{{ "css/style.css" | relURL }}" rel='stylesheet' type='text/css'>
+	  <link href="{{ "css/style.css" | relURL }}?v={{ now.Unix }}" rel='stylesheet' type='text/css'>
 
 		<!-- Prevent white flash on page load for dark mode -->
 		<script>

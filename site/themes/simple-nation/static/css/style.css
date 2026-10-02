@@ -1038,17 +1038,19 @@ img + em {
 .index-body, .index-body h3, .common-list {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
 }
-.index-body { max-width: 640px; }
-.index-item { margin-top: 16px; }
+.index-body, .common-list { max-width: 700px; }
+.index-item { margin-top: 18px; }
 .index-item-title { justify-content: space-between; flex-wrap: nowrap; }
-.index-item-title a, .common-body .index-item-title a { color: var(--text-color); font-size: 1.05em; letter-spacing: 0; }
+.index-item-title a, .common-body .index-item-title a { color: var(--text-color); font-size: 17px; letter-spacing: 0; }
 .index-item-title a:hover { color: var(--accent-color); opacity: 1; }
-.index-item .list-date { font-style: normal; font-size: 0.8em; opacity: 0.65; white-space: nowrap; }
-.index-item-desc { font-size: 0.88em; opacity: 0.8; }
-.index-item-section { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 8px; }
-.index-sections { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border-color-light); }
-.index-sections a { color: var(--text-color); text-decoration: none; border-bottom: none; font-size: 0.95em; }
-.index-sections a:hover { color: var(--accent-color); }
-.index-sections a span { color: var(--text-color-light); font-size: 0.85em; margin-left: 5px; }
+.index-item .list-date { font-style: normal; font-size: 13px; opacity: 0.65; white-space: nowrap; }
+.index-item-desc { font-size: 14px; opacity: 0.8; }
+.index-item-section, .index-item-section:visited { text-decoration: none; display: inline-block; font-size: 10px; line-height: 1; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 8px; padding: 3px 6px; border: 1px solid var(--border-color-light); border-radius: 3px; color: var(--text-color); opacity: 0.9; vertical-align: 1px; }
 .footer-links { margin-bottom: 8px; }
 .footer-links a { white-space: nowrap; }
+
+/* desktop: first nav link sits on the same line as the first heading of the page */
+@media only screen and (min-width: 781px) {
+  .side-list ul { margin-top: 3px; }
+}
+.index-item-section:hover { color: var(--accent-color); border-color: var(--accent-color); opacity: 1; }

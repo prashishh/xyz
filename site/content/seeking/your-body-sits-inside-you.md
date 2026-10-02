@@ -2,7 +2,7 @@
 title: Your Body Sits Inside You
 date: 2026-10-03T00:00:00+05:30
 author: Prashish
-description: "six steps through an old idea from the Upanishads"
+description: "from a light in the chest to everywhere"
 article_kind: Spiritual
 ---
 

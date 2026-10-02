@@ -8,7 +8,7 @@
 			<span class="list-date">{{ $p.PublishDate.Format "Jan 2006" }}</span>
 		</div>
 		{{ if or $label $p.Params.description }}
-			<div class="index-item-desc">{{ with $label }}<span class="index-item-section">{{ . }}</span>{{ end }}{{ $p.Params.description }}</div>
+			<div class="index-item-desc">{{ with $label }}<a class="index-item-section" href="{{ $p.CurrentSection.RelPermalink }}">{{ . }}</a>{{ end }}{{ $p.Params.description }}</div>
 		{{ end }}
 	</div>
 	{{ with $p.Params.article_kind }}
