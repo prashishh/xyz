@@ -1,0 +1,90 @@
+{{- /* Posts narrated by scripts/narrate-post.mjs, which lists them in data/audiobook.json. The player is static/js/audiobook.js. */ -}}
+{{ define "main" }}
+	{{ $book := site.Data.audiobook }}
+	{{ $labels := dict "fragments" "Fragment" "ai" "AI" "seeking" "Seeking" "essays" "Essay" }}
+	{{ $play := `<svg class="ab-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>` | safeHTML }}
+	{{ $pause := `<svg class="ab-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>` | safeHTML }}
+	<div class="common-body audiobook">
+		<h3 class="section-heading">Audiobook</h3>
+		{{ .Content }}
+
+		{{ with $book }}
+		{{/* Narrated posts per section, for the topic filter. */}}
+		{{ $topics := dict }}
+		{{ range site.RegularPages }}{{ if index $book.posts .File.Path }}{{ $topics = merge $topics (dict .Section (add 1 (default 0 (index $topics .Section)))) }}{{ end }}{{ end }}
+		{{ if gt (len $topics) 1 }}
+		<div class="ab-topics" role="group" aria-label="Topics">
+			<button type="button" class="ab-topic" data-topic="" aria-pressed="true">All</button>
+			{{ range $section, $count := $topics }}
+			<button type="button" class="ab-topic" data-topic="{{ $section }}" aria-pressed="false">{{ with site.GetPage (printf "/%s" $section) }}{{ .Title }}{{ else }}{{ $section }}{{ end }} <span>{{ $count }}</span></button>
+			{{ end }}
+		</div>
+		{{ end }}
+
+		<div class="ab-controls">
+			<label class="ab-voice"><span class="ab-label">Voice</span>
+				<select id="abVoice">
+					{{ range .voices }}<option value="{{ .key }}"{{ if eq .key $book.voice }} selected{{ end }}>{{ .name }}</option>{{ end }}
+				</select>
+			</label>
+			{{ if gt (len .models) 1 }}
+			<div class="ab-seg ab-model" role="group" aria-label="Model"><span class="ab-label">Model</span>
+				{{ range .models }}<button type="button" data-model="{{ .key }}" aria-pressed="{{ eq .key $book.model }}">{{ .name }}</button>{{ end }}
+			</div>
+			{{ end }}
+			<div class="ab-seg ab-speed" role="group" aria-label="Playback speed"><span class="ab-label">Speed</span>
+				<button type="button" data-rate="1" aria-pressed="true">1×</button><button type="button" data-rate="1.5" aria-pressed="false">1.5×</button><button type="button" data-rate="2" aria-pressed="false">2×</button>
+			</div>
+			<label class="ab-auto"><input type="checkbox" id="abAuto" checked><span>Autoplay next</span></label>
+		</div>
+
+		<div class="ab-head">
+			<button type="button" class="ab-playall" id="abPlayAll">{{ $play }}<span id="abPlayAllText">Play all</span></button>
+			<span class="ab-total" id="abTotal"></span>
+			<button type="button" class="ab-clear" id="abClear" hidden>Clear</button>
+		</div>
+
+		<ol class="ab-list common-list" data-model="{{ .model }}">
+			{{ range site.RegularPages.ByDate.Reverse }}
+				{{ $p := . }}
+				{{ with index $book.posts .File.Path }}
+				<li class="ab-item index-item" data-topic="{{ $p.Section }}" data-audio="{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $p.Title }}">
+					<label class="ab-pick"><input type="checkbox" aria-label="Pick {{ $p.Title }}"></label>
+					<button class="ab-play" type="button" aria-label="Play {{ $p.Title }}">{{ $play }}{{ $pause }}</button>
+					<div class="index-item-main">
+						<div class="index-item-title">
+							<a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a>
+							<span class="list-date">{{ $p.PublishDate.Format "Jan 2006" }}</span>
+						</div>
+						<div class="index-item-desc">
+							{{ with index $labels $p.Section }}<a class="index-item-section" href="{{ $p.CurrentSection.RelPermalink }}">{{ . }}</a>{{ end }}<span class="ab-eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="ab-time">{{ with index .seconds $book.model }}{{ with index . $book.voice }}{{ $t := int (math.Round .) }}{{ printf "%d:%02d" (div $t 60) (mod $t 60) }}{{ end }}{{ end }}</span>
+						</div>
+						<div class="ab-line"><span></span></div>
+					</div>
+				</li>
+				{{ end }}
+			{{ end }}
+		</ol>
+		{{ end }}
+	</div>
+
+	<div class="ab-bar" id="abBar" hidden>
+		<div class="ab-bar-inner">
+			<div class="ab-bar-buttons">
+				<button type="button" id="abPrev" aria-label="Previous post"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.5v14H6zM19 5.5v13L9.5 12z"/></svg></button>
+				<button type="button" id="abToggle" class="ab-play" aria-label="Pause">{{ $play }}{{ $pause }}</button>
+				<button type="button" id="abNext" aria-label="Next post"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5H18v14h-2.5zM5 5.5v13l9.5-6.5z"/></svg></button>
+			</div>
+			<div class="ab-bar-main">
+				<div class="ab-bar-title"><span id="abNow"></span><span class="ab-bar-voice" id="abNowVoice"></span></div>
+				<div class="ab-seek">
+					<span id="abAt">0:00</span>
+					<input type="range" id="abSeek" min="0" max="1000" value="0" step="1" aria-label="Seek">
+					<span id="abLen">0:00</span>
+				</div>
+			</div>
+			<button type="button" class="ab-rate" id="abRate" aria-label="Playback speed, 1×">1×</button>
+		</div>
+	</div>
+	<script src="{{ "js/audiobook.js" | relURL }}?v={{ now.Unix }}" defer></script>
+{{ end }}

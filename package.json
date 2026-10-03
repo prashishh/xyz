@@ -8,6 +8,7 @@
     "start:drafts": "hugo server -s site --disableFastRender --buildDrafts --buildFuture",
     "build": "hugo -s site -d ../dist --minify",
     "build:preview": "hugo -s site -d ../dist --minify --buildDrafts --buildFuture",
-    "narrate": "node scripts/narrate-walkthrough.mjs"
+    "narrate": "node scripts/narrate-walkthrough.mjs",
+    "narrate:post": "node scripts/narrate-post.mjs"
   }
 }

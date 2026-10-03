@@ -1,0 +1,105 @@
+{
+  "model": "v4",
+  "voice": "prashish2",
+  "models": [
+    {
+      "key": "v4",
+      "name": "v4"
+    },
+    {
+      "key": "v2",
+      "name": "v2"
+    }
+  ],
+  "voices": [
+    {
+      "key": "prashish1",
+      "name": "Prashish Sample 1"
+    },
+    {
+      "key": "prashish2",
+      "name": "Prashish Sample 2"
+    },
+    {
+      "key": "prashish3",
+      "name": "Prashish Sample 3"
+    }
+  ],
+  "posts": {
+    "fragments/world-class-network.md": {
+      "audio": "/audio/fragments/world-class-network/",
+      "seconds": {
+        "v4": {
+          "prashish1": 27.2,
+          "prashish2": 29.6,
+          "prashish3": 28.5
+        },
+        "v2": {
+          "prashish1": 27.4,
+          "prashish2": 29.4,
+          "prashish3": 28
+        }
+      }
+    },
+    "fragments/software-developments-ground-shift.md": {
+      "audio": "/audio/fragments/software-developments-ground-shift/",
+      "seconds": {
+        "v4": {
+          "prashish1": 57.3,
+          "prashish2": 61.6,
+          "prashish3": 61.1
+        },
+        "v2": {
+          "prashish1": 48.6,
+          "prashish2": 57.4,
+          "prashish3": 53.3
+        }
+      }
+    },
+    "fragments/18-is-the-new-25.md": {
+      "audio": "/audio/fragments/18-is-the-new-25/",
+      "seconds": {
+        "v4": {
+          "prashish1": 62,
+          "prashish2": 65.6,
+          "prashish3": 63
+        },
+        "v2": {
+          "prashish1": 54.5,
+          "prashish2": 54.4,
+          "prashish3": 60.8
+        }
+      }
+    },
+    "seeking/center-of-attention.md": {
+      "audio": "/audio/seeking/center-of-attention/",
+      "seconds": {
+        "v4": {
+          "prashish1": 61.7,
+          "prashish2": 64.9,
+          "prashish3": 63.7
+        },
+        "v2": {
+          "prashish1": 53.4,
+          "prashish2": 57.5,
+          "prashish3": 56
+        }
+      }
+    },
+    "seeking/what-is-consciousness.md": {
+      "audio": "/audio/seeking/what-is-consciousness/",
+      "seconds": {
+        "v4": {
+          "prashish1": 168.6,
+          "prashish2": 174.8,
+          "prashish3": 177.2
+        },
+        "v2": {
+          "prashish1": 152.8,
+          "prashish2": 168.2,
+          "prashish3": 167.2
+        }
+      }
+    }
+  }
+}
