@@ -32,12 +32,10 @@
 				{{ range .models }}<button type="button" data-model="{{ .key }}" aria-pressed="{{ eq .key $book.model }}">{{ .name }}</button>{{ end }}
 			</div>
 			{{ end }}
-			<label class="ab-auto"><input type="checkbox" id="abAuto" checked><span>Autoplay next</span></label>
 		</div>
 
 		<div class="ab-head">
 			<button type="button" class="ab-playall" id="abPlayAll">{{ $play }}<span id="abPlayAllText">Play all</span></button>
-			<span class="ab-total" id="abTotal"></span>
 			<button type="button" class="ab-clear" id="abClear" hidden>Clear</button>
 		</div>
 
@@ -54,7 +52,7 @@
 							<span class="list-date">{{ $p.PublishDate.Format "Jan 2006" }}</span>
 						</div>
 						<div class="index-item-desc">
-							{{ with index $labels $p.Section }}<a class="index-item-section" href="{{ $p.CurrentSection.RelPermalink }}">{{ . }}</a>{{ end }}<span class="ab-eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="ab-time">{{ with index .seconds $book.model }}{{ with index . $book.voice }}{{ $t := int (math.Round .) }}{{ printf "%d:%02d" (div $t 60) (mod $t 60) }}{{ end }}{{ end }}</span>
+							{{ with index $labels $p.Section }}<span class="index-item-section">{{ . }}</span>{{ end }}<span class="ab-eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="ab-time">{{ with index .seconds $book.model }}{{ with index . $book.voice }}{{ $t := int (math.Round .) }}{{ printf "%d:%02d" (div $t 60) (mod $t 60) }}{{ end }}{{ end }}</span>
 						</div>
 						<div class="ab-line"><span></span></div>
 					</div>
@@ -80,7 +78,8 @@
 					<span id="abLen">0:00</span>
 				</div>
 			</div>
-			<button type="button" class="ab-rate" id="abRate" aria-label="Playback speed, 1×">1×</button>
+			<button type="button" class="ab-pill" id="abAuto" aria-pressed="true" title="Play the next post when this one ends">Auto</button>
+			<button type="button" class="ab-pill" id="abRate" aria-label="Playback speed, 1×">1×</button>
 		</div>
 	</div>
 	<script src="{{ "js/audiobook.js" | relURL }}?v={{ now.Unix }}" defer></script>

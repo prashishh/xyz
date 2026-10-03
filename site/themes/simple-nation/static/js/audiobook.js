@@ -5,18 +5,18 @@
   var items = [].slice.call(document.querySelectorAll(".ab-item"));
   if (!items.length) return;
   var $ = function (id) { return document.getElementById(id); };
-  var voiceSel = $("abVoice"), autoBox = $("abAuto"), bar = $("abBar"), seek = $("abSeek");
+  var voiceSel = $("abVoice"), autoBtn = $("abAuto"), bar = $("abBar"), seek = $("abSeek");
   var topics = [].slice.call(document.querySelectorAll(".ab-topic"));
   var modelBtns = [].slice.call(document.querySelectorAll(".ab-model button"));
   var RATES = [1, 1.5, 2];
   var au = new Audio();
-  var cur = -1, rate = 1, model = document.querySelector(".ab-list").dataset.model, nextTimer = 0, dragging = false;
+  var cur = -1, rate = 1, auto = true, model = document.querySelector(".ab-list").dataset.model, nextTimer = 0, dragging = false;
   au.preload = "metadata";
 
   try {
     var saved = localStorage.getItem("audiobook-voice");
     if (saved && voiceSel.querySelector('option[value="' + saved + '"]')) voiceSel.value = saved;
-    if (localStorage.getItem("audiobook-autoplay") === "0") autoBox.checked = false;
+    if (localStorage.getItem("audiobook-autoplay") === "0") auto = false;
     rate = RATES.indexOf(Number(localStorage.getItem("audiobook-speed"))) >= 0 ? Number(localStorage.getItem("audiobook-speed")) : 1;
     var savedModel = localStorage.getItem("audiobook-model");
     if (modelBtns.some(function (b) { return b.dataset.model === savedModel; })) model = savedModel;
@@ -55,13 +55,10 @@
   }
 
   function showTimes() {
-    var q = queue(), total = 0, mine = items.filter(function (item) { return !item.hidden && picked(item); }).length;
+    var mine = items.some(function (item) { return !item.hidden && picked(item); });
     items.forEach(function (item, i) {
-      var len = clipOf(item).len;
-      if (q.indexOf(item) >= 0) total += len;
-      if (i !== cur) item.querySelector(".ab-time").textContent = fmt(len);
+      if (i !== cur) item.querySelector(".ab-time").textContent = fmt(clipOf(item).len);
     });
-    $("abTotal").textContent = (mine ? mine + " picked" : q.length + (q.length === 1 ? " post" : " posts")) + " · " + Math.max(1, Math.round(total / 60)) + " min";
     $("abPlayAllText").textContent = mine ? "Play picked" : "Play all";
     $("abClear").hidden = !mine;
   }
@@ -179,7 +176,7 @@
   au.addEventListener("timeupdate", progress);
   au.addEventListener("loadedmetadata", progress);
   au.addEventListener("ended", function () {
-    if (autoBox.checked && step(1) >= 0) nextTimer = setTimeout(next, 1200);
+    if (auto && step(1) >= 0) nextTimer = setTimeout(next, 1200);
     ui();
   });
 
@@ -192,8 +189,26 @@
     try { localStorage.setItem("audiobook-voice", voiceSel.value); } catch (e) {}
     reloadCurrent();
   });
-  autoBox.addEventListener("change", function () {
-    try { localStorage.setItem("audiobook-autoplay", autoBox.checked ? "1" : "0"); } catch (e) {}
+  function setAuto(on) {
+    auto = on;
+    autoBtn.setAttribute("aria-pressed", String(on));
+    try { localStorage.setItem("audiobook-autoplay", on ? "1" : "0"); } catch (e) {}
+  }
+  autoBtn.addEventListener("click", function () { setAuto(!auto); });
+
+  // The progress line under the playing post seeks too: press or drag along it.
+  items.forEach(function (item, i) {
+    var line = item.querySelector(".ab-line");
+    function seekTo(e) {
+      var r = line.getBoundingClientRect();
+      if (au.duration) au.currentTime = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * au.duration;
+    }
+    line.addEventListener("pointerdown", function (e) {
+      if (i !== cur) return;
+      line.setPointerCapture(e.pointerId);
+      seekTo(e);
+    });
+    line.addEventListener("pointermove", function (e) { if (line.hasPointerCapture(e.pointerId)) seekTo(e); });
   });
 
   if ("mediaSession" in navigator) {
@@ -210,6 +225,7 @@
   }
 
   setRate(rate);
+  setAuto(auto);
   if (modelBtns.length) setModel(model);
   showTimes();
   ui();
