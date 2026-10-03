@@ -7,6 +7,10 @@
       "name": "v4"
     },
     {
+      "key": "v3",
+      "name": "v3"
+    },
+    {
       "key": "v2",
       "name": "v2"
     }
@@ -34,6 +38,11 @@
           "prashish2": 29.6,
           "prashish3": 28.5
         },
+        "v3": {
+          "prashish1": 35.6,
+          "prashish2": 32.6,
+          "prashish3": 37.3
+        },
         "v2": {
           "prashish1": 27.4,
           "prashish2": 29.4,
@@ -48,6 +57,11 @@
           "prashish1": 57.3,
           "prashish2": 61.6,
           "prashish3": 61.1
+        },
+        "v3": {
+          "prashish1": 64.7,
+          "prashish2": 63.5,
+          "prashish3": 74.6
         },
         "v2": {
           "prashish1": 48.6,
@@ -64,6 +78,11 @@
           "prashish2": 65.6,
           "prashish3": 63
         },
+        "v3": {
+          "prashish1": 58.4,
+          "prashish2": 75.8,
+          "prashish3": 67.9
+        },
         "v2": {
           "prashish1": 54.5,
           "prashish2": 54.4,
@@ -79,6 +98,11 @@
           "prashish2": 64.9,
           "prashish3": 63.7
         },
+        "v3": {
+          "prashish1": 72.9,
+          "prashish2": 83.5,
+          "prashish3": 82.8
+        },
         "v2": {
           "prashish1": 53.4,
           "prashish2": 57.5,
@@ -93,6 +117,11 @@
           "prashish1": 168.6,
           "prashish2": 174.8,
           "prashish3": 177.2
+        },
+        "v3": {
+          "prashish1": 242.2,
+          "prashish2": 249,
+          "prashish3": 243.8
         },
         "v2": {
           "prashish1": 152.8,

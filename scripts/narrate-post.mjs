@@ -24,16 +24,17 @@ const VOICES = {
   prashish3: { id: "1BhQhNmwjgIhYHkStoq6", name: "Prashish Sample 3", speed: 1.03 },
 };
 const DEFAULT_VOICE = "prashish2";
-// The page lists models in this order. v4 has no speed, style or speaker boost setting and ignores SSML pauses.
+// The page lists models in this order. v4 and v3 have no speed, style or speaker boost setting and ignore SSML pauses,
+// and v3 reads best at its "Natural" stability of 0.5.
 const MODELS = {
-  v4: { id: "eleven_v4", name: "v4" },
+  v4: { id: "eleven_v4", name: "v4", settings: { stability: 0.6, similarity_boost: 0.75 } },
+  v3: { id: "eleven_v3", name: "v3", settings: { stability: 0.5, similarity_boost: 0.75 } },
   v2: { id: "eleven_multilingual_v2", name: "v2" },
 };
 const DEFAULT_MODEL = "v4";
 const V2_SETTINGS = { stability: 0.6, similarity_boost: 0.75, style: 0.1, use_speaker_boost: true };
-const V4_SETTINGS = { stability: 0.6, similarity_boost: 0.75 };
 const FORMAT = "mp3_44100_128";
-const MAX_CHARS = 9500; // One request takes up to 10,000 characters, and longer posts would need splitting.
+const MAX_CHARS = 4900; // v3 takes up to 5,000 characters in one request (v2 and v4 take 10,000), and longer posts would need splitting.
 // v2 reads a title at the start of a long text slow and drawn out, so there the title is its own request, a little faster than the body.
 const TITLE_SPEEDUP = 0.05;
 const TITLE_GAP = 0.3; // seconds of silence added between a separately read title and the body
@@ -101,7 +102,7 @@ const paragraphs = raw
 if (!paragraphs.length) throw new Error(`Nothing to read in ${post}`);
 const titleText = /[.!?]$/.test(title) ? title : `${title}.`;
 const bodyText = paragraphs.join(` <break time="${PARAGRAPH_PAUSE}s" /> `);
-// v4 takes its pauses from the blank lines between the title and paragraphs.
+// v4 and v3 take their pauses from the blank lines between the title and paragraphs.
 const plainText = [titleText, ...paragraphs].join("\n\n");
 for (const t of [bodyText, plainText]) {
   if (t.length > MAX_CHARS) throw new Error(`${post} is ${t.length} characters, over the ${MAX_CHARS} one request can take`);
@@ -114,7 +115,7 @@ if (dry) {
 // The requests that make one clip. With two, the title and body are read separately and joined after TITLE_GAP.
 function requestsFor(model, { speed }) {
   const model_id = MODELS[model].id;
-  if (model !== "v2") return [{ text: plainText, model_id, voice_settings: V4_SETTINGS }];
+  if (model !== "v2") return [{ text: plainText, model_id, voice_settings: MODELS[model].settings }];
   // The title hears the first paragraph as what follows, and the body hears the title as what came before, so the two join smoothly.
   return [
     { text: titleText, model_id, voice_settings: { ...V2_SETTINGS, speed: Math.min(1.2, speed + TITLE_SPEEDUP) }, next_text: paragraphs[0] },
