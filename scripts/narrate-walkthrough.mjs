@@ -24,6 +24,9 @@ const MODEL_ID = "eleven_multilingual_v2";
 const SETTINGS = { stability: 0.6, similarity_boost: 0.75, style: 0.1, use_speaker_boost: true };
 const SPEED = { en: 1.0, sa: 0.9, more: 1.05 };
 const FORMAT = "mp3_44100_128";
+// The explanation clips ("more"), which also make the post's audio on /audiobook, use Eleven v4 at 192 kbps like every other post.
+// v4 has no speed or style setting and takes its pauses from the blank lines between paragraphs. The verse clips stay on v2.
+const MORE = { model_id: "eleven_v4", settings: { stability: 0.6, similarity_boost: 0.75 }, format: "mp3_44100_192" };
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -50,12 +53,13 @@ const CH = vm.runInNewContext(html.slice(start, end + 3) + "\nCH", {}).slice(0, 
 
 const plain = (s) => s.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 const pause = (s) => ` <break time="${s}s" /> `;
+// Steps without a verse get only the explanation clip.
 const clips = CH.flatMap((c, i) => [
-  { file: `s${i + 1}-en.mp3`, kind: "en", text: plain(c.en) },
+  c.en && { file: `s${i + 1}-en.mp3`, kind: "en", text: plain(c.en) },
   // The double danda that closes a verse makes the voice add stray sounds after it, so it is read as a single danda.
-  { file: `s${i + 1}-sa.mp3`, kind: "sa", text: c.sa.split(/<br\s*\/?>/i).map(plain).join(pause(1.0)).replace(/॥/g, "।") },
-  { file: `s${i + 1}-more.mp3`, kind: "more", text: c.copy.map(plain).join(pause(0.8)) },
-]);
+  c.sa && { file: `s${i + 1}-sa.mp3`, kind: "sa", text: c.sa.split(/<br\s*\/?>/i).map(plain).join(pause(1.0)).replace(/॥/g, "।") },
+  { file: `s${i + 1}-more.mp3`, kind: "more", text: c.copy.map(plain).join("\n\n") },
+].filter(Boolean));
 
 const pageDir = path.join(path.dirname(page), "audio", path.basename(page, ".html"));
 const outDir = path.join(pageDir, voiceKey);
@@ -65,12 +69,16 @@ const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manife
 
 let made = 0;
 for (const clip of clips) {
-  const body = { text: clip.text, model_id: MODEL_ID, voice_settings: { ...SETTINGS, speed: speed[clip.kind] } };
-  const hash = crypto.createHash("sha256").update(JSON.stringify([voice.id, FORMAT, body])).digest("hex").slice(0, 16);
+  const more = clip.kind === "more";
+  const format = more ? MORE.format : FORMAT;
+  const body = more
+    ? { text: clip.text, model_id: MORE.model_id, voice_settings: MORE.settings }
+    : { text: clip.text, model_id: MODEL_ID, voice_settings: { ...SETTINGS, speed: speed[clip.kind] } };
+  const hash = crypto.createHash("sha256").update(JSON.stringify([voice.id, format, body])).digest("hex").slice(0, 16);
   const out = path.join(outDir, clip.file);
   if (manifest[clip.file] === hash && fs.existsSync(out)) continue;
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}?output_format=${FORMAT}`, {
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}?output_format=${format}`, {
     method: "POST",
     headers: { "xi-api-key": key, "Content-Type": "application/json", Accept: "audio/mpeg" },
     body: JSON.stringify(body),
@@ -89,7 +97,7 @@ for (const [k, v] of Object.entries(VOICES)) {
   const dir = path.join(pageDir, k);
   if (!fs.existsSync(dir)) continue;
   let steps = 0;
-  while (fs.existsSync(path.join(dir, `s${steps + 1}-en.mp3`))) steps++;
+  while (fs.existsSync(path.join(dir, `s${steps + 1}-more.mp3`))) steps++;
   if (steps) listed[k] = { name: v.name, steps };
 }
 fs.writeFileSync(path.join(pageDir, "voices.json"), JSON.stringify(listed, null, 2) + "\n");
