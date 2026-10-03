@@ -1,6 +1,6 @@
 ---
 title: High Agency
-date: 2026-09-29T00:00:00Z
+date: 2026-10-03T12:00:00+05:30
 author: Prashish
 description: "taking things into your own hands"
 article_kind: Perspective
