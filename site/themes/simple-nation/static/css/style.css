@@ -1084,7 +1084,11 @@ img + em {
 .ab-show:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
 .ab-empty { margin: 18px 0 0; font-size: 14px; color: var(--text-color-muted); }
 .ab-pick { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 34px; margin-right: -4px; cursor: pointer; }
-.ab-pick input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent-color); cursor: pointer; }
+/* a drawn checkbox, since the browser's own turns bright blue-white in dark mode */
+.ab-pick input { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; margin: 0; border: 1px solid var(--border-color); border-radius: 3px; background: transparent; cursor: pointer; display: grid; place-content: center; }
+.ab-pick input::after { content: ""; width: 9px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: translateY(-1px) rotate(-45deg) scale(0); transition: transform 0.1s ease; }
+.ab-pick input:checked { background: var(--accent-color); border-color: var(--accent-color); }
+.ab-pick input:checked::after { transform: translateY(-1px) rotate(-45deg) scale(1); }
 .ab-pill { flex: none; min-width: 46px; height: 30px; padding: 0 8px; font: inherit; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-color); background: none; border: 1px solid var(--border-color); border-radius: 999px; cursor: pointer; }
 .ab-pill[aria-pressed="true"] { background: var(--accent-color); border-color: var(--accent-color); color: #fff; }
 .ab-list { list-style: none; padding: 0; margin: 0; }

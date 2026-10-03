@@ -8,14 +8,15 @@
 
 		{{ with $book }}
 		{{/* Narrated posts per section, for the topic filter. */}}
-		{{ $topics := dict }}
-		{{ range site.RegularPages }}{{ if index $book.posts .File.Path }}{{ $topics = merge $topics (dict .Section (add 1 (default 0 (index $topics .Section)))) }}{{ end }}{{ end }}
+		{{ $topics := dict }}{{ $total := 0 }}
+		{{ range site.RegularPages }}{{ if index $book.posts .File.Path }}{{ $total = add $total 1 }}{{ $topics = merge $topics (dict .Section (add 1 (default 0 (index $topics .Section)))) }}{{ end }}{{ end }}
 		{{ if gt (len $topics) 1 }}
 		<div class="ab-topics" role="group" aria-label="Topics">
-			<button type="button" class="ab-topic" data-topic="" aria-pressed="true">All</button>
-			{{ range $section, $count := $topics }}
-			<button type="button" class="ab-topic" data-topic="{{ $section }}" aria-pressed="false">{{ with site.GetPage (printf "/%s" $section) }}{{ .Title }}{{ else }}{{ $section }}{{ end }} <span>{{ $count }}</span></button>
-			{{ end }}
+			<button type="button" class="ab-topic" data-topic="" aria-pressed="true">All <span>{{ $total }}</span></button>
+			{{/* In this order, whichever of them have narrated posts. */}}
+			{{ range slice "fragments" "ai" "seeking" "essays" }}{{ $section := . }}{{ with index $topics $section }}
+			<button type="button" class="ab-topic" data-topic="{{ $section }}" aria-pressed="false">{{ with site.GetPage (printf "/%s" $section) }}{{ .Title }}{{ else }}{{ $section }}{{ end }} <span>{{ . }}</span></button>
+			{{ end }}{{ end }}
 		</div>
 		{{ end }}
 
