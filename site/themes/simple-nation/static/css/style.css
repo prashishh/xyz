@@ -449,14 +449,12 @@ margin-top: 0px;
 
 .side-list ul li a {
   text-decoration: none;
-  border-bottom: var(--text-color) 1px solid;
   color: var(--text-color);
-  transition: color 0.3s ease, border-color 0.3s ease;
+  transition: color 0.3s ease;
 }
 
 .side-list ul li a:hover {
   color: var(--accent-color) !important;
-  border-bottom-color: var(--accent-color);
 }
 
 .contact {
@@ -893,19 +891,21 @@ p.title-margin-top {
   font-size: 16px;
 }
 
-/* Nav External Link (left nav) */
+/* Nav External Link (left nav): the links to other sites, after the sections */
 .side-list ul li.nav-external {
-  margin-top: 4px;
+  font-size: 14px;
+}
+
+.side-list ul li:not(.nav-external) + li.nav-external {
+  margin-top: 12px;
 }
 
 .side-list ul li.nav-external a {
-  font-size: 13px;
-  color: var(--text-color-muted);
-  border-bottom: none;
+  color: var(--accent-color);
 }
 
 .side-list ul li.nav-external a:hover {
-  color: var(--accent-color) !important;
+  opacity: 0.8;
 }
 
 /* Dark Mode Toggle Button */

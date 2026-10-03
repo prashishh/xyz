@@ -32,9 +32,6 @@
 				{{ range .models }}<button type="button" data-model="{{ .key }}" aria-pressed="{{ eq .key $book.model }}">{{ .name }}</button>{{ end }}
 			</div>
 			{{ end }}
-			<div class="ab-seg ab-speed" role="group" aria-label="Playback speed"><span class="ab-label">Speed</span>
-				<button type="button" data-rate="1" aria-pressed="true">1×</button><button type="button" data-rate="1.5" aria-pressed="false">1.5×</button><button type="button" data-rate="2" aria-pressed="false">2×</button>
-			</div>
 			<label class="ab-auto"><input type="checkbox" id="abAuto" checked><span>Autoplay next</span></label>
 		</div>
 

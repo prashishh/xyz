@@ -6,15 +6,3 @@
 
 [context.deploy-preview]
   command = "hugo -s site -d ../dist --minify --buildDrafts --buildFuture"
-
-[[redirects]]
-  from = "/bookshelf"
-  to = "https://bookshelf.prashish.xyz/"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/bookshelf/*"
-  to = "https://bookshelf.prashish.xyz/"
-  status = 301
-  force = true

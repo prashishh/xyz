@@ -7,7 +7,6 @@
   var $ = function (id) { return document.getElementById(id); };
   var voiceSel = $("abVoice"), autoBox = $("abAuto"), bar = $("abBar"), seek = $("abSeek");
   var topics = [].slice.call(document.querySelectorAll(".ab-topic"));
-  var rates = [].slice.call(document.querySelectorAll(".ab-speed button"));
   var modelBtns = [].slice.call(document.querySelectorAll(".ab-model button"));
   var RATES = [1, 1.5, 2];
   var au = new Audio();
@@ -131,7 +130,6 @@
   function setRate(r) {
     rate = r;
     au.defaultPlaybackRate = au.playbackRate = r;
-    rates.forEach(function (b) { b.setAttribute("aria-pressed", String(Number(b.dataset.rate) === r)); });
     $("abRate").textContent = r + "×";
     $("abRate").setAttribute("aria-label", "Playback speed, " + r + "×");
     try { localStorage.setItem("audiobook-speed", String(r)); } catch (e) {}
@@ -155,7 +153,6 @@
     item.querySelector(".ab-pick input").addEventListener("change", function () { showTimes(); ui(); });
   });
   topics.forEach(function (b) { b.addEventListener("click", function () { setTopic(b.dataset.topic); }); });
-  rates.forEach(function (b) { b.addEventListener("click", function () { setRate(Number(b.dataset.rate)); }); });
   modelBtns.forEach(function (b) { b.addEventListener("click", function () { setModel(b.dataset.model); reloadCurrent(); }); });
   $("abRate").addEventListener("click", function () { setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]); });
   $("abPlayAll").addEventListener("click", function () { load(items.indexOf(queue()[0])); });
