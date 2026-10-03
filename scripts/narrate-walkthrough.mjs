@@ -18,15 +18,13 @@ import vm from "node:vm";
 
 // To add a voice, add an entry with its ElevenLabs voice ID. The page shows a voice picker once two voices have clips.
 const VOICES = {
-  prashish2: { id: "bgNm9pp0UvhCbGbheCIV", name: "Prashish", speed: { en: 0.85, sa: 0.8, more: 0.9 } }, // "Prashish Sample 2" clone
+  prashish2: { id: "bgNm9pp0UvhCbGbheCIV", name: "Prashish" }, // "Prashish Sample 2" clone
 };
-const MODEL_ID = "eleven_multilingual_v2";
-const SETTINGS = { stability: 0.6, similarity_boost: 0.75, style: 0.1, use_speaker_boost: true };
-const SPEED = { en: 1.0, sa: 0.9, more: 1.05 };
-const FORMAT = "mp3_44100_128";
-// The explanation clips ("more"), which also make the post's audio on /audiobook, use Eleven v4 at 192 kbps like every other post.
-// v4 has no speed or style setting and takes its pauses from the blank lines between paragraphs. The verse clips stay on v2.
-const MORE = { model_id: "eleven_v4", settings: { stability: 0.6, similarity_boost: 0.75 }, format: "mp3_44100_192" };
+// Every clip uses Eleven v4 at 192 kbps like the other posts. v4 has no speed or style setting and takes its pauses from
+// line breaks (blank lines between paragraphs, single ones between the lines of a verse).
+const MODEL_ID = "eleven_v4";
+const SETTINGS = { stability: 0.6, similarity_boost: 0.75 };
+const FORMAT = "mp3_44100_192";
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -42,7 +40,6 @@ if (!key || !page || !voice) {
   console.error(`Usage: ELEVENLABS_API_KEY=... node scripts/narrate-walkthrough.mjs <walkthrough.html> [--voice ${Object.keys(VOICES).join("|")}] [--steps n]`);
   process.exit(1);
 }
-const speed = { ...SPEED, ...voice.speed };
 
 // The steps live in the page as `var CH=[ ... ];`, so evaluate that block on its own.
 const html = fs.readFileSync(page, "utf8");
@@ -52,12 +49,11 @@ if (start < 0 || end < 0) throw new Error(`No "var CH=[ ... ];" block in ${page}
 const CH = vm.runInNewContext(html.slice(start, end + 3) + "\nCH", {}).slice(0, stepLimit);
 
 const plain = (s) => s.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-const pause = (s) => ` <break time="${s}s" /> `;
 // Steps without a verse get only the explanation clip.
 const clips = CH.flatMap((c, i) => [
   c.en && { file: `s${i + 1}-en.mp3`, kind: "en", text: plain(c.en) },
   // The double danda that closes a verse makes the voice add stray sounds after it, so it is read as a single danda.
-  c.sa && { file: `s${i + 1}-sa.mp3`, kind: "sa", text: c.sa.split(/<br\s*\/?>/i).map(plain).join(pause(1.0)).replace(/॥/g, "।") },
+  c.sa && { file: `s${i + 1}-sa.mp3`, kind: "sa", text: c.sa.split(/<br\s*\/?>/i).map(plain).join("\n").replace(/॥/g, "।") },
   { file: `s${i + 1}-more.mp3`, kind: "more", text: c.copy.map(plain).join("\n\n") },
 ].filter(Boolean));
 
@@ -69,16 +65,12 @@ const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manife
 
 let made = 0;
 for (const clip of clips) {
-  const more = clip.kind === "more";
-  const format = more ? MORE.format : FORMAT;
-  const body = more
-    ? { text: clip.text, model_id: MORE.model_id, voice_settings: MORE.settings }
-    : { text: clip.text, model_id: MODEL_ID, voice_settings: { ...SETTINGS, speed: speed[clip.kind] } };
-  const hash = crypto.createHash("sha256").update(JSON.stringify([voice.id, format, body])).digest("hex").slice(0, 16);
+  const body = { text: clip.text, model_id: MODEL_ID, voice_settings: SETTINGS };
+  const hash = crypto.createHash("sha256").update(JSON.stringify([voice.id, FORMAT, body])).digest("hex").slice(0, 16);
   const out = path.join(outDir, clip.file);
   if (manifest[clip.file] === hash && fs.existsSync(out)) continue;
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}?output_format=${format}`, {
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}?output_format=${FORMAT}`, {
     method: "POST",
     headers: { "xi-api-key": key, "Content-Type": "application/json", Accept: "audio/mpeg" },
     body: JSON.stringify(body),
