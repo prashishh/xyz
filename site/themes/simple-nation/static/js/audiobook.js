@@ -139,19 +139,24 @@
     }
   }
 
-  // A clip that fails to load (the bucket or the network is down) dims its post, and autoplay moves on.
+  // A clip that fails to load (the bucket or the network is down) dims its post and stops there, rather than trying the
+  // next post, which usually fails the same way. Pressing a dimmed post tries it again.
   function unavailable() {
     if (cur < 0 || items[cur].classList.contains("is-unavailable")) return;
+    clearTimeout(nextTimer);
     items[cur].classList.add("is-unavailable");
-    part(items[cur], ".ab-play").title = "Audio unavailable right now";
+    part(items[cur], ".ab-play").title = "Audio unavailable right now, press to try again";
     $("abNowVoice").textContent = "Audio unavailable right now";
     track("audio_error");
-    if (auto && step(1) >= 0) nextTimer = setTimeout(function () { next("autoplay"); }, 1200);
     ui();
   }
 
   function toggle(i) {
-    if (items[i].classList.contains("is-unavailable")) return;
+    if (items[i].classList.contains("is-unavailable")) {
+      items[i].classList.remove("is-unavailable");
+      part(items[i], ".ab-play").removeAttribute("title");
+      return load(i, 0, true, "retry");
+    }
     if (i !== cur) return load(i, 0, true, "list");
     if (au.paused) au.play().catch(ui);
     else au.pause();

@@ -1140,6 +1140,6 @@ body.ab-has-bar { padding-bottom: 90px; }
 .ab-listen .ab-time { opacity: 0.6; }
 .ab-listen .ab-line { margin-top: -2px; }
 /* a post whose audio is missing or failed to load */
-.is-unavailable > .ab-play, .is-unavailable .ab-listen-main > .ab-play { opacity: 0.25; cursor: default; }
+.is-unavailable > .ab-play { opacity: 0.25; }
 .is-unavailable.is-current > .ab-play { background: transparent; color: var(--accent-color); }
 .ab-listen.is-soon-row { opacity: 0.55; }

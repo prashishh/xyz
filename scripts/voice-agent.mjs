@@ -19,6 +19,8 @@ const TTS_MODEL = "eleven_v4"; // eleven_v4_turbo answers faster
 const LLM = "gemini-2.5-flash"; // the quickest to answer of the models agents offer
 const EMBEDDING = "e5_mistral_7b_instruct";
 const HOSTS = ["prashish.xyz", "www.prashish.xyz", "localhost"];
+// An ElevenLabs pronunciation dictionary that reads "Prashish" as "Praashish", so the name is said right while transcripts keep its spelling.
+const PRONUNCIATION = { pronunciation_dictionary_id: "3brYeu1vQCiBl0OQnWWL", version_id: "ZA2tg56axpoCjwZqYXrk" };
 // Calls are billed by the minute, so each agent takes at most this many calls a day and this many at once (with no paid
 // bursting past that), each up to 5 minutes long.
 const CALL_LIMITS = { daily_limit: 100, agent_concurrency_limit: 3, bursting_enabled: false };
@@ -41,7 +43,7 @@ const AGENTS = {
     name: "Pragya (voice test)",
     voice: "Nr3AK2GnLR0jwlaNaWyw", // "Pragya Sample 1"
     first_message: "Hi, I'm an AI speaking on behalf of Prashish, about Prashish's essays and fragments. What would you like to know?",
-    ne: "नमस्ते! म प्रशिषको तर्फबाट उहाँका निबन्ध र लेखहरूबारे कुरा गर्ने AI हुँ। तपाईं के जान्न चाहनुहुन्छ?",
+    ne: "नमस्ते! म प्राशिषको तर्फबाट उहाँका निबन्ध र लेखहरूबारे कुरा गर्ने AI हुँ। तपाईं के जान्न चाहनुहुन्छ?",
     prompt: `You speak on behalf of Prashish Rajbhandari, presenting the ideas in the essays and fragments on prashish.xyz, in a cloned voice that is not Prashish's. Visitors talk to you to explore that writing. Represent Prashish's views faithfully in the third person, as in "Prashish believes…" or "In this essay, Prashish argues…", and never speak as Prashish or claim to be Prashish. If someone asks, say you are an AI speaking for Prashish, built from Prashish's writing.\n\n${RULES}`,
   },
 };
@@ -132,7 +134,7 @@ for (const [key, a] of Object.entries(AGENTS)) {
         },
       },
       language_presets: { ne: { overrides: { agent: { first_message: a.ne } } } },
-      tts: { voice_id: a.voice, model_id: TTS_MODEL, stability: 0.6, similarity_boost: 0.75 },
+      tts: { voice_id: a.voice, model_id: TTS_MODEL, stability: 0.6, similarity_boost: 0.75, pronunciation_dictionary_locators: [PRONUNCIATION] },
       conversation: { max_duration_seconds: 300 },
     },
     platform_settings: { auth: { allowlist: HOSTS.map((hostname) => ({ hostname })) }, call_limits: CALL_LIMITS },

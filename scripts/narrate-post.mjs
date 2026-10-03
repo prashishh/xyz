@@ -37,6 +37,8 @@ const SECTIONS = ["fragments", "seeking", "essays", "ai"];
 const FORMAT = "mp3_44100_192"; // the best mp3 ElevenLabs makes
 const CHUNK_GAP = 0.4; // seconds of silence between the requests a long post is split into
 const STEP_GAP = 0.8; // seconds of silence between the steps of a walkthrough
+// An ElevenLabs pronunciation dictionary that reads "Prashish" as "Praashish", used for posts that say the name.
+const PRONUNCIATION = { pronunciation_dictionary_id: "3brYeu1vQCiBl0OQnWWL", version_id: "ZA2tg56axpoCjwZqYXrk" };
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT = path.join(ROOT, "site/content");
@@ -134,7 +136,12 @@ function chunks(texts, sep, max) {
 // in site/data/audiobook.json, so an unchanged clip is not recorded again.
 export function clipRequests(post, model, voice) {
   const { id: model_id, maxChars, settings } = MODELS[model];
-  const requests = chunks([post.titleText, ...post.paragraphs], "\n\n", maxChars).map((text) => ({ text, model_id, voice_settings: settings }));
+  const requests = chunks([post.titleText, ...post.paragraphs], "\n\n", maxChars).map((text) => ({
+    text,
+    model_id,
+    voice_settings: settings,
+    ...(/prashish/i.test(text) ? { pronunciation_dictionary_locators: [PRONUNCIATION] } : {}),
+  }));
   const hash = crypto.createHash("sha256").update(JSON.stringify([VOICES[voice].id, FORMAT, requests, ...(requests.length > 1 ? [CHUNK_GAP] : [])])).digest("hex").slice(0, 16);
   return { requests, hash };
 }
