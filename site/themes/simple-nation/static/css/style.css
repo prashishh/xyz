@@ -1146,3 +1146,16 @@ body.ab-has-bar { padding-bottom: 90px; }
 .is-unavailable > .ab-play { opacity: 0.25; }
 .is-unavailable.is-current > .ab-play { background: transparent; color: var(--accent-color); }
 .ab-listen.is-soon-row { opacity: 0.55; }
+/* the audiobook page on phones: one row of smaller topic buttons, no Play all, and the same side margins as the homepage list */
+@media only screen and (max-width: 780px) {
+  .audiobook.common-body { padding-left: 0; padding-right: 0; }
+}
+@media only screen and (max-width: 600px) {
+  .ab-topics { flex-wrap: nowrap; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .ab-topics::-webkit-scrollbar { display: none; }
+  .ab-topic { flex: none; font-size: 11px; padding: 3px 7px; }
+  .ab-topic span { margin-left: 1px; }
+  .ab-playall, .ab-clear { display: none; }
+  .ab-head:not(:has(.ab-show)) { display: none; }
+  .ab-list .ab-item:first-child { margin-top: 14px; }
+}
