@@ -1,15 +1,7 @@
-{{- /* Takes a page, or a dict with "page" and an optional section "label" (used on the homepage).
-       A narrated post (listed in data/audiobook.json) gets a play button for the player bar; the others get a faded one. */ -}}
+{{- /* Takes a page, or a dict with "page" and an optional section "label" (used on the homepage). */ -}}
 {{ $p := . }}{{ $label := "" }}
 {{ if reflect.IsMap . }}{{ $p = .page }}{{ $label = .label }}{{ end }}
-{{ $audio := false }}{{ $base := "" }}
-{{ with site.Data.audiobook }}{{ $base = site.Params.audioBase | default .base }}{{ $posts := .posts }}{{ with $p.File }}{{ $audio = index $posts .Path }}{{ end }}{{ end }}
-<div class="index-item"{{ with $audio }} data-audio="{{ $base }}{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $p.Title }}" data-path="{{ $p.RelPermalink }}"{{ end }}>
-	{{ if $audio }}
-		<button class="ab-play ab-play-sm" type="button" aria-label="Play {{ $p.Title }}">{{ partial "ab-icons.html" }}</button>
-	{{ else }}
-		<span class="ab-play ab-play-sm is-soon" title="Audio coming soon" aria-hidden="true">{{ partial "ab-icons.html" }}</span>
-	{{ end }}
+<div class="index-item">
 	<div class="index-item-main">
 		<div class="index-item-title">
 			<a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a>

@@ -1126,9 +1126,8 @@ span.index-item-section:hover { color: var(--text-color); border-color: var(--bo
 .ab-seek { display: flex; align-items: center; gap: 10px; font-size: 12px; font-variant-numeric: tabular-nums; opacity: 0.85; }
 .ab-seek input { flex: 1; min-width: 0; margin: 0; accent-color: var(--accent-color); cursor: pointer; }
 body.ab-has-bar { padding-bottom: 90px; }
-/* play buttons in post lists; a faded one marks a post without audio yet */
+/* small play buttons (the Listen row on post pages); a faded one marks a post without audio yet */
 .index-body .section-heading-popular { margin-top: 40px; }
-.index-item > .ab-play { align-self: flex-start; margin-top: 1px; }
 .ab-play.ab-play-sm { width: 26px; height: 26px; }
 .ab-play.ab-play-sm svg { width: 12px; height: 12px; }
 .ab-play.is-soon { opacity: 0.25; cursor: default; }
