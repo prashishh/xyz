@@ -1,0 +1,173 @@
+{
+  "docs": {
+    "essays/leaving-united_states.md": {
+      "id": "4rAolrvMrcj4rGvESjop",
+      "name": "Leaving United States",
+      "hash": "5f2897af68550739"
+    },
+    "essays/soul-md-conversation.md": {
+      "id": "b8cMaeU0DNDBzBnFuVjJ",
+      "name": "SOUL.md - A Conversation",
+      "hash": "37ee6f7473c208b0"
+    },
+    "essays/why-nepal-should-buy-bitcoin.md": {
+      "id": "FymqsIjmhdJhUSMlHosC",
+      "name": "Why Nepal Should Buy Bitcoin",
+      "hash": "4af81c67c60cc48a"
+    },
+    "essays/why-nepal-should-give-citizens-free-ai.md": {
+      "id": "IeONiZ81WddVDoGgzo4s",
+      "name": "Why Nepal Should Be the First Country to Give Its Citizens Free AI",
+      "hash": "84300898754a4948"
+    },
+    "fragments/10000-books.md": {
+      "id": "EPUzQQTGg8xbcDlBgA3D",
+      "name": "10,000 Books",
+      "hash": "d6957c2031936a77"
+    },
+    "fragments/18-is-the-new-25.md": {
+      "id": "8ezux2alGBSk2nSAwdtr",
+      "name": "18 is the New 25",
+      "hash": "3747b7fb3e7556ba"
+    },
+    "fragments/40-40-20-playbook.md": {
+      "id": "qG6ewTaNsZUgtaRtQzT2",
+      "name": "40/40/20 for Developers",
+      "hash": "19375bed45bff655"
+    },
+    "fragments/ai-and-creative-workflow.md": {
+      "id": "dpz4pabtpFZOoSxYY9Q7",
+      "name": "AI and Creative Workflow",
+      "hash": "678d6a263c20f3dc"
+    },
+    "fragments/ai-politics-problem.md": {
+      "id": "NSYQexceh6mXGNaetnhP",
+      "name": "AI Politics Problem",
+      "hash": "b1482505d0bdfb7b"
+    },
+    "fragments/back-to-writing-thanks-ai.md": {
+      "id": "VidnxOUSYTctw33xahhC",
+      "name": "Back to Writing, Thanks to AI",
+      "hash": "049fe79258caa662"
+    },
+    "fragments/dial-up-ai.md": {
+      "id": "5FHlPIjyk1nnNvkORMYP",
+      "name": "Dial-Up AI",
+      "hash": "598f7d1dd12e41c7"
+    },
+    "fragments/driving-force.md": {
+      "id": "FIWwnajsVJljT1jWXloa",
+      "name": "Driving Force",
+      "hash": "db8c1a44a9548425"
+    },
+    "fragments/fat-wallets.md": {
+      "id": "LbVXUvECTA7XcNXt3rNo",
+      "name": "Fat wallets",
+      "hash": "30032e8a5d186417"
+    },
+    "fragments/full-stack-founder.md": {
+      "id": "nkksYZv0Tc0Kc4rHQwef",
+      "name": "The Full Stack Founder",
+      "hash": "cd97bc44a4afb05c"
+    },
+    "fragments/fully-on-chain.md": {
+      "id": "FRz9mTHzqWrbfkH3WzD6",
+      "name": "Fully On-Chain",
+      "hash": "b923cb3361ec2cb2"
+    },
+    "fragments/infinite-software.md": {
+      "id": "DBCKJENy9g8yp7yuMxWT",
+      "name": "Infinite Software",
+      "hash": "46dbc4b623d3a263"
+    },
+    "fragments/integrity.md": {
+      "id": "99Wb6rPE03mLJE17x52j",
+      "name": "Integrity",
+      "hash": "63d67f9db8de9cab"
+    },
+    "fragments/joy.md": {
+      "id": "b233fAV5j9hKkrgJM3Fg",
+      "name": "Joy",
+      "hash": "0ac50a222ee6036b"
+    },
+    "fragments/llms-as-operating-systems.md": {
+      "id": "ChEqx0U4WznBTmsEaA9f",
+      "name": "LLMs as Operating Systems",
+      "hash": "ed04940c375169cf"
+    },
+    "fragments/love-and-greed-in-crypto.md": {
+      "id": "dXDrgY16JJrpGOguwT4e",
+      "name": "Love and Greed in Crypto",
+      "hash": "88aae760b6a77bdf"
+    },
+    "fragments/notes-from-my-ai-shelf.md": {
+      "id": "2UmlFcFKGqLbh77OqBEg",
+      "name": "Notes From My AI Shelf",
+      "hash": "fa089c7ba5e59293"
+    },
+    "fragments/on-inspiration.md": {
+      "id": "NOaHeRQzoMARBnDatzvh",
+      "name": "On Inspiration",
+      "hash": "5991bb4b50f00807"
+    },
+    "fragments/paper-to-app.md": {
+      "id": "TCUmTdFpNYsdU8uaR34f",
+      "name": "Paper to App",
+      "hash": "72672d7bd7cee33e"
+    },
+    "fragments/software-developments-ground-shift.md": {
+      "id": "P3KNOifX2kXbDoF4zvmy",
+      "name": "Software Development's Ground Shift",
+      "hash": "97ccaa4d15f8beeb"
+    },
+    "fragments/software-that-builds-itself.md": {
+      "id": "6OvX91jsOKfYcQI3RAHB",
+      "name": "Software That Builds Itself",
+      "hash": "cb61b4ec50db61f3"
+    },
+    "fragments/the-going-abroad-scenario.md": {
+      "id": "IYSvERzgL15vBnGKzuAf",
+      "name": "The Going Abroad Scenario",
+      "hash": "409a75bedd2866dc"
+    },
+    "fragments/the-joy-of-walking.md": {
+      "id": "wf2mTkHtc1jfFKAewy1s",
+      "name": "The Joy of Walking",
+      "hash": "df7bc358b38f6be0"
+    },
+    "fragments/the-pain-of-not-doing.md": {
+      "id": "Y1Vub1miZN6Lvi1iFMdo",
+      "name": "The Pain of Not Doing",
+      "hash": "1f54cc98a4f583af"
+    },
+    "fragments/what-is-your-lifes-work.md": {
+      "id": "JGGBA23ojuTxxemkJwV7",
+      "name": "Life's Work?",
+      "hash": "bc989bf7505e9175"
+    },
+    "fragments/world-class-network.md": {
+      "id": "Q1GFi5B6WrkcFZXekhFo",
+      "name": "World Class Network",
+      "hash": "af65398698cd8e45"
+    },
+    "fragments/writing-more-or-less.md": {
+      "id": "gYJuGX77bj6X4BNEZaaW",
+      "name": "Writing more or less",
+      "hash": "3e28b5b5e98a4fb1"
+    },
+    "fragments/same-‘ol-kathmandu.md": {
+      "id": "EmAaGShyKDtHybfSN4SB",
+      "name": "Same ‘ol Kathmandu",
+      "hash": "636e780634d4e965"
+    },
+    "fragments/high-agency.md": {
+      "id": "6DzVQdEB1Ip5iMX9TDX7",
+      "name": "High Agency",
+      "hash": "9e9fe62af1ca2e2e"
+    }
+  },
+  "agents": {
+    "prashish": "agent_8301m408xs6cese9t4cpmpdx9dte",
+    "pragya": "agent_8001m40z9mt1ecm9kg828jdkbp0c"
+  }
+}

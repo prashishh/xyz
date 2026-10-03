@@ -1,0 +1,8 @@
+{{- /* Returns the Popular posts from data/popular.yaml: the favourites, then the most-read, each post once. */ -}}
+{{- $pages := slice -}}
+{{- with site.Data.popular -}}
+	{{- range uniq ((.favourites | default slice) | append (.most_read | default slice)) -}}
+		{{- with site.GetPage . }}{{ $pages = $pages | append . }}{{ end -}}
+	{{- end -}}
+{{- end -}}
+{{- return $pages -}}

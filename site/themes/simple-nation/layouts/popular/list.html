@@ -1,0 +1,11 @@
+{{- /* Every post in data/popular.yaml: the favourites, then the most-read. */ -}}
+{{ define "main" }}
+	{{ $labels := dict "fragments" "Fragment" "ai" "AI" "seeking" "Seeking" "essays" "Essay" }}
+	<div class="index-body">
+		<h3 class="section-heading">Popular</h3>
+		{{ .Content }}
+		{{ range partial "popular.html" . }}
+			{{ partial "index-item.html" (dict "page" . "label" (index $labels .Section)) }}
+		{{ end }}
+	</div>
+{{ end }}

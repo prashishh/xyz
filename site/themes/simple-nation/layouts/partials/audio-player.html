@@ -1,0 +1,25 @@
+{{- /* The player bar for narrated posts, shown once a post plays. static/js/audiobook.js runs it, using the default
+       voice and model and the voice names from data/audiobook.json, which scripts/narrate-post.mjs writes. */ -}}
+{{ with site.Data.audiobook }}
+{{ $names := dict }}{{ range .voices }}{{ $names = merge $names (dict .key .name) }}{{ end }}
+<div class="ab-bar" id="abBar" data-voice="{{ .voice }}" data-model="{{ .model }}" data-voices="{{ jsonify $names }}" data-label="{{ or (gt (len .voices) 1) (gt (len .models) 1) }}" hidden>
+	<div class="ab-bar-inner">
+		<div class="ab-bar-buttons">
+			<button type="button" id="abPrev" aria-label="Previous post"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.5v14H6zM19 5.5v13L9.5 12z"/></svg></button>
+			<button type="button" id="abToggle" class="ab-play" aria-label="Pause">{{ partial "ab-icons.html" }}</button>
+			<button type="button" id="abNext" aria-label="Next post"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5H18v14h-2.5zM5 5.5v13l9.5-6.5z"/></svg></button>
+		</div>
+		<div class="ab-bar-main">
+			<div class="ab-bar-title"><span id="abNow"></span><span class="ab-bar-voice" id="abNowVoice"></span></div>
+			<div class="ab-seek">
+				<span id="abAt">0:00</span>
+				<input type="range" id="abSeek" min="0" max="1000" value="0" step="1" aria-label="Seek">
+				<span id="abLen">0:00</span>
+			</div>
+		</div>
+		<button type="button" class="ab-pill" id="abAuto" aria-pressed="true" title="Play the next post when this one ends">Auto</button>
+		<button type="button" class="ab-pill" id="abRate" aria-label="Playback speed, 1×">1×</button>
+	</div>
+</div>
+<script src="{{ "js/audiobook.js" | relURL }}?v={{ now.Unix }}" defer></script>
+{{ end }}

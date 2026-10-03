@@ -1,0 +1,16 @@
+# Posts for the Popular section on the homepage, by content path without ".md".
+# Favourites come first, then the most-read posts, and a post listed in both shows once.
+favourites: []
+
+# Most readers (Google Analytics active users) from 5 Sep 2024 to 2 Oct 2026, counting visits to a post's older addresses.
+most_read:
+  - /fragments/back-to-writing-thanks-ai
+  - /essays/why-nepal-should-give-citizens-free-ai
+  - /ai/architecture-for-llm-database-integration
+  - /fragments/llms-as-operating-systems
+  - /seeking/vajrapani-the-senior-engineer
+  - /fragments/software-that-builds-itself
+  - /ai/the-orchestrators-dilemma
+  - /fragments/ai-politics-problem
+  - /ai/how-ai-agents-collaborate-framework-architecture
+  - /fragments/40-40-20-playbook

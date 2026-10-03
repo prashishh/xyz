@@ -1,0 +1,55 @@
+name: Narrate new posts
+
+# After a push that touches a post, records the audio for new posts that do not have it yet (scripts/narrate-post.mjs
+# --missing: posts dated from its AUTO_FROM on, in its default model and voice), uploads the clips to the R2 bucket, and
+# commits site/data/audiobook.json, which redeploys the site with the new play buttons.
+# Needs the ELEVENLABS_API_KEY, CLOUDFLARE_API_TOKEN (with R2 edit access) and CLOUDFLARE_ACCOUNT_ID repository secrets,
+# and does nothing without them.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "site/content/**.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: narrate
+  cancel-in-progress: false
+
+jobs:
+  narrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Narrate posts without audio
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$ELEVENLABS_API_KEY" ] || [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "The ElevenLabs or Cloudflare secret is missing, so nothing is narrated."
+            exit 0
+          fi
+          npm install --global wrangler@4
+          node scripts/narrate-post.mjs --missing --yes
+      - name: Commit the list of narrated posts
+        run: |
+          git add site/data/audiobook.json
+          if git diff --cached --quiet; then
+            echo "No new audio."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Narrate new posts"
+          git push

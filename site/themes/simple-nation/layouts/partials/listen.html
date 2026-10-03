@@ -1,0 +1,21 @@
+{{- /* A Listen button under a narrated post's date (one listed in data/audiobook.json), played in the player bar.
+       A post without audio yet, unless it says "narrate: false", gets a faded "coming soon" row instead. */ -}}
+{{ $found := false }}
+{{ with site.Data.audiobook }}
+	{{ $model := .model }}{{ $voice := .voice }}{{ $posts := .posts }}{{ $base := site.Params.audioBase | default .base }}
+	{{ with $.File }}{{ with index $posts .Path }}{{ $found = true }}
+		<div class="ab-listen" data-audio="{{ $base }}{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $.Title }}" data-path="{{ $.RelPermalink }}">
+			<button class="ab-play ab-play-sm" type="button" aria-label="Play {{ $.Title }}">{{ partial "ab-icons.html" }}</button>
+			<div class="ab-listen-main">
+				<span class="ab-listen-label">Listen</span><span class="ab-time">{{ with index .seconds $model }}{{ with index . $voice }}{{ $t := int (math.Round .) }}{{ printf "%d:%02d" (div $t 60) (mod $t 60) }}{{ end }}{{ end }}</span>
+				<div class="ab-line"><span></span></div>
+			</div>
+		</div>
+	{{ end }}{{ end }}
+{{ end }}
+{{ if and (not $found) (ne .Params.narrate false) }}
+	<div class="ab-listen is-soon-row" title="Audio coming soon">
+		<span class="ab-play ab-play-sm is-soon" aria-hidden="true">{{ partial "ab-icons.html" }}</span>
+		<div class="ab-listen-main"><span class="ab-listen-label">Audio coming soon</span></div>
+	</div>
+{{ end }}

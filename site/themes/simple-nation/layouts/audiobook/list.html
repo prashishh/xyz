@@ -1,9 +1,7 @@
-{{- /* Posts narrated by scripts/narrate-post.mjs, which lists them in data/audiobook.json. The player is static/js/audiobook.js. */ -}}
+{{- /* Posts narrated by scripts/narrate-post.mjs, which lists them in data/audiobook.json. The player bar is partials/audio-player.html. */ -}}
 {{ define "main" }}
 	{{ $book := site.Data.audiobook }}
 	{{ $labels := dict "fragments" "Fragment" "ai" "AI" "seeking" "Seeking" "essays" "Essay" }}
-	{{ $play := `<svg class="ab-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>` | safeHTML }}
-	{{ $pause := `<svg class="ab-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>` | safeHTML }}
 	<div class="common-body audiobook">
 		<h3 class="section-heading">Audiobook</h3>
 		{{ .Content }}
@@ -21,31 +19,40 @@
 		</div>
 		{{ end }}
 
+		{{/* The voice and model choices show only when there is more than one of either. */}}
+		{{ if or (gt (len .voices) 1) (gt (len .models) 1) }}
 		<div class="ab-controls">
+			{{ if gt (len .voices) 1 }}
 			<label class="ab-voice"><span class="ab-label">Voice</span>
 				<select id="abVoice">
 					{{ range .voices }}<option value="{{ .key }}"{{ if eq .key $book.voice }} selected{{ end }}>{{ .name }}</option>{{ end }}
 				</select>
 			</label>
+			{{ end }}
 			{{ if gt (len .models) 1 }}
 			<div class="ab-seg ab-model" role="group" aria-label="Model"><span class="ab-label">Model</span>
 				{{ range .models }}<button type="button" data-model="{{ .key }}" aria-pressed="{{ eq .key $book.model }}">{{ .name }}</button>{{ end }}
 			</div>
 			{{ end }}
 		</div>
+		{{ end }}
 
+		{{/* Where each post ranks in data/popular.yaml, for the Popular filter. */}}
+		{{ $rank := dict }}{{ if site.Params.showPopular }}{{ range $i, $p := partial "popular.html" . }}{{ $rank = merge $rank (dict $p.RelPermalink (add $i 1)) }}{{ end }}{{ end }}
 		<div class="ab-head">
-			<button type="button" class="ab-playall" id="abPlayAll">{{ $play }}<span id="abPlayAllText">Play all</span></button>
+			<button type="button" class="ab-playall" id="abPlayAll"><svg class="ab-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span id="abPlayAllText">Play all</span></button>
 			<button type="button" class="ab-clear" id="abClear" hidden>Clear</button>
+			{{ if site.Params.showPopular }}<select class="ab-show" id="abShow" aria-label="Show"><option value="">All posts</option><option value="popular">Popular</option></select>{{ end }}
 		</div>
+		<p class="ab-empty" id="abEmpty" hidden>None of the popular posts has audio yet.</p>
 
-		<ol class="ab-list common-list" data-model="{{ .model }}">
+		<ol class="ab-list common-list">
 			{{ range site.RegularPages.ByDate.Reverse }}
 				{{ $p := . }}
 				{{ with index $book.posts .File.Path }}
-				<li class="ab-item index-item" data-topic="{{ $p.Section }}" data-audio="{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $p.Title }}">
+				<li class="ab-item index-item" data-topic="{{ $p.Section }}" data-audio="{{ site.Params.audioBase | default $book.base }}{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $p.Title }}" data-path="{{ $p.RelPermalink }}"{{ with index $rank $p.RelPermalink }} data-popular="{{ . }}"{{ end }}>
 					<label class="ab-pick"><input type="checkbox" aria-label="Pick {{ $p.Title }}"></label>
-					<button class="ab-play" type="button" aria-label="Play {{ $p.Title }}">{{ $play }}{{ $pause }}</button>
+					<button class="ab-play" type="button" aria-label="Play {{ $p.Title }}">{{ partial "ab-icons.html" }}</button>
 					<div class="index-item-main">
 						<div class="index-item-title">
 							<a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a>
@@ -63,24 +70,4 @@
 		{{ end }}
 	</div>
 
-	<div class="ab-bar" id="abBar" hidden>
-		<div class="ab-bar-inner">
-			<div class="ab-bar-buttons">
-				<button type="button" id="abPrev" aria-label="Previous post"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.5v14H6zM19 5.5v13L9.5 12z"/></svg></button>
-				<button type="button" id="abToggle" class="ab-play" aria-label="Pause">{{ $play }}{{ $pause }}</button>
-				<button type="button" id="abNext" aria-label="Next post"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5H18v14h-2.5zM5 5.5v13l9.5-6.5z"/></svg></button>
-			</div>
-			<div class="ab-bar-main">
-				<div class="ab-bar-title"><span id="abNow"></span><span class="ab-bar-voice" id="abNowVoice"></span></div>
-				<div class="ab-seek">
-					<span id="abAt">0:00</span>
-					<input type="range" id="abSeek" min="0" max="1000" value="0" step="1" aria-label="Seek">
-					<span id="abLen">0:00</span>
-				</div>
-			</div>
-			<button type="button" class="ab-pill" id="abAuto" aria-pressed="true" title="Play the next post when this one ends">Auto</button>
-			<button type="button" class="ab-pill" id="abRate" aria-label="Playback speed, 1×">1×</button>
-		</div>
-	</div>
-	<script src="{{ "js/audiobook.js" | relURL }}?v={{ now.Unix }}" defer></script>
 {{ end }}

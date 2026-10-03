@@ -5,3 +5,5 @@ site/public/
 site/resources/_gen/
 .DS_Store
 .claude/worktrees/
+# Local copies of the narration clips, which live in the R2 bucket (scripts/narrate-post.mjs)
+.audio/

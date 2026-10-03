@@ -1,132 +1,784 @@
 {
+  "base": "https://audio.prashish.xyz/",
   "model": "v4",
   "voice": "prashish2",
   "models": [
     {
       "key": "v4",
       "name": "v4"
-    },
-    {
-      "key": "v3",
-      "name": "v3"
-    },
-    {
-      "key": "v2",
-      "name": "v2"
     }
   ],
   "voices": [
     {
-      "key": "prashish1",
-      "name": "Prashish Sample 1"
-    },
-    {
       "key": "prashish2",
       "name": "Prashish Sample 2"
-    },
-    {
-      "key": "prashish3",
-      "name": "Prashish Sample 3"
     }
   ],
   "posts": {
     "fragments/world-class-network.md": {
-      "audio": "/audio/fragments/world-class-network/",
+      "audio": "fragments/world-class-network/",
       "seconds": {
         "v4": {
-          "prashish1": 27.2,
-          "prashish2": 29.6,
-          "prashish3": 28.5
-        },
-        "v3": {
-          "prashish1": 35.6,
-          "prashish2": 32.6,
-          "prashish3": 37.3
-        },
-        "v2": {
-          "prashish1": 27.4,
-          "prashish2": 29.4,
-          "prashish3": 28
+          "prashish2": 29.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "17c43ab61a0a57fe"
         }
       }
     },
     "fragments/software-developments-ground-shift.md": {
-      "audio": "/audio/fragments/software-developments-ground-shift/",
+      "audio": "fragments/software-developments-ground-shift/",
       "seconds": {
         "v4": {
-          "prashish1": 57.3,
-          "prashish2": 61.6,
-          "prashish3": 61.1
-        },
-        "v3": {
-          "prashish1": 64.7,
-          "prashish2": 63.5,
-          "prashish3": 74.6
-        },
-        "v2": {
-          "prashish1": 48.6,
-          "prashish2": 57.4,
-          "prashish3": 53.3
+          "prashish2": 61.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "dc61668ac7ad1e67"
         }
       }
     },
     "fragments/18-is-the-new-25.md": {
-      "audio": "/audio/fragments/18-is-the-new-25/",
+      "audio": "fragments/18-is-the-new-25/",
       "seconds": {
         "v4": {
-          "prashish1": 62,
-          "prashish2": 65.6,
-          "prashish3": 63
-        },
-        "v3": {
-          "prashish1": 58.4,
-          "prashish2": 75.8,
-          "prashish3": 67.9
-        },
-        "v2": {
-          "prashish1": 54.5,
-          "prashish2": 54.4,
-          "prashish3": 60.8
+          "prashish2": 64.5
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "32bfa9f58073e072"
         }
       }
     },
     "seeking/center-of-attention.md": {
-      "audio": "/audio/seeking/center-of-attention/",
+      "audio": "seeking/center-of-attention/",
       "seconds": {
         "v4": {
-          "prashish1": 61.7,
-          "prashish2": 64.9,
-          "prashish3": 63.7
-        },
-        "v3": {
-          "prashish1": 72.9,
-          "prashish2": 83.5,
-          "prashish3": 82.8
-        },
-        "v2": {
-          "prashish1": 53.4,
-          "prashish2": 57.5,
-          "prashish3": 56
+          "prashish2": 64.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "c3e40ff8ed882850"
         }
       }
     },
     "seeking/what-is-consciousness.md": {
-      "audio": "/audio/seeking/what-is-consciousness/",
+      "audio": "seeking/what-is-consciousness/",
       "seconds": {
         "v4": {
-          "prashish1": 168.6,
-          "prashish2": 174.8,
-          "prashish3": 177.2
-        },
-        "v3": {
-          "prashish1": 242.2,
-          "prashish2": 249,
-          "prashish3": 243.8
-        },
-        "v2": {
-          "prashish1": 152.8,
-          "prashish2": 168.2,
-          "prashish3": 167.2
+          "prashish2": 174.5
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "d1916631c699ce16"
+        }
+      }
+    },
+    "essays/leaving-united_states.md": {
+      "audio": "essays/leaving-united_states/",
+      "seconds": {
+        "v4": {
+          "prashish2": 482.3
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "1b77d4995d6c7b82"
+        }
+      }
+    },
+    "essays/soul-md-conversation.md": {
+      "audio": "essays/soul-md-conversation/",
+      "seconds": {
+        "v4": {
+          "prashish2": 475.7
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "1f66b50bdf2ca9ad"
+        }
+      }
+    },
+    "essays/why-nepal-should-buy-bitcoin.md": {
+      "audio": "essays/why-nepal-should-buy-bitcoin/",
+      "seconds": {
+        "v4": {
+          "prashish2": 2029.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "0ee6ed4c4650ceed"
+        }
+      }
+    },
+    "essays/why-nepal-should-give-citizens-free-ai.md": {
+      "audio": "essays/why-nepal-should-give-citizens-free-ai/",
+      "seconds": {
+        "v4": {
+          "prashish2": 1221.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "1c9f34a12ab05b3f"
+        }
+      }
+    },
+    "fragments/10000-books.md": {
+      "audio": "fragments/10000-books/",
+      "seconds": {
+        "v4": {
+          "prashish2": 69.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "ba108cdcfca8908a"
+        }
+      }
+    },
+    "fragments/40-40-20-playbook.md": {
+      "audio": "fragments/40-40-20-playbook/",
+      "seconds": {
+        "v4": {
+          "prashish2": 71.3
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "2e34928d6f477d76"
+        }
+      }
+    },
+    "fragments/ai-and-creative-workflow.md": {
+      "audio": "fragments/ai-and-creative-workflow/",
+      "seconds": {
+        "v4": {
+          "prashish2": 162.8
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "0e2f09afb95767d3"
+        }
+      }
+    },
+    "fragments/ai-politics-problem.md": {
+      "audio": "fragments/ai-politics-problem/",
+      "seconds": {
+        "v4": {
+          "prashish2": 83.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "16efa2c5f7a5e8c5"
+        }
+      }
+    },
+    "fragments/back-to-writing-thanks-ai.md": {
+      "audio": "fragments/back-to-writing-thanks-ai/",
+      "seconds": {
+        "v4": {
+          "prashish2": 136.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "945df090579fc123"
+        }
+      }
+    },
+    "fragments/dial-up-ai.md": {
+      "audio": "fragments/dial-up-ai/",
+      "seconds": {
+        "v4": {
+          "prashish2": 80
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "77253deae465945b"
+        }
+      }
+    },
+    "fragments/driving-force.md": {
+      "audio": "fragments/driving-force/",
+      "seconds": {
+        "v4": {
+          "prashish2": 95.9
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "1acf3210a8e90f4e"
+        }
+      }
+    },
+    "fragments/fat-wallets.md": {
+      "audio": "fragments/fat-wallets/",
+      "seconds": {
+        "v4": {
+          "prashish2": 58
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "f10b65fdf121cc51"
+        }
+      }
+    },
+    "fragments/full-stack-founder.md": {
+      "audio": "fragments/full-stack-founder/",
+      "seconds": {
+        "v4": {
+          "prashish2": 90.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "af52a1273a5fba67"
+        }
+      }
+    },
+    "fragments/fully-on-chain.md": {
+      "audio": "fragments/fully-on-chain/",
+      "seconds": {
+        "v4": {
+          "prashish2": 143.8
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "d62d29e57f73f971"
+        }
+      }
+    },
+    "fragments/infinite-software.md": {
+      "audio": "fragments/infinite-software/",
+      "seconds": {
+        "v4": {
+          "prashish2": 83.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "c138dd97932dcb4b"
+        }
+      }
+    },
+    "fragments/integrity.md": {
+      "audio": "fragments/integrity/",
+      "seconds": {
+        "v4": {
+          "prashish2": 61
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "56681888da6d564f"
+        }
+      }
+    },
+    "fragments/joy.md": {
+      "audio": "fragments/joy/",
+      "seconds": {
+        "v4": {
+          "prashish2": 102.8
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "8786f16175282918"
+        }
+      }
+    },
+    "fragments/llms-as-operating-systems.md": {
+      "audio": "fragments/llms-as-operating-systems/",
+      "seconds": {
+        "v4": {
+          "prashish2": 75.8
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "a64a7ea30c364649"
+        }
+      }
+    },
+    "fragments/love-and-greed-in-crypto.md": {
+      "audio": "fragments/love-and-greed-in-crypto/",
+      "seconds": {
+        "v4": {
+          "prashish2": 391.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "79526112cfb5863a"
+        }
+      }
+    },
+    "fragments/notes-from-my-ai-shelf.md": {
+      "audio": "fragments/notes-from-my-ai-shelf/",
+      "seconds": {
+        "v4": {
+          "prashish2": 111.5
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "b9d6c0eb0d54dd05"
+        }
+      }
+    },
+    "fragments/on-inspiration.md": {
+      "audio": "fragments/on-inspiration/",
+      "seconds": {
+        "v4": {
+          "prashish2": 92.9
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "725ca1ee7349adb6"
+        }
+      }
+    },
+    "fragments/paper-to-app.md": {
+      "audio": "fragments/paper-to-app/",
+      "seconds": {
+        "v4": {
+          "prashish2": 56
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "4e0a67d35c2b7fd8"
+        }
+      }
+    },
+    "fragments/same-‘ol-kathmandu.md": {
+      "audio": "fragments/same-‘ol-kathmandu/",
+      "seconds": {
+        "v4": {
+          "prashish2": 55.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "37ff224d51b42097"
+        }
+      }
+    },
+    "fragments/software-that-builds-itself.md": {
+      "audio": "fragments/software-that-builds-itself/",
+      "seconds": {
+        "v4": {
+          "prashish2": 84
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "d7d4f2a4ebd49b11"
+        }
+      }
+    },
+    "fragments/the-going-abroad-scenario.md": {
+      "audio": "fragments/the-going-abroad-scenario/",
+      "seconds": {
+        "v4": {
+          "prashish2": 214.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "a22aa85d70f0a39e"
+        }
+      }
+    },
+    "fragments/the-joy-of-walking.md": {
+      "audio": "fragments/the-joy-of-walking/",
+      "seconds": {
+        "v4": {
+          "prashish2": 113.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "0ff335e93adeabf6"
+        }
+      }
+    },
+    "fragments/the-pain-of-not-doing.md": {
+      "audio": "fragments/the-pain-of-not-doing/",
+      "seconds": {
+        "v4": {
+          "prashish2": 162.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "ab5a694bc4e9d436"
+        }
+      }
+    },
+    "fragments/what-is-your-lifes-work.md": {
+      "audio": "fragments/what-is-your-lifes-work/",
+      "seconds": {
+        "v4": {
+          "prashish2": 81.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "7c34151915a04304"
+        }
+      }
+    },
+    "fragments/writing-more-or-less.md": {
+      "audio": "fragments/writing-more-or-less/",
+      "seconds": {
+        "v4": {
+          "prashish2": 66
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "4afd8db609ab09cf"
+        }
+      }
+    },
+    "seeking/composition-of-god.md": {
+      "audio": "seeking/composition-of-god/",
+      "seconds": {
+        "v4": {
+          "prashish2": 166.8
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "81b262dc4ecfa985"
+        }
+      }
+    },
+    "seeking/default-mode.md": {
+      "audio": "seeking/default-mode/",
+      "seconds": {
+        "v4": {
+          "prashish2": 166.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "d716c2ed1388bcf1"
+        }
+      }
+    },
+    "seeking/here-and-there-in-a-game.md": {
+      "audio": "seeking/here-and-there-in-a-game/",
+      "seconds": {
+        "v4": {
+          "prashish2": 182.8
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "9308bef5b3b0fc44"
+        }
+      }
+    },
+    "seeking/maya.md": {
+      "audio": "seeking/maya/",
+      "seconds": {
+        "v4": {
+          "prashish2": 234.4
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "c038fc4f8bd99bfe"
+        }
+      }
+    },
+    "seeking/purpose-of-life-in-a-metaverse.md": {
+      "audio": "seeking/purpose-of-life-in-a-metaverse/",
+      "seconds": {
+        "v4": {
+          "prashish2": 174.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "ace033b9dc9302cc"
+        }
+      }
+    },
+    "seeking/the-limits-of-reality.md": {
+      "audio": "seeking/the-limits-of-reality/",
+      "seconds": {
+        "v4": {
+          "prashish2": 134.7
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "5716b407c41abd35"
+        }
+      }
+    },
+    "seeking/the-fourth.md": {
+      "audio": "seeking/the-fourth/",
+      "seconds": {
+        "v4": {
+          "prashish2": 244.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "f6e0b72502cab39f"
+        }
+      }
+    },
+    "seeking/the-space-between.md": {
+      "audio": "seeking/the-space-between/",
+      "seconds": {
+        "v4": {
+          "prashish2": 187.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "7ae97b56faca49e6"
+        }
+      }
+    },
+    "seeking/vajrapani-the-senior-engineer.md": {
+      "audio": "seeking/vajrapani-the-senior-engineer/",
+      "seconds": {
+        "v4": {
+          "prashish2": 161.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "bd6c6e16002f22b8"
+        }
+      }
+    },
+    "seeking/was-that-true-or-is-this-true.md": {
+      "audio": "seeking/was-that-true-or-is-this-true/",
+      "seconds": {
+        "v4": {
+          "prashish2": 234.5
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "affbc4324f426902"
+        }
+      }
+    },
+    "ai/agentic-marketing.md": {
+      "audio": "ai/agentic-marketing/",
+      "seconds": {
+        "v4": {
+          "prashish2": 209.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "78385cfb87880833"
+        }
+      }
+    },
+    "ai/ais-widening-access-gap.md": {
+      "audio": "ai/ais-widening-access-gap/",
+      "seconds": {
+        "v4": {
+          "prashish2": 142
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "9eed6eda2a092695"
+        }
+      }
+    },
+    "ai/restructuring-your-company-around-ai-agents.md": {
+      "audio": "ai/restructuring-your-company-around-ai-agents/",
+      "seconds": {
+        "v4": {
+          "prashish2": 117.9
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "00ce6686aa9605e6"
+        }
+      }
+    },
+    "ai/personal-bookshelf-system.md": {
+      "audio": "ai/personal-bookshelf-system/",
+      "seconds": {
+        "v4": {
+          "prashish2": 576.4
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "95995b105d4c726f"
+        }
+      }
+    },
+    "ai/how-ai-agents-collaborate-framework-architecture.md": {
+      "audio": "ai/how-ai-agents-collaborate-framework-architecture/",
+      "seconds": {
+        "v4": {
+          "prashish2": 727.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "de4ba6837d0555d7"
+        }
+      }
+    },
+    "ai/self-healing-software.md": {
+      "audio": "ai/self-healing-software/",
+      "seconds": {
+        "v4": {
+          "prashish2": 431.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "a052aff97556f41e"
+        }
+      }
+    },
+    "ai/shared-intelligence-layer.md": {
+      "audio": "ai/shared-intelligence-layer/",
+      "seconds": {
+        "v4": {
+          "prashish2": 351.2
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "e48e414b75e10a25"
+        }
+      }
+    },
+    "ai/software-for-one-powered-by-llms.md": {
+      "audio": "ai/software-for-one-powered-by-llms/",
+      "seconds": {
+        "v4": {
+          "prashish2": 562.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "399136863b5c1c1f"
+        }
+      }
+    },
+    "ai/vibe-framework-for-agentic-software-delivery.md": {
+      "audio": "ai/vibe-framework-for-agentic-software-delivery/",
+      "seconds": {
+        "v4": {
+          "prashish2": 385.3
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "b3b5120caf11ce72"
+        }
+      }
+    },
+    "ai/architecture-for-llm-database-integration.md": {
+      "audio": "ai/architecture-for-llm-database-integration/",
+      "seconds": {
+        "v4": {
+          "prashish2": 2575.8
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "926ca1124283eaf1"
+        }
+      }
+    },
+    "ai/the-orchestrators-dilemma.md": {
+      "audio": "ai/the-orchestrators-dilemma/",
+      "seconds": {
+        "v4": {
+          "prashish2": 1782.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "ded93db6fe24754b"
+        }
+      }
+    },
+    "seeking/the-mind-on-autopilot.md": {
+      "audio": "seeking/the-mind-on-autopilot/",
+      "seconds": {
+        "v4": {
+          "prashish2": 75.1
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "689693012ed09c22"
+        }
+      }
+    },
+    "seeking/your-body-at-7-83-hz.md": {
+      "audio": "seeking/your-body-at-7-83-hz/",
+      "seconds": {
+        "v4": {
+          "prashish2": 221.3
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "2abf5d91f66b737c"
+        }
+      }
+    },
+    "seeking/your-body-sits-inside-you.md": {
+      "audio": "seeking/your-body-sits-inside-you/",
+      "seconds": {
+        "v4": {
+          "prashish2": 140.3
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "walkthrough-77b55be4878b8023"
+        }
+      }
+    },
+    "fragments/high-agency.md": {
+      "audio": "fragments/high-agency/",
+      "seconds": {
+        "v4": {
+          "prashish2": 108.4
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "d6333c0f8dbb9b57"
         }
       }
     }

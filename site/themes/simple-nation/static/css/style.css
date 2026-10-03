@@ -1078,8 +1078,11 @@ img + em {
 .ab-playall { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 14px; color: #fff; background: var(--accent-color); border: 0; border-radius: 999px; padding: 6px 14px 6px 10px; cursor: pointer; }
 .ab-playall svg { width: 14px; height: 14px; fill: currentColor; }
 .ab-playall:hover { filter: brightness(1.08); }
-.ab-clear { margin-left: auto; font: inherit; font-size: 13px; color: var(--accent-color); background: none; border: 0; padding: 0; cursor: pointer; }
-.ab-clear[hidden], .ab-item[hidden] { display: none; }
+.ab-clear { font: inherit; font-size: 13px; color: var(--accent-color); background: none; border: 0; padding: 0; cursor: pointer; }
+.ab-clear[hidden], .ab-item[hidden], .ab-empty[hidden] { display: none; }
+.ab-show { margin-left: auto; font: inherit; font-size: 13px; color: var(--text-color); background: var(--bg-color) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 9px center / 11px; border: 1px solid var(--border-color); border-radius: 999px; padding: 4px 26px 4px 11px; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.ab-show:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.ab-empty { margin: 18px 0 0; font-size: 14px; color: var(--text-color-muted); }
 .ab-pick { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 34px; margin-right: -4px; cursor: pointer; }
 .ab-pick input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent-color); cursor: pointer; }
 .ab-pill { flex: none; min-width: 46px; height: 30px; padding: 0 8px; font: inherit; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-color); background: none; border: 1px solid var(--border-color); border-radius: 999px; cursor: pointer; }
@@ -1123,3 +1126,20 @@ span.index-item-section:hover { color: var(--text-color); border-color: var(--bo
 .ab-seek { display: flex; align-items: center; gap: 10px; font-size: 12px; font-variant-numeric: tabular-nums; opacity: 0.85; }
 .ab-seek input { flex: 1; min-width: 0; margin: 0; accent-color: var(--accent-color); cursor: pointer; }
 body.ab-has-bar { padding-bottom: 90px; }
+/* play buttons in post lists; a faded one marks a post without audio yet */
+.index-body .section-heading-popular { margin-top: 40px; }
+.index-item > .ab-play { align-self: flex-start; margin-top: 1px; }
+.ab-play.ab-play-sm { width: 26px; height: 26px; }
+.ab-play.ab-play-sm svg { width: 12px; height: 12px; }
+.ab-play.is-soon { opacity: 0.25; cursor: default; }
+.ab-play.is-soon:hover { background: transparent; }
+/* the Listen row under a narrated post's date */
+.ab-listen { display: flex; align-items: center; gap: 10px; max-width: 420px; margin: -8px 0 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif; font-size: 14px; }
+.ab-listen-main { flex: 1; min-width: 0; }
+.ab-listen-label { margin-right: 8px; }
+.ab-listen .ab-time { opacity: 0.6; }
+.ab-listen .ab-line { margin-top: -2px; }
+/* a post whose audio is missing or failed to load */
+.is-unavailable > .ab-play, .is-unavailable .ab-listen-main > .ab-play { opacity: 0.25; cursor: default; }
+.is-unavailable.is-current > .ab-play { background: transparent; color: var(--accent-color); }
+.ab-listen.is-soon-row { opacity: 0.55; }

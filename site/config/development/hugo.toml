@@ -1,0 +1,13 @@
+# Only for the local preview (hugo server): plays narration from the local copies in .audio instead of the R2 bucket.
+[params]
+  audioBase = "/audio-local/"
+  # Popular (the homepage section, /popular and the /audiobook filter) shows only here until its list is settled.
+  showPopular = true
+
+[module]
+  [[module.mounts]]
+    source = "static"
+    target = "static"
+  [[module.mounts]]
+    source = "../.audio"
+    target = "static/audio-local"
