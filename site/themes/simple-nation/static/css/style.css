@@ -1075,6 +1075,10 @@ img + em {
 .ab-seg button:last-of-type { border-radius: 0 999px 999px 0; padding-right: 12px; }
 .ab-seg button[aria-pressed="true"] { position: relative; background: var(--accent-color); border-color: var(--accent-color); color: #fff; }
 .ab-head { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+/* the topic buttons and Play all share one row, with Play all on the right */
+.ab-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px; margin-top: 18px; }
+.ab-row .ab-topics { margin-top: 0; }
+.ab-row .ab-head { margin: 0 0 0 auto; flex: none; }
 .ab-playall { order: 2; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 14px; color: #fff; background: var(--accent-color); border: 0; border-radius: 999px; padding: 6px 14px 6px 10px; cursor: pointer; }
 .ab-playall svg { width: 14px; height: 14px; fill: currentColor; }
 .ab-playall:hover { filter: brightness(1.08); }
@@ -1152,6 +1156,7 @@ body.ab-has-bar { padding-bottom: 90px; }
 }
 @media only screen and (max-width: 600px) {
   .ab-topics { flex-wrap: nowrap; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .ab-row .ab-topics { flex: 1 1 100%; min-width: 0; }
   .ab-topics::-webkit-scrollbar { display: none; }
   .ab-topic { flex: none; font-size: 11px; padding: 3px 7px; }
   .ab-topic span { margin-left: 1px; }

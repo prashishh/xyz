@@ -10,6 +10,9 @@
 		{{/* Narrated posts per section, for the topic filter. */}}
 		{{ $topics := dict }}{{ $total := 0 }}
 		{{ range site.RegularPages }}{{ if index $book.posts .File.Path }}{{ $total = add $total 1 }}{{ $topics = merge $topics (dict .Section (add 1 (default 0 (index $topics .Section)))) }}{{ end }}{{ end }}
+		{{/* Where each post ranks in data/popular.yaml, for the Popular filter. */}}
+		{{ $rank := dict }}{{ if site.Params.showPopular }}{{ range $i, $p := partial "popular.html" . }}{{ $rank = merge $rank (dict $p.RelPermalink (add $i 1)) }}{{ end }}{{ end }}
+		<div class="ab-row">
 		{{ if gt (len $topics) 1 }}
 		<div class="ab-topics" role="group" aria-label="Topics">
 			<button type="button" class="ab-topic" data-topic="" aria-pressed="true">All <span>{{ $total }}</span></button>
@@ -19,6 +22,12 @@
 			{{ end }}{{ end }}
 		</div>
 		{{ end }}
+		<div class="ab-head">
+			<button type="button" class="ab-playall" id="abPlayAll"><svg class="ab-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span id="abPlayAllText">Play all</span></button>
+			<button type="button" class="ab-clear" id="abClear" hidden>Clear</button>
+			{{ if site.Params.showPopular }}<select class="ab-show" id="abShow" aria-label="Show"><option value="">All posts</option><option value="popular">Popular</option></select>{{ end }}
+		</div>
+		</div>
 
 		{{/* The voice and model choices show only when there is more than one of either. */}}
 		{{ if or (gt (len .voices) 1) (gt (len .models) 1) }}
@@ -38,13 +47,6 @@
 		</div>
 		{{ end }}
 
-		{{/* Where each post ranks in data/popular.yaml, for the Popular filter. */}}
-		{{ $rank := dict }}{{ if site.Params.showPopular }}{{ range $i, $p := partial "popular.html" . }}{{ $rank = merge $rank (dict $p.RelPermalink (add $i 1)) }}{{ end }}{{ end }}
-		<div class="ab-head">
-			<button type="button" class="ab-playall" id="abPlayAll"><svg class="ab-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg><span id="abPlayAllText">Play all</span></button>
-			<button type="button" class="ab-clear" id="abClear" hidden>Clear</button>
-			{{ if site.Params.showPopular }}<select class="ab-show" id="abShow" aria-label="Show"><option value="">All posts</option><option value="popular">Popular</option></select>{{ end }}
-		</div>
 		<p class="ab-empty" id="abEmpty" hidden>None of the popular posts has audio yet.</p>
 
 		<ol class="ab-list common-list">
