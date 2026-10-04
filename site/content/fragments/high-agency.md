@@ -23,17 +23,17 @@ article_kind: Perspective
 
 High agency means turning a rough goal into the right result without waiting for someone to spell it out. It means owning the outcome and taking things into your own hands, instead of waiting on someone or doing only the task you were given.
 
-- **Know what it is for:** Before you start, find out what the task is meant to achieve and whether this is the best way to get there. If the approach looks wrong, say so and suggest a better one. **Building the wrong thing fast isn't agency.**
+- **Know what it is for:** Before you start, find out what the task is meant to achieve and whether this is the best way to get there. If the approach looks wrong, say so and suggest a better one. *Building the wrong thing fast isn't agency.*
 
 <div class="ha" data-scene="order"><svg viewBox="0 0 400 142" role="img" aria-label="Both people are told to walk right, toward a wall with a flag behind it. One follows the order, hits the wall and says done. The other stops to ask whether this is the best way, turns the sign, puts a plank up the wall and reaches the flag."><g class="ag-world"></g></svg></div>
 
-- **Come back with something done:** Bring a draft, a fix, or a first version. Where something is unclear, make your best guess, say what you guessed, and keep going, like "I assumed X because Y; if that's wrong, here's how I'd change it." On bigger work, ask first, with a default attached, like "I'm planning to do A unless you'd prefer B." **Coming back with a draft is agency.**
+- **Come back with something done:** Bring a draft, a fix, or a first version. Where something is unclear, make your best guess, say what you guessed, and keep going, like "I assumed X because Y; if that's wrong, here's how I'd change it." On bigger work, ask first, with a default attached, like "I'm planning to do A unless you'd prefer B." *Coming back with a draft is agency.*
 
-- **Go beyond the task:** Look at the bigger goal and point out what else you notice, like "While fixing this, I found Z is also causing the problem." **Doing something outside the work you were assigned is where agency starts.**
+- **Go beyond the task:** Look at the bigger goal and point out what else you notice, like "While fixing this, I found Z is also causing the problem." *Doing something outside the work you were assigned is where agency starts.*
 
-- **Communicate early:** Share what you are doing, what you found, and what you need before anyone asks. **Sharing updates before anyone asks is agency.**
+- **Communicate early:** Share what you are doing, what you found, and what you need before anyone asks. *Sharing updates before anyone asks is agency.*
 
-- **Use AI to think better:** Use agents to explore options, challenge your approach, draft, and test, and check the output before handing it over. **Using AI only to move faster isn't agency.**
+- **Use AI to think better:** Use agents to explore options, challenge your approach, draft, and test, and check the output before handing it over. *Using AI only to move faster isn't agency.*
 
 AI has been a boon for people with high agency, because it lets them try more ideas and get more done in less time.
 
