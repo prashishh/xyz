@@ -48,6 +48,8 @@
     {{- $desc = "Long-form essays exploring ideas, experiences, and deeper thoughts." -}}
   {{- else if eq .Section "ai" -}}
     {{- $desc = "Essays and articles about AI, machine learning, and artificial intelligence." -}}
+  {{- else if .Params.description -}}
+    {{- $desc = .Params.description -}}
   {{- else -}}
     {{- $desc = printf "Collection of %s from %s" (.Section | title) .Site.Title -}}
   {{- end -}}
