@@ -241,14 +241,20 @@ async function alignClip(post, model, voice, key) {
   const res = await fetch("https://api.elevenlabs.io/v1/forced-alignment", { method: "POST", headers: { "xi-api-key": key }, body: form });
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
   const words = (await res.json()).words.filter((w) => w.text.trim());
-  // Paragraph by paragraph, counting words the way the aligner does: the title first, then each paragraph.
-  const counts = [post.titleText, ...post.paragraphs].map((t) => t.split(/\s+/).filter(Boolean).length);
-  if (counts.reduce((a, b) => a + b, 0) !== words.length) throw new Error(`${words.length} aligned words but ${counts.reduce((a, b) => a + b, 0)} in the text`);
+  // The aligner sometimes keeps a phrase such as "(opus4.5, glm-4.7, auto)" as one word, so paragraphs are split by counting the
+  // characters that are not spaces: the title first, then each paragraph. Both sides spell out the same characters.
+  const size = (t) => t.replace(/\s/g, "").length;
+  const targets = [post.titleText, ...post.paragraphs].map(size);
+  if (words.reduce((n, w) => n + size(w.text), 0) !== targets.reduce((a, b) => a + b, 0)) throw new Error("the aligned words do not spell out the text");
   const round = (n) => Math.round(n * 100) / 100;
   // Markdown marks that were not stripped from the text are not words to show.
   const clean = (t) => t.replace(/[_*]/g, "").replace(/\.{2,}/g, ".");
   let at = 0;
-  const paragraphs = counts.map((n) => words.slice(at, (at += n)).map((w) => [clean(w.text), round(w.start), round(w.end)]));
+  const paragraphs = targets.map((target) => {
+    const out = [];
+    for (let n = 0; n < target; at++) { n += size(words[at].text); out.push([clean(words[at].text), round(words[at].start), round(words[at].end)]); }
+    return out;
+  });
   const file = `${local.replace(/\.mp3$/, "")}.words.json`;
   fs.writeFileSync(file, JSON.stringify({ p: paragraphs.slice(1) }));
   upload(`${clip.replace(/\.mp3$/, "")}.words.json`, file, "application/json");
