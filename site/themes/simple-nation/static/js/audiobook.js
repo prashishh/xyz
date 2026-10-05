@@ -121,7 +121,7 @@
     if (old) old.style.width = "0";
     cur = i;
     var item = items[i], clip = clipOf(item);
-    readerLoad();
+    readerLoad(how);
     au.src = item.dataset.audio + clip.model + "/" + clip.voice + ".mp3";
     au.defaultPlaybackRate = au.playbackRate = rate;
     if (at) au.addEventListener("loadedmetadata", function () { au.currentTime = at * au.duration; }, { once: true });
@@ -214,11 +214,16 @@
   var reader = $("abReader"), readerOpen = false, rw = null, rwUrl = "", rwPast = -1, rwNow = -2, rwPausedUntil = 0, rwFrame = 0, wordsCache = {};
   function hasWords(i) { return i >= 0 && items[i].dataset.words === "1"; }
   function wordsUrl(item) { var c = clipOf(item); return item.dataset.audio + c.model + "/" + c.voice + ".words.json"; }
-  // Called whenever a post is loaded: offers the view for posts that have it, and fills it again when it is open.
-  function readerLoad() {
+  // Closing the view by hand turns off opening it on play, until the button opens it again.
+  function readerWanted() { try { return localStorage.getItem("audiobook-reader") !== "off"; } catch (e) { return true; } }
+  function rememberReader(on) { try { localStorage.setItem("audiobook-reader", on ? "on" : "off"); } catch (e) {} }
+  // Called whenever a post is loaded: offers the view for posts that have it, fills it again when it is open, and opens it when
+  // the post was started by pressing play (not when the next post follows on by itself).
+  function readerLoad(how) {
     var can = hasWords(cur);
     $("abRead").hidden = !can;
     if (readerOpen) { if (can) buildReader(); else closeReader(); }
+    else if (can && readerWanted() && (how === "list" || how === "retry" || how === "play_all")) openReader(true);
   }
   function buildReader() {
     var item = items[cur], url = wordsUrl(item), box = $("abReaderText");
@@ -265,24 +270,26 @@
     cancelAnimationFrame(rwFrame);
     (function tick() { paintReader(); rwFrame = requestAnimationFrame(tick); })();
   }
-  function openReader() {
+  function openReader(auto) {
     if (!hasWords(cur)) return;
+    if (!auto) rememberReader(true);
     readerOpen = true; reader.hidden = false;
     document.body.classList.add("ab-reading");
     $("abRead").setAttribute("aria-pressed", "true");
     buildReader(); readerLoop();
-    track("reader_open");
-    $("abReaderClose").focus();
+    track("reader_open", { trigger: auto ? "play" : "button" });
+    if (!auto) $("abReaderClose").focus();
   }
-  function closeReader() {
+  function closeReader(byUser) {
+    if (byUser) rememberReader(false);
     readerOpen = false; reader.hidden = true;
     document.body.classList.remove("ab-reading");
     $("abRead").setAttribute("aria-pressed", "false");
     cancelAnimationFrame(rwFrame);
   }
-  $("abRead").addEventListener("click", function () { if (readerOpen) closeReader(); else openReader(); });
-  $("abReaderClose").addEventListener("click", closeReader);
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && readerOpen) closeReader(); });
+  $("abRead").addEventListener("click", function () { if (readerOpen) closeReader(true); else openReader(); });
+  $("abReaderClose").addEventListener("click", function () { closeReader(true); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && readerOpen) closeReader(true); });
   ["wheel", "touchstart"].forEach(function (n) { reader.addEventListener(n, function () { rwPausedUntil = Date.now() + 4000; }, { passive: true }); });
   // Pressing a word plays from there.
   reader.addEventListener("click", function (e) {
