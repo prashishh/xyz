@@ -1145,7 +1145,8 @@ body.ab-has-bar { padding-bottom: 90px; }
 .ab-listen-main { flex: 1; min-width: 0; }
 .ab-listen-label { margin-right: 8px; }
 .ab-listen .ab-time { opacity: 0.6; }
-.ab-listen .ab-line { margin-top: -2px; }
+.ab-listen .ab-line { margin-top: -2px; visibility: visible; } /* the dim track shows before play, so the row is not empty under Listen */
+.index-item > .ab-play { align-self: flex-start; margin-top: 1px; }
 /* a post whose audio is missing or failed to load */
 .is-unavailable > .ab-play { opacity: 0.25; }
 .is-unavailable.is-current > .ab-play { background: transparent; color: var(--accent-color); }

@@ -312,7 +312,7 @@
       if (au.duration) au.currentTime = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * au.duration;
     }
     line.addEventListener("pointerdown", function (e) {
-      if (i !== cur) return;
+      if (i !== cur) { if (item.classList.contains("ab-listen")) toggle(i); return; } // pressing the dim track on a post that is not playing starts it
       line.setPointerCapture(e.pointerId);
       seekTo(e);
     });
