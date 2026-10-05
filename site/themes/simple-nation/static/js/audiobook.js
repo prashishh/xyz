@@ -121,6 +121,7 @@
     if (old) old.style.width = "0";
     cur = i;
     var item = items[i], clip = clipOf(item);
+    readerLoad();
     au.src = item.dataset.audio + clip.model + "/" + clip.voice + ".mp3";
     au.defaultPlaybackRate = au.playbackRate = rate;
     if (at) au.addEventListener("loadedmetadata", function () { au.currentTime = at * au.duration; }, { once: true });
@@ -207,6 +208,90 @@
     if (cur >= 0) load(cur, au.ended || !au.duration ? 0 : au.currentTime / au.duration, !au.paused);
     else showTimes();
   }
+
+  // The read-along view: the post's words, lit up as they are spoken. The words and their timings come from
+  // <clip>.words.json, made by scripts/narrate-post.mjs, and only posts marked data-words have them.
+  var reader = $("abReader"), readerOpen = false, rw = null, rwUrl = "", rwPast = -1, rwNow = -2, rwPausedUntil = 0, rwFrame = 0, wordsCache = {};
+  function hasWords(i) { return i >= 0 && items[i].dataset.words === "1"; }
+  function wordsUrl(item) { var c = clipOf(item); return item.dataset.audio + c.model + "/" + c.voice + ".words.json"; }
+  // Called whenever a post is loaded: offers the view for posts that have it, and fills it again when it is open.
+  function readerLoad() {
+    var can = hasWords(cur);
+    $("abRead").hidden = !can;
+    if (readerOpen) { if (can) buildReader(); else closeReader(); }
+  }
+  function buildReader() {
+    var item = items[cur], url = wordsUrl(item), box = $("abReaderText");
+    $("abReaderTitle").textContent = item.dataset.title;
+    $("abReaderTag").textContent = item.dataset.tag || "";
+    box.textContent = ""; rw = null; rwUrl = url;
+    (wordsCache[url] ? Promise.resolve(wordsCache[url]) : fetch(url).then(function (r) { if (!r.ok) throw new Error("words"); return r.json(); }).then(function (j) { wordsCache[url] = j; return j; }))
+      .then(function (j) {
+        if (rwUrl !== url) return; // another post was loaded in the meantime
+        var spans = [], times = [];
+        j.p.forEach(function (para) {
+          var p = document.createElement("p");
+          para.forEach(function (w, k) {
+            var sp = document.createElement("span");
+            sp.className = "w"; sp.dataset.i = spans.length; sp.textContent = w[0];
+            p.appendChild(sp);
+            if (k < para.length - 1) p.appendChild(document.createTextNode(" "));
+            spans.push(sp); times.push(w);
+          });
+          box.appendChild(p);
+        });
+        rw = { spans: spans, times: times };
+        reader.scrollTop = 0; rwPast = -1; rwNow = -2;
+        paintReader();
+      })
+      .catch(function () { box.textContent = "The read-along text is not available right now."; });
+  }
+  // Marks the words before the current time as spoken and the one being spoken as current, touching only the words that changed.
+  function paintReader() {
+    if (!rw || !readerOpen) return;
+    var T = rw.times, t = au.currentTime, lo = 0, hi = T.length - 1, idx = -1;
+    while (lo <= hi) { var mid = (lo + hi) >> 1; if (T[mid][1] <= t) { idx = mid; lo = mid + 1; } else hi = mid - 1; }
+    var now = idx >= 0 && t < T[idx][2] ? idx : -1, past = now >= 0 ? idx : idx + 1;
+    if (past === rwPast && now === rwNow) return;
+    var first = rwPast < 0 ? 0 : Math.min(past, rwPast) - 1, last = rwPast < 0 ? T.length - 1 : Math.max(past, rwPast) + 1;
+    for (var i = Math.max(0, first); i <= Math.min(T.length - 1, last); i++) rw.spans[i].className = "w" + (i < past ? " past" : i === now ? " now" : "");
+    rwPast = past; rwNow = now;
+    // Keep the spoken line in the middle of the screen, unless the reader has just scrolled by hand.
+    if (Date.now() < rwPausedUntil) return;
+    var el = rw.spans[now >= 0 ? now : Math.max(0, past - 1)], box = el.getBoundingClientRect(), vh = window.innerHeight - 90;
+    if (box.top < vh * 0.25 || box.bottom > vh * 0.6) reader.scrollTo({ top: reader.scrollTop + box.top - vh * 0.4, behavior: "smooth" });
+  }
+  function readerLoop() {
+    cancelAnimationFrame(rwFrame);
+    (function tick() { paintReader(); rwFrame = requestAnimationFrame(tick); })();
+  }
+  function openReader() {
+    if (!hasWords(cur)) return;
+    readerOpen = true; reader.hidden = false;
+    document.body.classList.add("ab-reading");
+    $("abRead").setAttribute("aria-pressed", "true");
+    buildReader(); readerLoop();
+    track("reader_open");
+    $("abReaderClose").focus();
+  }
+  function closeReader() {
+    readerOpen = false; reader.hidden = true;
+    document.body.classList.remove("ab-reading");
+    $("abRead").setAttribute("aria-pressed", "false");
+    cancelAnimationFrame(rwFrame);
+  }
+  $("abRead").addEventListener("click", function () { if (readerOpen) closeReader(); else openReader(); });
+  $("abReaderClose").addEventListener("click", closeReader);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && readerOpen) closeReader(); });
+  ["wheel", "touchstart"].forEach(function (n) { reader.addEventListener(n, function () { rwPausedUntil = Date.now() + 4000; }, { passive: true }); });
+  // Pressing a word plays from there.
+  reader.addEventListener("click", function (e) {
+    var w = e.target.closest && e.target.closest(".w");
+    if (!w || !rw) return;
+    au.currentTime = rw.times[+w.dataset.i][1];
+    rwPausedUntil = 0;
+    if (au.paused) au.play().catch(ui);
+  });
 
   items.forEach(function (item, i) {
     part(item, ".ab-play").addEventListener("click", function () { toggle(i); });

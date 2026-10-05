@@ -3,6 +3,7 @@
 //
 //   ELEVENLABS_API_KEY=... npm run narrate:post -- site/content/fragments/world-class-network.md
 //   npm run narrate:post -- <post.md> --dry     prints the text that would be read, without calling ElevenLabs
+//   ELEVENLABS_API_KEY=... npm run narrate:post -- <post.md> --align     fetches only the word timings of a clip that exists already
 //   npm run narrate:post -- --missing           lists new posts without audio in the default model and voice
 //   ELEVENLABS_API_KEY=... npm run narrate:post -- --missing --yes     narrates them (the "Narrate new posts" workflow runs this)
 //
@@ -206,6 +207,8 @@ export async function narrate(post, models, voices, key) {
       saveClip(post, m, v, { hash, seconds: seconds(frames) });
       console.log(`made ${clip}`);
       made++;
+      // The word timings drive the read-along view. A failure here only costs that view, so it does not stop the run.
+      if (!walk) await alignClip(post, m, v, key).catch((e) => console.error(`No word timings for ${post.page}: ${e.message}`));
     }
   }
   console.log(`${made} clip(s) generated, ${skipped} unchanged, ${post.plainText.length} characters each, ${credits} credits used, for ${post.page}`);
@@ -226,15 +229,51 @@ function walkthroughClips(post, voice) {
   return { files, requests: [], hash: `walkthrough-${hash.update(String(STEP_GAP)).digest("hex").slice(0, 16)}` };
 }
 
+// The word timings of a clip, for the read-along view: ElevenLabs aligns the narration's text with the audio, and the words
+// are saved by paragraph as [word, start, end] in <clip>.words.json next to the clip, which the pages load when needed.
+async function alignClip(post, model, voice, key) {
+  const clip = `${post.audio}${model}/${voice}.mp3`;
+  const local = path.join(CACHE, clip);
+  if (!fs.existsSync(local)) throw new Error(`No local copy of ${clip}`);
+  const form = new FormData();
+  form.append("file", new Blob([fs.readFileSync(local)], { type: "audio/mpeg" }), "clip.mp3");
+  form.append("text", post.plainText);
+  const res = await fetch("https://api.elevenlabs.io/v1/forced-alignment", { method: "POST", headers: { "xi-api-key": key }, body: form });
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  const words = (await res.json()).words.filter((w) => w.text.trim());
+  // Paragraph by paragraph, counting words the way the aligner does: the title first, then each paragraph.
+  const counts = [post.titleText, ...post.paragraphs].map((t) => t.split(/\s+/).filter(Boolean).length);
+  if (counts.reduce((a, b) => a + b, 0) !== words.length) throw new Error(`${words.length} aligned words but ${counts.reduce((a, b) => a + b, 0)} in the text`);
+  const round = (n) => Math.round(n * 100) / 100;
+  // Markdown marks that were not stripped from the text are not words to show.
+  const clean = (t) => t.replace(/[_*]/g, "").replace(/\.{2,}/g, ".");
+  let at = 0;
+  const paragraphs = counts.map((n) => words.slice(at, (at += n)).map((w) => [clean(w.text), round(w.start), round(w.end)]));
+  const file = `${local.replace(/\.mp3$/, "")}.words.json`;
+  fs.writeFileSync(file, JSON.stringify({ p: paragraphs.slice(1) }));
+  upload(`${clip.replace(/\.mp3$/, "")}.words.json`, file, "application/json");
+  saveWords(post, model, voice);
+  console.log(`words ${clip.replace(/\.mp3$/, "")}.words.json`);
+}
+
 // Puts a clip in the R2 bucket, from where the site plays it.
-export function upload(clip, local) {
-  execFileSync(process.env.WRANGLER ?? "wrangler", ["r2", "object", "put", `${BUCKET}/${clip}`, "--file", local, "--content-type", "audio/mpeg", "--cache-control", "public, max-age=86400", "--remote"], {
+export function upload(clip, local, type = "audio/mpeg") {
+  execFileSync(process.env.WRANGLER ?? "wrangler", ["r2", "object", "put", `${BUCKET}/${clip}`, "--file", local, "--content-type", type, "--cache-control", "public, max-age=86400", "--remote"], {
     env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID ?? CLOUDFLARE_ACCOUNT },
     stdio: ["ignore", "ignore", "inherit"],
   });
 }
 
 const readData = () => (fs.existsSync(DATA) ? JSON.parse(fs.readFileSync(DATA, "utf8")) : { posts: {} });
+
+// Marks in site/data/audiobook.json that a clip has word timings, so its pages offer the read-along view.
+function saveWords(post, model, voice) {
+  const data = readData();
+  const entry = data.posts[post.page];
+  if (!entry) return;
+  ((entry.words ??= {})[model] ??= {})[voice] = true;
+  fs.writeFileSync(DATA, JSON.stringify(data, null, 2) + "\n");
+}
 
 // Records a clip's hash and length for its post in site/data/audiobook.json, then lists the models and voices that appear in
 // any post, in the order above. The file is read and written in one go, so posts recorded side by side do not overwrite each other.
@@ -286,6 +325,7 @@ async function main() {
   const onlyModel = flag("model");
   const dry = option("dry");
   const missing = option("missing");
+  const alignOnly = option("align");
   const yes = option("yes");
   const key = process.env.ELEVENLABS_API_KEY;
   const usage = `Usage: ELEVENLABS_API_KEY=... node scripts/narrate-post.mjs <post.md> [--model ${Object.keys(MODELS).join("|")}] [--voice ${Object.keys(VOICES).join("|")}] [--dry]
@@ -323,7 +363,13 @@ async function main() {
     if (dry) {
       console.log(`${post.plainText}\n\n${post.plainText.length} characters`);
     } else {
-      await narrate(post, onlyModel ? [onlyModel] : Object.keys(MODELS), onlyVoice ? [onlyVoice] : Object.keys(VOICES), key);
+      const models = onlyModel ? [onlyModel] : Object.keys(MODELS), voices = onlyVoice ? [onlyVoice] : Object.keys(VOICES);
+      if (alignOnly) {
+        // Only the word timings, for clips that already exist.
+        for (const m of models) for (const v of voices) if (readData().posts[post.page]?.seconds?.[m]?.[v]) await alignClip(post, m, v, key);
+      } else {
+        await narrate(post, models, voices, key);
+      }
     }
   }
 }

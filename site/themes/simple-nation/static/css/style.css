@@ -1164,3 +1164,32 @@ body.ab-has-bar { padding-bottom: 90px; }
   .ab-head:not(:has(.ab-show)) { display: none; }
   .ab-list .ab-item:first-child { margin-top: 14px; }
 }
+
+/* the read-along view and its button in the player bar */
+@font-face { font-family: "Freight Text"; src: url("/fonts/freight-text-book.otf") format("opentype"); font-display: swap; }
+.ab-icon-btn { flex: none; width: 30px; height: 30px; padding: 0; border: 1px solid var(--border-color); border-radius: 50%; background: none; color: var(--text-color); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.ab-icon-btn[hidden] { display: none; }
+.ab-icon-btn svg { width: 16px; height: 16px; fill: currentColor; }
+.ab-icon-btn[aria-pressed="true"] { background: var(--accent-color); border-color: var(--accent-color); color: #fff; }
+.ab-reader { position: fixed; inset: 0; z-index: 998; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--bg-color); padding-bottom: 140px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif; }
+.ab-reader[hidden] { display: none; }
+.ab-reader-inner { max-width: 720px; margin: 0 auto; padding: 22px 24px 0; }
+.ab-reader-head { display: flex; align-items: center; gap: 14px; padding-right: 70px; }
+.ab-reader-close { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 14px; color: var(--text-color); background: none; border: 1px solid var(--border-color); border-radius: 999px; padding: 6px 14px 6px 9px; cursor: pointer; }
+.ab-reader-close svg { width: 16px; height: 16px; fill: currentColor; }
+.ab-reader-tag { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px; border: 1px solid var(--border-color-light); border-radius: 3px; }
+.ab-reader .ab-reader-title { margin: 30px 0 24px; font-size: clamp(26px, 5vw, 36px); line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; color: var(--accent-color); }
+.ab-reader-text { font-family: "Freight Text", Georgia, serif; font-size: clamp(22px, 4.6vw, 30px); line-height: 1.5; }
+.ab-reader-text p { margin: 0 0 1.1em; font-family: inherit; font-size: inherit; line-height: inherit; text-align: left; }
+.ab-reader-text .w { color: color-mix(in srgb, var(--text-color) 30%, transparent); cursor: pointer; transition: color 0.12s ease; }
+.ab-reader-text .w.past { color: var(--text-color); }
+.ab-reader-text .w.now { color: var(--accent-color); }
+body.ab-reading { overflow: hidden; }
+/* on phones the player bar has two rows, the title and seek bar above the buttons, so the seek bar keeps room */
+@media only screen and (max-width: 520px) {
+  .ab-bar-inner { flex-wrap: wrap; gap: 4px 10px; padding-top: 8px; }
+  .ab-bar-main { order: -1; flex: 1 1 100%; }
+  .ab-bar-buttons { margin-right: auto; }
+  body.ab-has-bar { padding-bottom: 130px; }
+  .ab-reader { padding-bottom: 180px; }
+}

@@ -17,8 +17,16 @@
 				<span id="abLen">0:00</span>
 			</div>
 		</div>
+		<button type="button" class="ab-icon-btn" id="abRead" aria-label="Read along" title="Read along" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zM4 11h16v2H4zM4 16h10v2H4z"/></svg></button>
 		<button type="button" class="ab-pill" id="abAuto" aria-pressed="true" title="Play the next post when this one ends">Auto</button>
 		<button type="button" class="ab-pill" id="abRate" aria-label="Playback speed, 1×">1×</button>
+	</div>
+</div>
+<div class="ab-reader" id="abReader" role="dialog" aria-label="Read along" hidden>
+	<div class="ab-reader-inner">
+		<div class="ab-reader-head"><button type="button" class="ab-reader-close" id="abReaderClose" aria-label="Close read along"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19l5.6-5.6 5.6 5.6 1.4-1.4-5.6-5.6L19 6.4 17.6 5 12 10.6z"/></svg><span>Close</span></button><span class="ab-reader-tag" id="abReaderTag"></span></div>
+		<h2 class="ab-reader-title" id="abReaderTitle"></h2>
+		<div class="ab-reader-text" id="abReaderText"></div>
 	</div>
 </div>
 <script src="{{ "js/audiobook.js" | relURL }}?v={{ now.Unix }}" defer></script>

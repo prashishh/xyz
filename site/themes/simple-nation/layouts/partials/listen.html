@@ -1,10 +1,10 @@
 {{- /* A Listen button under a narrated post's date (one listed in data/audiobook.json), played in the player bar.
        A post without audio yet, unless it says "narrate: false", gets a faded "coming soon" row instead. */ -}}
-{{ $found := false }}
+{{ $found := false }}{{ $labels := dict "fragments" "Fragment" "ai" "AI" "seeking" "Seeking" "essays" "Essay" }}
 {{ with site.Data.audiobook }}
 	{{ $model := .model }}{{ $voice := .voice }}{{ $posts := .posts }}{{ $base := site.Params.audioBase | default .base }}
 	{{ with $.File }}{{ with index $posts .Path }}{{ $found = true }}
-		<div class="ab-listen" data-audio="{{ $base }}{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $.Title }}" data-path="{{ $.RelPermalink }}">
+		<div class="ab-listen" data-audio="{{ $base }}{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $.Title }}" data-tag="{{ index $labels $.Section }}" data-path="{{ $.RelPermalink }}"{{ with .words }}{{ with index . $model }}{{ if index . $voice }} data-words="1"{{ end }}{{ end }}{{ end }}>
 			<button class="ab-play ab-play-sm" type="button" aria-label="Play {{ $.Title }}">{{ partial "ab-icons.html" }}</button>
 			<div class="ab-listen-main">
 				<span class="ab-listen-label">Listen</span><span class="ab-time">{{ with index .seconds $model }}{{ with index . $voice }}{{ $t := int (math.Round .) }}{{ printf "%d:%02d" (div $t 60) (mod $t 60) }}{{ end }}{{ end }}</span>

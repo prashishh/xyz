@@ -53,7 +53,7 @@
 			{{ range site.RegularPages.ByDate.Reverse }}
 				{{ $p := . }}
 				{{ with index $book.posts .File.Path }}
-				<li class="ab-item index-item" data-topic="{{ $p.Section }}" data-audio="{{ site.Params.audioBase | default $book.base }}{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $p.Title }}" data-path="{{ $p.RelPermalink }}"{{ with index $rank $p.RelPermalink }} data-popular="{{ . }}"{{ end }}>
+				<li class="ab-item index-item" data-topic="{{ $p.Section }}" data-audio="{{ site.Params.audioBase | default $book.base }}{{ .audio }}" data-seconds="{{ jsonify .seconds }}" data-title="{{ $p.Title }}" data-tag="{{ index $labels $p.Section }}" data-path="{{ $p.RelPermalink }}"{{ with .words }}{{ with index . $book.model }}{{ if index . $book.voice }} data-words="1"{{ end }}{{ end }}{{ end }}{{ with index $rank $p.RelPermalink }} data-popular="{{ . }}"{{ end }}>
 					<label class="ab-pick"><input type="checkbox" aria-label="Pick {{ $p.Title }}"></label>
 					<button class="ab-play" type="button" aria-label="Play {{ $p.Title }}">{{ partial "ab-icons.html" }}</button>
 					<div class="index-item-main">
