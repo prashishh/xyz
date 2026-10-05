@@ -11,7 +11,7 @@
   var voiceSel = $("abVoice"), seek = $("abSeek");
   var topics = [].slice.call(document.querySelectorAll(".ab-topic"));
   var modelBtns = [].slice.call(document.querySelectorAll(".ab-model button"));
-  var VOICES = JSON.parse(bar.dataset.voices), RATES = [1, 1.5, 2];
+  var VOICES = JSON.parse(bar.dataset.voices), RATES = [1, 1.25, 1.5]; // a saved speed no longer offered falls back to 1×
   var au = new Audio();
   var cur = -1, rate = 1, voice = bar.dataset.voice, model = bar.dataset.model, nextTimer = 0, dragging = false;
   var topic = "", marks = {};
