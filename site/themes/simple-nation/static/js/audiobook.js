@@ -152,15 +152,18 @@
     ui();
   }
 
-  function toggle(i) {
+  // fromRow is true for a play button in a list or a Listen row, which also brings the read-along view back after it was closed.
+  function toggle(i, fromRow) {
     if (items[i].classList.contains("is-unavailable")) {
       items[i].classList.remove("is-unavailable");
       part(items[i], ".ab-play").removeAttribute("title");
       return load(i, 0, true, "retry");
     }
     if (i !== cur) return load(i, 0, true, "list");
-    if (au.paused) au.play().catch(ui);
-    else au.pause();
+    if (au.paused) {
+      au.play().catch(ui);
+      if (fromRow && hasWords(i) && !readerOpen) openReader(true);
+    } else au.pause();
   }
   function prev() {
     var i = step(-1);
@@ -296,7 +299,7 @@
   });
 
   items.forEach(function (item, i) {
-    part(item, ".ab-play").addEventListener("click", function () { toggle(i); });
+    part(item, ".ab-play").addEventListener("click", function () { toggle(i, true); });
     var box = part(item, ".ab-pick input");
     if (box) box.addEventListener("change", function () { showTimes(); ui(); });
     // The progress line under the playing post seeks too: press or drag along it.
