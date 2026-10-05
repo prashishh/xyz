@@ -216,7 +216,7 @@
   // <clip>.words.json, made by scripts/narrate-post.mjs, and only posts marked data-words have them.
   var reader = $("abReader"), readerOpen = false, rw = null, rwUrl = "", rwPast = -1, rwNow = -2, rwPausedUntil = 0, rwFrame = 0, wordsCache = {};
   function hasWords(i) { return i >= 0 && items[i].dataset.words === "1"; }
-  function wordsUrl(item) { var c = clipOf(item); return item.dataset.audio + c.model + "/" + c.voice + ".words.json"; }
+  function wordsUrl(item) { var c = clipOf(item); return item.dataset.audio + c.model + "/" + c.voice + ".words.json?v=2"; } // v=2 skips copies browsers saved before the bucket allowed the site to read them
   // Called whenever a post is loaded: offers the view for posts that have it, fills it again when it is open, and opens it when
   // the post was started by pressing play (not when the next post follows on by itself). Closing it returns to the page below.
   function readerLoad(how) {
