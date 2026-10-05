@@ -8,19 +8,18 @@
   var bar = document.getElementById("abBar");
   if (!items.length || !bar) return;
   var $ = function (id) { return document.getElementById(id); };
-  var voiceSel = $("abVoice"), autoBtn = $("abAuto"), seek = $("abSeek");
+  var voiceSel = $("abVoice"), seek = $("abSeek");
   var topics = [].slice.call(document.querySelectorAll(".ab-topic"));
   var modelBtns = [].slice.call(document.querySelectorAll(".ab-model button"));
   var VOICES = JSON.parse(bar.dataset.voices), RATES = [1, 1.5, 2];
   var au = new Audio();
-  var cur = -1, rate = 1, auto = true, voice = bar.dataset.voice, model = bar.dataset.model, nextTimer = 0, dragging = false;
+  var cur = -1, rate = 1, voice = bar.dataset.voice, model = bar.dataset.model, nextTimer = 0, dragging = false;
   var topic = "", marks = {};
   au.preload = "metadata";
 
   try {
     var saved = localStorage.getItem("audiobook-voice");
     if (VOICES[saved]) voice = saved;
-    if (localStorage.getItem("audiobook-autoplay") === "0") auto = false;
     rate = RATES.indexOf(Number(localStorage.getItem("audiobook-speed"))) >= 0 ? Number(localStorage.getItem("audiobook-speed")) : 1;
     var savedModel = localStorage.getItem("audiobook-model");
     if (savedModel && (!modelBtns.length || modelBtns.some(function (b) { return b.dataset.model === savedModel; }))) model = savedModel;
@@ -91,8 +90,8 @@
     });
     bar.classList.toggle("is-playing", playing);
     $("abToggle").setAttribute("aria-label", playing ? "Pause" : "Play");
-    $("abPrev").disabled = cur < 0;
-    $("abNext").disabled = step(1) < 0;
+    $("abPrev").disabled = $("abNext").disabled = cur < 0;
+    $("abNextPost").hidden = step(1) < 0 && !bar.dataset.next;
   }
 
   function progress() {
@@ -113,7 +112,7 @@
   }
 
   // Loads post i in the chosen model and voice, starting at a fraction of the way through (used when either changes mid-post).
-  // how says what started it ("list", "play_all", "next", "previous" or "autoplay"), for the audio_play event.
+  // how says what started it ("list", "play_all", "next", "next_article", "retry" or "autoplay"), for the audio_play event.
   function load(i, at, play, how) {
     clearTimeout(nextTimer);
     if (i !== cur) marks = {};
@@ -165,14 +164,23 @@
       if (fromRow && hasWords(i) && !readerOpen) openReader(true);
     } else au.pause();
   }
-  function prev() {
-    var i = step(-1);
-    if (i >= 0 && au.currentTime < 3) load(i, 0, true, "previous");
-    else if (cur >= 0) { au.currentTime = 0; if (au.paused) au.play().catch(ui); }
+  // The buttons either side of play jump back or forward ten seconds.
+  function skip(by) {
+    if (cur < 0 || !au.duration) return;
+    au.currentTime = Math.min(au.duration, Math.max(0, au.currentTime + by));
+    progress();
   }
   function next(how) {
     var i = step(1);
     if (i >= 0) load(i, 0, true, typeof how === "string" ? how : "next");
+  }
+  // The Next button: the next post in the list, or on a post's own page, that next post's page (data-next), where it starts
+  // playing (see the end of this file).
+  function nextPost() {
+    if (step(1) >= 0) return next();
+    if (!bar.dataset.next) return;
+    try { sessionStorage.setItem("audiobook-play", bar.dataset.next); } catch (e) {}
+    location.href = bar.dataset.next;
   }
 
   function setRate(r) {
@@ -196,11 +204,6 @@
     showTimes();
     ui();
   }
-  function setAuto(on) {
-    auto = on;
-    autoBtn.setAttribute("aria-pressed", String(on));
-    try { localStorage.setItem("audiobook-autoplay", on ? "1" : "0"); } catch (e) {}
-  }
   function setTopic(t) {
     topic = t;
     topics.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.topic === t)); });
@@ -223,7 +226,7 @@
     var can = hasWords(cur);
     $("abRead").hidden = !can;
     if (readerOpen) { if (can) buildReader(); else closeReader(); }
-    else if (can && (how === "list" || how === "retry" || how === "play_all")) openReader(true);
+    else if (can && (how === "list" || how === "retry" || how === "play_all" || how === "next_article")) openReader(true);
   }
   function buildReader() {
     var item = items[cur], url = wordsUrl(item), box = $("abReaderText");
@@ -342,10 +345,10 @@
     });
   }
   $("abRate").addEventListener("click", function () { setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]); });
-  autoBtn.addEventListener("click", function () { setAuto(!auto); });
   $("abToggle").addEventListener("click", function () { toggle(cur); });
-  $("abPrev").addEventListener("click", prev);
-  $("abNext").addEventListener("click", next);
+  $("abPrev").addEventListener("click", function () { skip(-10); });
+  $("abNext").addEventListener("click", function () { skip(10); });
+  $("abNextPost").addEventListener("click", nextPost);
 
   seek.addEventListener("input", function () {
     dragging = true;
@@ -363,7 +366,8 @@
   au.addEventListener("error", unavailable);
   au.addEventListener("ended", function () {
     track("audio_complete");
-    if (auto && step(1) >= 0) nextTimer = setTimeout(function () { next("autoplay"); }, 1200);
+    // In a list, the next post follows on by itself; a post's own page stops at its end.
+    if (step(1) >= 0) nextTimer = setTimeout(function () { next("autoplay"); }, 1200);
     ui();
   });
 
@@ -371,8 +375,9 @@
     var actions = {
       play: function () { au.play(); },
       pause: function () { au.pause(); },
-      previoustrack: prev,
-      nexttrack: next,
+      seekbackward: function () { skip(-10); },
+      seekforward: function () { skip(10); },
+      nexttrack: nextPost,
       seekto: function (d) { au.currentTime = d.seekTime; },
     };
     Object.keys(actions).forEach(function (a) {
@@ -381,8 +386,18 @@
   }
 
   setRate(rate);
-  setAuto(auto);
   if (modelBtns.length) setModel(model);
   showTimes();
   ui();
+  // Arriving from the Next button on the previous post: start this post. A browser that does not allow sound without a press
+  // here leaves it loaded in the bar, ready to play.
+  try {
+    var same = function (a, b) { return decodeURI(a) === decodeURI(b); };
+    var wanted = sessionStorage.getItem("audiobook-play");
+    if (wanted && same(wanted, location.pathname)) {
+      sessionStorage.removeItem("audiobook-play");
+      var here = items.filter(function (item) { return same(item.dataset.path, location.pathname); })[0];
+      if (here) load(items.indexOf(here), 0, true, "next_article");
+    }
+  } catch (e) {}
 })();
