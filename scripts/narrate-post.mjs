@@ -4,8 +4,8 @@
 //   ELEVENLABS_API_KEY=... npm run narrate:post -- site/content/fragments/world-class-network.md
 //   npm run narrate:post -- <post.md> --dry     prints the text that would be read, without calling ElevenLabs
 //   ELEVENLABS_API_KEY=... npm run narrate:post -- <post.md> --align     fetches only the word timings of a clip that exists already
-//   npm run narrate:post -- --missing           lists new posts without audio in the default model and voice
-//   ELEVENLABS_API_KEY=... npm run narrate:post -- --missing --yes     narrates them (the "Narrate new posts" workflow runs this)
+//   npm run narrate:post -- --missing           lists new posts without audio in the default model and voice, and those without word timings
+//   ELEVENLABS_API_KEY=... npm run narrate:post -- --missing --yes     narrates and aligns them (the "Narrate new posts" workflow runs this)
 //
 // Each model and voice gets one clip, <section>/<post>/<model>/<voice>.mp3 in the R2 bucket, that reads the title and then the body.
 // The site uses Sample 2 on v4. With more entries in VOICES or MODELS, a post is read with every one of them unless --model or
@@ -235,7 +235,13 @@ function walkthroughClips(post, voice) {
 async function alignClip(post, model, voice, key) {
   const clip = `${post.audio}${model}/${voice}.mp3`;
   const local = path.join(CACHE, clip);
-  if (!fs.existsSync(local)) throw new Error(`No local copy of ${clip}`);
+  // A clip recorded elsewhere, such as by the workflow, is fetched from the site's audio domain first.
+  if (!fs.existsSync(local)) {
+    const res = await fetch(AUDIO_BASE + clip);
+    if (!res.ok) throw new Error(`No local copy of ${clip}, and ${AUDIO_BASE}${clip} returned ${res.status}`);
+    fs.mkdirSync(path.dirname(local), { recursive: true });
+    fs.writeFileSync(local, Buffer.from(await res.arrayBuffer()));
+  }
   const form = new FormData();
   form.append("file", new Blob([fs.readFileSync(local)], { type: "audio/mpeg" }), "clip.mp3");
   form.append("text", post.plainText);
@@ -306,17 +312,21 @@ export function saveClip(post, model, voice, { hash, seconds: length }) {
   }, null, 2) + "\n");
 }
 
-// Published posts dated from AUTO_FROM on (as written in the post) whose default clip does not exist yet.
-function missingPosts() {
+// Published posts dated from AUTO_FROM on (as written in the post).
+function recentPosts() {
   const now = new Date();
   return SECTIONS.flatMap((s) => {
     const dir = path.join(CONTENT, s);
     return fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".md") && f !== "_index.md").map((f) => readPost(path.join(dir, f))) : [];
-  }).filter((p) => {
-    if (p.draft || p.skip || p.date.slice(0, 10) < AUTO_FROM || new Date(p.date) > now) return false;
-    return !readData().posts[p.page]?.hashes?.[DEFAULT_MODEL]?.[DEFAULT_VOICE];
-  });
+  }).filter((p) => !p.draft && !p.skip && p.date.slice(0, 10) >= AUTO_FROM && new Date(p.date) <= now);
 }
+// Recent posts whose default clip does not exist yet.
+const missingPosts = () => recentPosts().filter((p) => !readData().posts[p.page]?.hashes?.[DEFAULT_MODEL]?.[DEFAULT_VOICE]);
+// Recent posts read from their text whose default clip has no word timings, such as when the alignment failed.
+const unalignedPosts = () => recentPosts().filter((p) => {
+  const entry = readData().posts[p.page];
+  return !p.walkthrough && entry?.hashes?.[DEFAULT_MODEL]?.[DEFAULT_VOICE] && !entry.words?.[DEFAULT_MODEL]?.[DEFAULT_VOICE];
+});
 
 // The command line, when this file is run rather than imported (scripts/voice-agent.mjs imports readPost).
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();
@@ -342,7 +352,9 @@ async function main() {
     const todo = missingPosts();
     for (const p of todo) console.log(`${p.page}: ${p.plainText.length} characters`);
     console.log(`${todo.length} post(s) from ${AUTO_FROM} on without ${DEFAULT_MODEL}/${DEFAULT_VOICE} audio, ${todo.reduce((n, p) => n + p.plainText.length, 0)} characters in all`);
-    if (!yes || !todo.length) process.exit(0);
+    const unaligned = unalignedPosts().filter((p) => !todo.some((t) => t.page === p.page));
+    for (const p of unaligned) console.log(`${p.page}: has audio but no word timings`);
+    if (!yes || (!todo.length && !unaligned.length)) process.exit(0);
     if (!key) {
       console.error(usage);
       process.exit(1);
@@ -358,6 +370,8 @@ async function main() {
         console.error(`FAILED ${p.page}: ${e.message}`);
       }
     }
+    // The word timings only drive the read-along view, so a failure here does not fail the run.
+    for (const p of unaligned) await alignClip(p, DEFAULT_MODEL, DEFAULT_VOICE, key).catch((e) => console.error(`No word timings for ${p.page}: ${e.message}`));
     console.log(`${credits} credits used in all${failed.length ? `, ${failed.length} failed: ${failed.join(", ")}` : ""}`);
     if (failed.length) process.exitCode = 1;
   } else {
