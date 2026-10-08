@@ -1,0 +1,1595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scattered attention</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+/* ?embed follows the parent page theme, ?theme=dark|light forces one, otherwise the OS setting applies.
+   Testing: ?seed=7 replays the same class, ?t=20 renders one still frame, ?sel=Maya follows a student, ?ev=plane starts with that event. */
+(function(){
+  var root=document.documentElement,q=new URLSearchParams(location.search),t=q.get("theme");
+  if(t==="dark"||t==="light"){root.setAttribute("data-theme",t);return}
+  if(!q.has("embed"))return;
+  root.classList.add("embedded");
+  var P;try{P=window.parent.document;if(!P||P===document)return}catch(e){return}
+  function read(){var v=(P.documentElement.getAttribute("data-theme")||"")+" "+P.documentElement.className;root.setAttribute("data-theme",/dark/i.test(v)?"dark":"light")}
+  read();new MutationObserver(read).observe(P.documentElement,{attributes:true,attributeFilter:["data-theme","class"]});
+})();
+setTimeout(function(){if(!window.__sceneStarted){var n=document.getElementById("note");if(n)n.textContent="The 3D scene could not load here."}},12000);
+</script>
+<style>
+:root{--bg1:#f8f2e9;--bg2:#ebe0d1;--ink:#2b2622;--muted:#7d7064;--chip:rgba(255,251,245,.88);--line:rgba(43,38,34,.12);--gold:#e9a320;--shadow:rgba(70,45,20,.10);--bub:#fffdf9;--bubInk:#2b2622}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#2b2339;--bg2:#141019;--ink:#efe9f7;--muted:#a79eb7;--chip:rgba(37,30,49,.88);--line:rgba(239,233,247,.14);--gold:#f5c04a;--shadow:rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg1:#2b2339;--bg2:#141019;--ink:#efe9f7;--muted:#a79eb7;--chip:rgba(37,30,49,.88);--line:rgba(239,233,247,.14);--gold:#f5c04a;--shadow:rgba(0,0,0,.35)}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:radial-gradient(120% 95% at 50% 32%,var(--bg1) 0%,var(--bg2) 100%);font-family:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none;z-index:3}
+.col{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;flex:1 1 auto}
+.col .pill{max-width:100%;box-sizing:border-box;overflow:hidden}
+.pill{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px 0 11px;border-radius:999px;background:var(--chip);border:1px solid var(--line);box-shadow:0 6px 20px var(--shadow);font-size:13px;white-space:nowrap;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 26%,transparent);flex:none}
+.muted{color:var(--muted)}
+#name{font-weight:600}
+#target{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+#target.pop{animation:pop .3s ease}
+@keyframes pop{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+#count b{font-weight:600;font-variant-numeric:tabular-nums}
+.tip{font-size:12px;color:var(--muted);padding:0 6px;transition:opacity .8s}
+.tip.gone{opacity:0}
+#bubbles{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.bb{position:absolute;left:0;top:0;will-change:transform}
+.bb i{position:relative;display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;box-sizing:border-box;border-radius:15px;background:var(--bub);color:var(--bubInk);border:1px solid rgba(43,38,34,.14);box-shadow:0 4px 12px var(--shadow);font:600 13px "Hanken Grotesk",system-ui,sans-serif;font-style:normal;line-height:1;white-space:nowrap;transform:translate(-50%,-100%) scale(0);transform-origin:50% 100%;opacity:0;transition:transform .24s cubic-bezier(.3,1.6,.5,1),opacity .18s}
+.bb i::after{content:"";position:absolute;left:50%;bottom:-5px;width:8px;height:8px;margin-left:-5px;background:var(--bub);border-right:1px solid rgba(43,38,34,.14);border-bottom:1px solid rgba(43,38,34,.14);transform:rotate(45deg)}
+.bb.on i{transform:translate(-50%,-100%) scale(1);opacity:1}
+.bb.pop i{font-size:17px}
+.bb.cloud i{font-size:19px;height:34px;min-width:44px;border-radius:17px}
+.bb.cloud i::after{width:7px;height:7px;border-radius:50%;bottom:-11px;left:38%;transform:none;border:1px solid rgba(43,38,34,.14)}
+.bb.me i{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 40%,transparent),0 4px 12px var(--shadow)}
+.inset{position:fixed;right:12px;bottom:12px;box-sizing:border-box;border:2px solid var(--chip);outline:1px solid var(--line);border-radius:3px;box-shadow:0 10px 30px var(--shadow);pointer-events:none;z-index:2;overflow:hidden}
+.inset span{position:absolute;left:7px;top:7px;font-size:11px;line-height:1;padding:5px 8px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap}
+#dream{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(closest-side,rgba(255,255,255,.96),rgba(255,255,255,.75) 60%,rgba(255,255,255,.25));opacity:0}
+#dream b{font-weight:400;line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+#shade{position:absolute;inset:0;background:#0b0910;opacity:0}
+.ctl{position:fixed;left:12px;bottom:12px;z-index:3;display:flex;align-items:center;gap:8px}
+.focus,.snd{display:inline-flex;align-items:center;gap:9px;height:36px;padding:0 15px 0 12px;font:600 13px "Hanken Grotesk",system-ui,sans-serif;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:999px;cursor:pointer;box-shadow:0 6px 20px var(--shadow);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.focus i{position:relative;width:13px;height:13px;border-radius:50%;border:2px solid var(--gold);box-sizing:border-box}
+.focus i::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--gold)}
+.snd{gap:7px;padding:0 14px 0 11px}
+.snd svg{width:16px;height:16px;flex:none}
+.snd .w,.snd.on .x{opacity:0}
+.snd.on .w{opacity:1}
+.focus.on,.snd.on{background:color-mix(in srgb,var(--gold) 22%,var(--chip));border-color:color-mix(in srgb,var(--gold) 55%,transparent)}
+.focus:disabled{cursor:default;opacity:.75}
+.mon{position:relative;flex:none;display:flex;align-items:stretch;height:54px;border-radius:12px;background:#0d1412;border:1px solid rgba(255,255,255,.1);box-shadow:0 6px 20px var(--shadow);overflow:hidden;--mc:#3ee08f}
+.mon canvas{display:block;width:196px;height:54px}
+.mon-r{display:flex;flex-direction:column;align-items:center;justify-content:center;width:58px;border-left:1px solid rgba(255,255,255,.08);color:var(--mc)}
+.mon-r b{font:600 22px/1 "Hanken Grotesk",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.mon-r span{margin-top:3px;font-size:8.5px;line-height:1.15;letter-spacing:.06em;text-transform:uppercase;text-align:center;opacity:.75}
+.mon-s{position:absolute;left:8px;top:5px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mc)}
+.tag{position:fixed;left:0;top:0;z-index:2;pointer-events:none;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--chip);border:1px solid var(--line);color:var(--ink);opacity:0;transition:opacity .15s;white-space:nowrap}
+.tag.on{opacity:1}
+body:not(.ready) .hud,body:not(.ready) .ctl,body:not(.ready) .inset{opacity:0}
+.hud,.ctl,.inset{transition:opacity .4s}
+.note[hidden]{display:none}
+.note{position:fixed;inset:0;display:grid;place-items:center;margin:0;color:var(--muted);font-size:14px;pointer-events:none}
+.play{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:4;font:600 13px "Hanken Grotesk",system-ui,sans-serif;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;box-shadow:0 6px 20px var(--shadow)}
+@media (max-width:480px){.pill{height:28px;font-size:12px;padding:0 10px 0 9px;gap:6px}.ctl{flex-direction:column-reverse;align-items:flex-start;gap:6px}.focus,.snd{height:32px;font-size:12px}.focus{padding:0 12px 0 10px}.mon{height:46px;border-radius:10px}.mon canvas{width:104px;height:46px}.mon-r{width:48px}.mon-r b{font-size:18px}.mon-r span{font-size:7px;letter-spacing:0}.bb i{height:26px;min-width:26px;border-radius:13px;font-size:12px}.bb.pop i{font-size:15px}.bb.cloud i{height:30px;font-size:16px}}
+@media (max-width:360px){.mon canvas{width:78px}.mon-r{width:46px}.pill{padding:0 9px 0 8px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="stage"></div>
+<div id="bubbles" aria-hidden="true"></div>
+<div class="hud" aria-hidden="true">
+  <div class="col">
+    <div class="pill"><span class="dot"></span><b id="name">Lucas</b><span class="muted">→</span><span id="target">Teacher</span></div>
+    <div class="tip" id="tip">Tap any student to follow their attention</div>
+  </div>
+  <div class="mon" id="mon"><canvas id="monC"></canvas><div class="mon-r"><b id="n">0</b><span id="nl">switches<br>in 1 min</span></div><span class="mon-s" id="monS">Calm</span></div>
+</div>
+<div class="inset" id="inset" aria-hidden="true"><div id="dream"><b id="dreamE"></b></div><div id="shade"></div><span id="insetLabel">Through Lucas’s eyes</span></div>
+<div class="ctl"><button class="focus" id="focus" type="button"><i></i><span id="focusL">Focus</span></button><button class="snd" id="snd" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="none"/><path class="w" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg><span>Sound</span></button></div>
+<div class="tag" id="tag" aria-hidden="true"></div>
+<p class="note" id="note">Loading…</p>
+<button class="play" id="play" hidden>Play</button>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const qs = new URLSearchParams(location.search);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fixedT = qs.has('t') ? parseFloat(qs.get('t')) : null;
+const $ = (id) => document.getElementById(id);
+const elName = $('name'), elTarget = $('target'), elN = $('n'), elNL = $('nl'), elInset = $('inset'), elInsetLabel = $('insetLabel'), elShade = $('shade');
+const elDream = $('dream'), elDreamE = $('dreamE'), elPlay = $('play'), elFocus = $('focus'), elFocusL = $('focusL'), elSnd = $('snd'), elTip = $('tip'), elTag = $('tag'), elBubbles = $('bubbles'), elMon = $('mon'), elMonC = $('monC'), elMonS = $('monS'), note = $('note');
+const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const clamp = THREE.MathUtils.clamp;
+const smooth01 = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+
+/* ---------- seeded randomness, so ?seed=7 replays the same class ---------- */
+let seed = (qs.has('seed') ? parseInt(qs.get('seed'), 10) : Math.floor(Math.random() * 1e9)) >>> 0;
+function rand() { seed = (seed + 0x6D2B79F5) | 0; let x = Math.imul(seed ^ (seed >>> 15), 1 | seed); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }
+const rnd = (a, b) => a + (b - a) * rand();
+const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+function pickW(list) { let s = 0; for (const o of list) s += o.w; let r = rand() * s; for (const o of list) if ((r -= o.w) <= 0) return o; return list[list.length - 1]; }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- renderer, cameras, lights ---------- */
+const smallScreen = Math.min(innerWidth || 800, innerHeight || 600) < 560;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;
+renderer.domElement.setAttribute('role', 'img');
+renderer.domElement.setAttribute('aria-label', 'A lecture hall where each student’s attention moves between the teacher, the board, notes, phones, laptops, daydreams and each other. Tap a student to follow their attention, and press Focus to let them settle.');
+$('stage').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.5;
+
+const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
+camera.layers.enable(1);
+const pov = new THREE.PerspectiveCamera(56, 1.6, 0.05, 60);
+
+scene.add(new THREE.HemisphereLight('#fff6ea', '#c8b8dd', 1.05));
+const sun = new THREE.DirectionalLight('#fff0db', 2.3);
+sun.position.set(6, 11, 7.5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(smallScreen ? 1024 : 2048, smallScreen ? 1024 : 2048);
+Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 34 });
+sun.shadow.camera.updateProjectionMatrix();
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.025;
+scene.add(sun);
+const fill = new THREE.DirectionalLight('#e4e9ff', 0.4);
+fill.position.set(-6, 5, 6);
+scene.add(fill);
+const spot = new THREE.SpotLight('#ffd27a', 10, 0, 0.25, 0.8, 1.6);
+spot.position.set(-1.1, 4.7, 0.5);
+scene.add(spot, spot.target);
+
+/* ---------- ground grid ---------- */
+const gridMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false,
+  uniforms: { uColor: { value: new THREE.Color('#a69481') }, uOpacity: { value: 0.16 } },
+  vertexShader: 'varying vec2 vP; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vP = w.xz; gl_Position = projectionMatrix * viewMatrix * w; }',
+  fragmentShader: 'uniform vec3 uColor; uniform float uOpacity; varying vec2 vP; void main(){ vec2 g = abs(fract(vP - 0.5) - 0.5) / fwidth(vP); float l = 1.0 - min(min(g.x, g.y), 1.0); float f = 1.0 - smoothstep(8.0, 24.0, length(vP)); gl_FragColor = vec4(uColor, l * uOpacity * f); }'
+});
+const grid = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), gridMat);
+grid.rotation.x = -Math.PI / 2; grid.position.y = -0.34; scene.add(grid);
+const catcher = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ color: '#2a1d3a', opacity: 0.2, depthWrite: false }));
+catcher.rotation.x = -Math.PI / 2; catcher.position.y = -0.335; catcher.receiveShadow = true; scene.add(catcher);
+
+/* ---------- materials and helpers ---------- */
+const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.82, metalness: 0, ...o });
+const mat = {
+  slab: M('#fbf6ef'), floor: M('#ecd8bd'), carpet: M('#b3a6ec', { roughness: 0.95 }),
+  wall: M('#f8f4ee'), cap: M('#ffffff'), stage: M('#dcc09b'), wood: M('#ecd5b1'), woodDark: M('#c99f73'),
+  leg: M('#d8c19e'), frame: M('#c79e72'), sage: M('#b4c8a3'), peach: M('#f3b78f'), cream: M('#efe4d3'),
+  base: M('#9a948d', { metalness: 0.25, roughness: 0.55 }), pot: M('#dc8d63'), leaf: M('#6aac77'), leaf2: M('#4f9160'),
+  glass: M('#cfe6fb', { emissive: '#bfe0ff', emissiveIntensity: 0.45, roughness: 0.25 }),
+  ink: M('#2a2421', { roughness: 0.4 }), blush: M('#f29b8f', { roughness: 0.9 }),
+  laptop: M('#cdd0d6', { metalness: 0.35, roughness: 0.45 }), phone: M('#26232a', { roughness: 0.35, metalness: 0.2 }),
+  clockFace: M('#fffdf8'), clockRim: M('#3a3430'), mug: M('#fbfaf7'), pen: M('#3d405b', { roughness: 0.5 }),
+  paper: M('#7cc0ff', { side: THREE.DoubleSide, roughness: 0.7, flatShading: true }), flyBody: M('#26211f', { roughness: 0.4 }),
+  door: M('#d6b08a'), knob: M('#caa45a', { metalness: 0.6, roughness: 0.35 }),
+  book: ['#e07a5f', '#81b29a', '#f2cc8f', '#3d405b', '#a78bfa', '#6c9bd2'].map((c) => M(c)),
+};
+const matCache = new Map();
+const mc = (c, o) => { const k = c + (o ? JSON.stringify(o) : ''); if (!matCache.has(k)) matCache.set(k, M(c, o)); return matCache.get(k); };
+const geoCache = new Map();
+function rgeo(w, h, d, r) {
+  const k = w + '|' + h + '|' + d + '|' + r;
+  if (!geoCache.has(k)) geoCache.set(k, new RoundedBoxGeometry(w, h, d, 3, Math.min(r, Math.min(w, h, d) / 2 - 0.001)));
+  return geoCache.get(k);
+}
+/* everything built while `building` is true never moves, and gets merged into a few meshes */
+let building = true;
+const statics = [];
+function mesh(geo, m, x, y, z, parent = scene, shadow = true) {
+  const me = new THREE.Mesh(geo, m); me.position.set(x, y, z);
+  me.castShadow = shadow; me.receiveShadow = true; parent.add(me);
+  if (building) statics.push(me);
+  return me;
+}
+const box = (w, h, d, r, m, x, y, z, parent = scene) => mesh(rgeo(w, h, d, r), m, x, y, z, parent);
+const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
+function dampAngle(a, b, l, dt) { const d = ((((b - a + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI; return a + d * (1 - Math.exp(-l * dt)); }
+function spring(s, target, dt, k = 170, c = 15) { s.v += (k * (target - s.x) - c * s.v) * dt; s.x += s.v * dt; return s.x; }
+
+const GEO = {
+  head: new THREE.SphereGeometry(0.24, 32, 24),
+  hair: new THREE.SphereGeometry(0.255, 32, 18, 0, Math.PI * 2, 0, Math.PI * 0.56),
+  bun: new THREE.SphereGeometry(0.095, 16, 12),
+  eye: new THREE.SphereGeometry(0.03, 14, 10),
+  blush: new THREE.SphereGeometry(0.04, 12, 8),
+  torso: new THREE.CapsuleGeometry(0.19, 0.2, 6, 16),
+  arm: new THREE.CapsuleGeometry(0.055, 0.2, 4, 10),
+  hand: new THREE.SphereGeometry(0.06, 14, 10),
+  leg: new THREE.CapsuleGeometry(0.07, 0.22, 4, 10),
+  robe: new THREE.CylinderGeometry(0.19, 0.31, 0.6, 24),
+  post: new THREE.CylinderGeometry(0.03, 0.03, 0.38, 10),
+  foot: new THREE.CylinderGeometry(0.2, 0.22, 0.04, 22),
+  pot: new THREE.CylinderGeometry(0.15, 0.11, 0.28, 20),
+  leaf: new THREE.SphereGeometry(0.1, 12, 10),
+  mug: new THREE.CylinderGeometry(0.045, 0.04, 0.1, 16),
+  pen: new THREE.CylinderGeometry(0.008, 0.008, 0.14, 8),
+  part: new THREE.SphereGeometry(0.032, 10, 8),
+  screen: new THREE.PlaneGeometry(0.33, 0.205),
+  phoneScr: new THREE.PlaneGeometry(0.068, 0.14),
+  pick: new THREE.CapsuleGeometry(0.3, 0.45, 2, 8),
+  flyBody: new THREE.SphereGeometry(0.045, 12, 10),
+  wing: new THREE.PlaneGeometry(0.075, 0.045),
+  knob: new THREE.SphereGeometry(0.035, 12, 10),
+};
+
+/* ---------- canvas textures ---------- */
+function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; }
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function tex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+function circ(g, x, y, r) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+const UI = '"Hanken Grotesk",system-ui,sans-serif', CHALKF = '"Caveat","Comic Sans MS",cursive';
+const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+/* the board: "Focus" stays, the teacher adds sketches into four slots and wipes them when full */
+const [boardC, bg] = canvas(720, 300), boardTex = tex(boardC);
+const [dustC, dg] = canvas(720, 300);
+for (let i = 0; i < 900; i++) { dg.fillStyle = 'rgba(255,255,255,' + (rand() * 0.035).toFixed(3) + ')'; dg.fillRect(rand() * 720, rand() * 300, 2, 2); }
+const CHALK = 'rgba(240,242,230,0.9)';
+const SLOTS = [{ cx: 455, cy: 80, w: 150, h: 112 }, { cx: 625, cy: 80, w: 150, h: 112 }, { cx: 540, cy: 222, w: 300, h: 104 }, { cx: 186, cy: 236, w: 290, h: 84 }];
+const slotState = SLOTS.map(() => null);
+let boardDirty = true;
+const WORDS = ['attention', 'notice', 'come back', 'one thing', 'be here', 'deep work', 'listen', 'stay'];
+function circlePts(cx, cy, r, n = 40, a0 = -Math.PI / 2, sweep = Math.PI * 2) { const o = []; for (let i = 0; i <= n; i++) { const a = a0 + (i / n) * sweep; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } return o; }
+function wobbleLine(x0, y, w) { const o = []; for (let i = 0; i <= 24; i++) o.push([x0 + (i / 24) * w, y + Math.sin(i * 1.9) * 2.2]); return o; }
+function sketchStrokes(kind, s, sv) {
+  const { cx, cy, w, h } = s, r = Math.min(w, h) / 2 - 8;
+  switch (kind) {
+    case 'target': return [circlePts(cx, cy, r), circlePts(cx, cy, r * 0.62), circlePts(cx, cy, r * 0.25, 20)];
+    case 'scatter': {
+      const out = [], lx = cx - w * 0.28;
+      for (let i = 0; i < 9; i++) out.push(circlePts(lx + Math.sin(i * 2.3 + sv) * w * 0.15, cy + Math.cos(i * 1.7 + sv) * h * 0.32, 3.5, 8));
+      out.push([[cx - w * 0.06, cy], [cx + w * 0.14, cy]], [[cx + w * 0.1, cy - 7], [cx + w * 0.14, cy], [cx + w * 0.1, cy + 7]]);
+      out.push(circlePts(cx + w * 0.32, cy, 5, 10), circlePts(cx + w * 0.32, cy, 15, 24));
+      return out;
+    }
+    case 'wave': { const a = []; for (let i = 0; i <= 40; i++) { const x = cx - w / 2 + 12 + (i / 40) * (w - 24); a.push([x, cy - h * 0.1 + Math.sin(i * 0.9) * h * 0.24 * (1 - i / 44)]); } return [a, [[cx - w / 2 + 12, cy + h * 0.32], [cx + w / 2 - 12, cy + h * 0.32]]]; }
+    case 'lines': { const out = []; for (let i = 0; i < 3; i++) out.push(wobbleLine(cx - w / 2 + 12, cy - h * 0.28 + i * h * 0.28, (w - 24) * (i === 2 ? 0.55 : 0.92))); return out; }
+    case 'loop': { const a = circlePts(cx, cy, r, 50, -Math.PI / 2, Math.PI * 1.75), e = a[a.length - 1]; return [a, [[e[0] - 10, e[1] - 3], e, [e[0] - 1, e[1] - 11]], circlePts(cx, cy, 4, 10)]; }
+  }
+  return [];
+}
+function strokePartial(g, pts, p) {
+  if (p <= 0 || pts.length < 2) return;
+  let total = 0; const seg = [];
+  for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(d); total += d; }
+  let rem = p * total;
+  g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length && rem > 0; i++) {
+    const d = seg[i - 1];
+    if (rem >= d) { g.lineTo(pts[i][0], pts[i][1]); rem -= d; }
+    else { const k = rem / d; g.lineTo(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k); rem = 0; }
+  }
+  g.stroke();
+}
+function fillSlot(i, kind, p) { slotState[i] = { kind, p, a: 1, strokes: kind === 'word' ? null : sketchStrokes(kind, SLOTS[i], rand() * 10), text: kind === 'word' ? pick(WORDS) : '' }; boardDirty = true; }
+function drawBoard() {
+  bg.globalAlpha = 1; bg.fillStyle = '#2f4c41'; bg.fillRect(0, 0, 720, 300); bg.drawImage(dustC, 0, 0);
+  bg.strokeStyle = CHALK; bg.fillStyle = CHALK; bg.lineCap = 'round'; bg.lineJoin = 'round'; bg.lineWidth = 4;
+  bg.font = '600 116px ' + CHALKF; bg.textAlign = 'left'; bg.textBaseline = 'middle'; bg.fillText('Focus', 50, 104);
+  strokePartial(bg, wobbleLine(56, 162, 226), 1);
+  slotState.forEach((s, i) => {
+    if (!s) return;
+    const sl = SLOTS[i]; bg.globalAlpha = s.a;
+    if (s.kind === 'word') {
+      bg.save(); bg.beginPath(); bg.rect(sl.cx - sl.w / 2, sl.cy - sl.h / 2 - 10, sl.w * s.p, sl.h + 20); bg.clip();
+      let fs = 64; bg.font = '600 ' + fs + 'px ' + CHALKF; const tw = bg.measureText(s.text).width;
+      if (tw > sl.w - 16) { fs = Math.floor((fs * (sl.w - 16)) / tw); bg.font = '600 ' + fs + 'px ' + CHALKF; }
+      bg.textAlign = 'center'; bg.textBaseline = 'middle'; bg.fillText(s.text, sl.cx, sl.cy); bg.restore();
+    } else { const n = s.strokes.length; s.strokes.forEach((pts, k) => strokePartial(bg, pts, clamp(s.p * n - k, 0, 1))); }
+  });
+  bg.globalAlpha = 1; boardTex.needsUpdate = true;
+}
+const BOARD = { x: 3.6, y: 1.6, z: -3.52, w: 2.16, h: 1.06 };
+const boardWorld = (u, v, out) => out.set(BOARD.x - BOARD.w / 2 + (u / 720) * BOARD.w, BOARD.y + BOARD.h / 2 - (v / 300) * BOARD.h, BOARD.z);
+
+/* phone screens */
+const [feedC, fg] = canvas(256, 1024);
+(function drawFeed() {
+  fg.fillStyle = '#f4f2ef'; fg.fillRect(0, 0, 256, 1024);
+  const cols = ['#f6b7a0', '#a8d5ba', '#bdb6f4', '#f7d794', '#9ad0f5', '#f4a7c0', '#c7e59a'];
+  for (let i = 0; i < 4; i++) {
+    const y = i * 256 + 10;
+    fg.fillStyle = '#ffffff'; rr(fg, 10, y, 236, 236, 16); fg.fill();
+    fg.fillStyle = cols[i % 7]; circ(fg, 36, y + 26, 13);
+    fg.fillStyle = '#d8d3cc'; rr(fg, 58, y + 17, 96, 9, 4); fg.fill(); rr(fg, 58, y + 32, 62, 8, 4); fg.fill();
+    fg.fillStyle = cols[(i + 3) % 7]; rr(fg, 22, y + 54, 212, 132, 12); fg.fill();
+    fg.fillStyle = 'rgba(255,255,255,.78)'; circ(fg, 128, y + 120, 24);
+    fg.fillStyle = cols[(i + 3) % 7]; fg.beginPath(); fg.moveTo(121, y + 108); fg.lineTo(139, y + 120); fg.lineTo(121, y + 132); fg.closePath(); fg.fill();
+    fg.fillStyle = '#d8d3cc'; rr(fg, 22, y + 200, 176, 9, 4); fg.fill(); rr(fg, 22, y + 216, 118, 9, 4); fg.fill();
+  }
+})();
+const feedTex = tex(feedC); feedTex.wrapT = THREE.RepeatWrapping; feedTex.repeat.set(1, 0.52);
+const PT = {};
+{
+  const [c, g] = canvas(256, 532); const gr = g.createLinearGradient(0, 0, 0, 532); gr.addColorStop(0, '#5b6ee1'); gr.addColorStop(1, '#c48bd6');
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 532); g.fillStyle = 'rgba(255,255,255,.92)'; g.font = '600 64px ' + UI; g.textAlign = 'center'; g.fillText('9:41', 128, 120);
+  g.fillStyle = 'rgba(255,255,255,.88)'; rr(g, 18, 170, 220, 74, 18); g.fill(); g.fillStyle = '#5b6ee1'; rr(g, 30, 184, 44, 44, 10); g.fill();
+  g.fillStyle = '#c9c4d6'; rr(g, 86, 190, 120, 12, 6); g.fill(); rr(g, 86, 212, 80, 10, 5); g.fill(); PT.lock = tex(c);
+}
+{
+  const [c, g] = canvas(256, 532); g.fillStyle = '#f4f2ef'; g.fillRect(0, 0, 256, 532); g.fillStyle = '#e6e1da'; g.fillRect(0, 0, 256, 54);
+  g.fillStyle = '#9ad0f5'; circ(g, 34, 27, 15); g.fillStyle = '#bdb6ad'; rr(g, 58, 20, 90, 12, 6); g.fill();
+  [[0, 74, 150, 40], [1, 126, 120, 40], [0, 178, 170, 56], [0, 246, 96, 40], [1, 298, 160, 40], [1, 350, 104, 40], [0, 402, 140, 56], [1, 470, 130, 40]]
+    .forEach(([r, y, w, h]) => { g.fillStyle = r ? '#5b8def' : '#ffffff'; rr(g, r ? 242 - w : 14, y, w, h, 16); g.fill(); });
+  PT.chat = tex(c);
+}
+{
+  const [c, g] = canvas(256, 532), gr = g.createLinearGradient(0, 0, 0, 532); gr.addColorStop(0, '#ffd6a5'); gr.addColorStop(1, '#ffadad');
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 532);
+  g.fillStyle = '#f1c7a1'; circ(g, 128, 250, 74); g.fillStyle = '#2c221d'; g.beginPath(); g.arc(128, 238, 80, Math.PI * 1.05, Math.PI * 1.95); g.fill();
+  g.fillStyle = '#2a2421'; circ(g, 102, 262, 7); circ(g, 154, 262, 7);
+  g.strokeStyle = '#2a2421'; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.arc(128, 284, 20, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+  g.fillStyle = 'rgba(242,155,143,.7)'; circ(g, 88, 286, 10); circ(g, 168, 286, 10);
+  g.fillStyle = '#fff'; circ(g, 128, 470, 30); g.fillStyle = 'rgba(0,0,0,.25)'; circ(g, 128, 470, 24); g.fillStyle = '#fff'; circ(g, 128, 470, 21);
+  PT.selfie = tex(c);
+}
+const [camC, cg] = canvas(256, 532); PT.photo = tex(camC);
+function drawCamera() {
+  cg.fillStyle = '#0f0e12'; cg.fillRect(0, 0, 256, 532); cg.fillStyle = '#2f4c41'; cg.fillRect(0, 96, 256, 300);
+  cg.fillStyle = CHALK; cg.strokeStyle = CHALK; cg.lineWidth = 4; cg.font = '600 70px ' + CHALKF; cg.textAlign = 'left'; cg.textBaseline = 'middle'; cg.fillText('Focus', 20, 186);
+  for (const r of [40, 24]) { cg.beginPath(); cg.arc(190, 300, r, 0, Math.PI * 2); cg.stroke(); }
+  cg.strokeStyle = 'rgba(255,255,255,.35)'; cg.lineWidth = 1.5;
+  for (const x of [85, 171]) { cg.beginPath(); cg.moveTo(x, 96); cg.lineTo(x, 396); cg.stroke(); }
+  for (const y of [196, 296]) { cg.beginPath(); cg.moveTo(0, y); cg.lineTo(256, y); cg.stroke(); }
+  cg.fillStyle = '#fff'; circ(cg, 128, 462, 34); cg.fillStyle = '#0f0e12'; circ(cg, 128, 462, 29); cg.fillStyle = '#fff'; circ(cg, 128, 462, 25);
+  PT.photo.needsUpdate = true;
+}
+drawCamera();
+function drawVideo(g, w, h, t, tall) {
+  g.fillStyle = '#121016'; g.fillRect(0, 0, w, h);
+  const vy = tall ? 110 : 0, vh = tall ? 150 : h - 22, k = (t * 0.07) % 1;
+  const gr = g.createLinearGradient(0, vy, 0, vy + vh); gr.addColorStop(0, '#ffb37a'); gr.addColorStop(1, '#f06d8a'); g.fillStyle = gr; g.fillRect(0, vy, w, vh);
+  g.fillStyle = '#ffe9a8'; circ(g, w * (0.15 + 0.7 * k), vy + vh * (0.5 - 0.25 * Math.sin(k * Math.PI)), vh * 0.13);
+  g.fillStyle = '#4b3a63'; g.beginPath(); g.moveTo(0, vy + vh); g.lineTo(w * 0.3, vy + vh * 0.45); g.lineTo(w * 0.58, vy + vh); g.fill();
+  g.fillStyle = '#6a4f86'; g.beginPath(); g.moveTo(w * 0.35, vy + vh); g.lineTo(w * 0.72, vy + vh * 0.35); g.lineTo(w * 1.05, vy + vh); g.fill();
+  const by = vy + vh + 8; g.fillStyle = '#3a3542'; g.fillRect(10, by, w - 20, 5); g.fillStyle = '#ff4d6d'; g.fillRect(10, by, (w - 20) * ((t * 0.05) % 1), 5);
+  if (tall) { g.fillStyle = '#2c2833'; for (let i = 0; i < 5; i++) { circ(g, 26, 320 + i * 44, 12); rr(g, 46, 312 + i * 44, 110 + ((i * 37) % 60), 10, 5); g.fill(); rr(g, 46, 328 + i * 44, 70, 8, 4); g.fill(); } }
+}
+const [pvC, pvG] = canvas(256, 532); PT.video = tex(pvC); drawVideo(pvG, 256, 532, 0, true);
+
+/* laptop screens */
+const LT = {};
+const [codeC, codeG] = canvas(320, 200); LT.code = tex(codeC);
+const CODE = [[18, '#c792ea', 70], [30, '#82aaff', 150], [30, '#c3e88d', 110], [42, '#89ddff', 130], [42, '#f78c6c', 80], [30, '#82aaff', 60], [18, '#c792ea', 40], [18, '#ffcb6b', 120], [30, '#c3e88d', 160], [30, '#89ddff', 90]];
+const CODE_TOTAL = CODE.reduce((s, l) => s + l[2], 0);
+function drawCode(px, cursorOn) {
+  const g = codeG; g.fillStyle = '#1f2531'; g.fillRect(0, 0, 320, 200); g.fillStyle = '#2a3140'; g.fillRect(0, 0, 320, 18);
+  ['#ff6b6b', '#ffd166', '#06d6a0'].forEach((c, i) => { g.fillStyle = c; circ(g, 12 + i * 12, 9, 3.5); });
+  let rem = px, cx = 18, cy = 30;
+  CODE.forEach(([x, c, w], i) => {
+    const y = 30 + i * 16, ww = Math.max(0, Math.min(w, rem)); rem -= w;
+    g.fillStyle = '#3a4252'; g.fillRect(6, y, 6, 6);
+    if (ww > 0) { g.fillStyle = c; rr(g, x, y, Math.max(ww, 6), 7, 3); g.fill(); cx = x + ww + 3; cy = y; }
+  });
+  if (cursorOn) { g.fillStyle = '#e6edf3'; g.fillRect(cx, cy - 2, 2, 11); }
+  LT.code.needsUpdate = true;
+}
+drawCode(CODE_TOTAL * 0.4, true);
+{
+  const [c, g] = canvas(320, 200); g.fillStyle = '#fbfaf7'; g.fillRect(0, 0, 320, 200); g.fillStyle = '#e8e4dd'; g.fillRect(0, 0, 320, 18);
+  g.fillStyle = '#3d405b'; rr(g, 24, 32, 140, 12, 5); g.fill(); g.fillStyle = '#cfc9c0';
+  for (let i = 0; i < 8; i++) { rr(g, 24, 58 + i * 16, 120 + ((i * 53) % 150), 7, 3); g.fill(); }
+  LT.doc = tex(c);
+}
+{
+  const [c, g] = canvas(320, 200); g.fillStyle = '#ffffff'; g.fillRect(0, 0, 320, 200); g.fillStyle = '#ff9f43'; g.fillRect(0, 0, 320, 26);
+  g.fillStyle = '#ffffff'; rr(g, 70, 6, 180, 14, 7); g.fill();
+  const cols = ['#f6b7a0', '#9ad0f5', '#c7e59a', '#bdb6f4', '#f7d794', '#f4a7c0'];
+  for (let i = 0; i < 6; i++) { const x = 14 + (i % 3) * 102, y = 36 + Math.floor(i / 3) * 82; g.fillStyle = '#f2efe9'; rr(g, x, y, 90, 74, 8); g.fill(); g.fillStyle = cols[i]; rr(g, x + 10, y + 8, 70, 40, 6); g.fill(); g.fillStyle = '#3d405b'; rr(g, x + 10, y + 56, 34, 8, 4); g.fill(); g.fillStyle = '#ff9f43'; rr(g, x + 56, y + 54, 24, 12, 6); g.fill(); }
+  LT.shop = tex(c);
+}
+const [lvC, lvG] = canvas(320, 200); LT.video = tex(lvC); drawVideo(lvG, 320, 200, 0, false);
+const [gameC, gameG] = canvas(320, 200); LT.game = tex(gameC);
+const tri = (x) => 2 * Math.abs(2 * (x - Math.floor(x + 0.5))) - 1;
+function drawGame(t) {
+  const g = gameG; g.fillStyle = '#141a2a'; g.fillRect(0, 0, 320, 200); g.fillStyle = '#2b3550';
+  for (let y = 6; y < 200; y += 16) g.fillRect(158, y, 4, 8);
+  const by = 100 + 76 * tri(t * 0.83), bx = 160 + 136 * tri(t * 0.6);
+  g.fillStyle = '#06d6a0'; rr(g, 8, clamp(by - 22 + Math.sin(t * 3) * 6, 4, 152), 8, 44, 3); g.fill();
+  g.fillStyle = '#ff6b6b'; rr(g, 304, clamp(by - 22 - Math.sin(t * 2.4) * 8, 4, 152), 8, 44, 3); g.fill();
+  g.fillStyle = '#ffd166'; circ(g, bx, by, 6);
+  g.fillStyle = '#e6edf3'; g.font = '600 22px ' + UI; g.textAlign = 'center'; g.fillText(String(3 + Math.floor(t / 9) % 5), 130, 30); g.fillText(String(2 + Math.floor(t / 13) % 5), 190, 30);
+  LT.game.needsUpdate = true;
+}
+drawGame(0);
+{
+  const [c, g] = canvas(320, 200); g.fillStyle = '#f4f2ef'; g.fillRect(0, 0, 320, 200); g.fillStyle = '#2b2d3a'; g.fillRect(0, 0, 84, 200);
+  const cols = ['#f6b7a0', '#9ad0f5', '#c7e59a', '#bdb6f4'];
+  for (let i = 0; i < 4; i++) { g.fillStyle = cols[i]; circ(g, 22, 24 + i * 40, 12); g.fillStyle = '#4a4d5e'; rr(g, 40, 18 + i * 40, 34, 8, 4); g.fill(); }
+  [[0, 20, 120], [1, 54, 96], [0, 88, 150], [1, 122, 110], [0, 156, 80]].forEach(([r, y, w]) => { g.fillStyle = r ? '#5b8def' : '#ffffff'; rr(g, r ? 308 - w : 96, y, w, 24, 10); g.fill(); });
+  LT.chat = tex(c);
+}
+{
+  const [c, g] = canvas(320, 200); const gr = g.createLinearGradient(0, 0, 320, 200); gr.addColorStop(0, '#6c7bd8'); gr.addColorStop(1, '#d59ad8');
+  g.fillStyle = gr; g.fillRect(0, 0, 320, 200); g.fillStyle = 'rgba(255,255,255,.35)'; rr(g, 80, 168, 160, 24, 10); g.fill();
+  ['#ff6b6b', '#ffd166', '#06d6a0', '#5b8def', '#c792ea'].forEach((col, i) => { g.fillStyle = col; rr(g, 92 + i * 29, 172, 18, 16, 5); g.fill(); });
+  LT.idle = tex(c);
+}
+{
+  const [c, g] = canvas(320, 200); g.fillStyle = '#ffffff'; g.fillRect(0, 0, 320, 200); g.fillStyle = '#eef1f6'; g.fillRect(0, 0, 70, 200);
+  g.fillStyle = '#5b8def'; rr(g, 10, 12, 50, 16, 8); g.fill(); g.fillStyle = '#c9cfdb';
+  for (let i = 0; i < 5; i++) { rr(g, 12, 42 + i * 18, 40, 7, 3); g.fill(); }
+  for (let i = 0; i < 7; i++) {
+    const y = 14 + i * 26; if (i < 3) { g.fillStyle = '#5b8def'; circ(g, 84, y + 8, 3.5); }
+    g.fillStyle = i < 3 ? '#3d405b' : '#9aa1b2'; rr(g, 94, y, 70, 7, 3); g.fill(); g.fillStyle = '#d5d9e2'; rr(g, 94, y + 11, 170 - ((i * 23) % 60), 6, 3); g.fill();
+  }
+  LT.mail = tex(c);
+}
+{
+  const [c, g] = canvas(320, 200); g.fillStyle = '#fbfaf7'; g.fillRect(0, 0, 320, 200); g.fillStyle = '#2b2d3a'; g.fillRect(0, 0, 320, 24); g.fillStyle = '#ffffff'; rr(g, 12, 7, 60, 10, 4); g.fill();
+  g.fillStyle = '#2b2622'; rr(g, 14, 34, 200, 12, 5); g.fill(); rr(g, 14, 52, 150, 12, 5); g.fill();
+  g.fillStyle = '#9ad0f5'; rr(g, 14, 74, 140, 100, 8); g.fill(); g.fillStyle = '#7fbf8a'; g.beginPath(); g.moveTo(14, 174); g.lineTo(70, 118); g.lineTo(126, 174); g.fill();
+  g.fillStyle = '#cfc9c0'; for (let i = 0; i < 8; i++) { rr(g, 168, 76 + i * 13, 130 - ((i * 17) % 40), 6, 3); g.fill(); }
+  LT.news = tex(c);
+}
+const [nbC, nb] = canvas(128, 170);
+nb.fillStyle = '#fbf8f0'; nb.fillRect(0, 0, 128, 170); nb.strokeStyle = '#b9d0ea'; nb.lineWidth = 2;
+for (let y = 22; y < 170; y += 14) { nb.beginPath(); nb.moveTo(0, y); nb.lineTo(128, y); nb.stroke(); }
+nb.strokeStyle = '#f0a3a3'; nb.beginPath(); nb.moveTo(20, 0); nb.lineTo(20, 170); nb.stroke();
+nb.fillStyle = '#5a6a8a'; for (let i = 0; i < 5; i++) nb.fillRect(26, 18 + i * 14, 40 + ((i * 29) % 60), 3);
+const bookMat = new THREE.MeshStandardMaterial({ map: tex(nbC), roughness: 0.9 });
+
+function glowTexture() {
+  const [c, g] = canvas(128, 128); const r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  r.addColorStop(0, 'rgba(255,214,110,1)'); r.addColorStop(0.3, 'rgba(255,190,60,.55)'); r.addColorStop(1, 'rgba(255,170,40,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 128, 128); return tex(c);
+}
+function emojiTexture(e, flip) {
+  const [c, g] = canvas(128, 128);
+  g.font = '88px ' + EMOJI_FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70);
+  const t = tex(c); if (flip) { t.repeat.x = -1; t.offset.x = 1; } return t;
+}
+function badgeTexture() {
+  const [c, g] = canvas(64, 64); g.fillStyle = '#ef4444'; circ(g, 32, 32, 28);
+  g.fillStyle = '#fff'; g.font = '600 34px ' + UI; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('1', 32, 34); return tex(c);
+}
+function ringTexture() {
+  const [c, g] = canvas(256, 256);
+  g.strokeStyle = 'rgba(242,165,31,1)'; g.lineWidth = 10; g.shadowColor = 'rgba(255,186,64,.9)'; g.shadowBlur = 12;
+  g.beginPath(); g.arc(128, 128, 102, 0, Math.PI * 2); g.stroke(); return tex(c);
+}
+const SCREEN_ON = new THREE.Color('#ffffff'), SCREEN_OFF = new THREE.Color('#2b2a31');
+
+/* ---------- room ---------- */
+const FY = 0.03, SEAT = 0.485, TOP = 0.8, LID_OPEN = 0.22, LID_SHUT = -1.52;
+box(9.75, 0.32, 7.55, 0.06, mat.slab, 0, -0.16, 0);
+box(9.4, 0.03, 7.2, 0.012, mat.floor, 0, 0.015, 0);
+box(5.6, 0.012, 6.3, 0.005, mat.carpet, -1.1, FY + 0.006, 0);
+const WH = 2.45, WT = 0.18, WX = -4.7 - WT / 2, DOOR_Z0 = -1.85, DOOR_Z1 = -0.85, DOOR_H = 1.85;
+box(9.4 + WT, WH, WT, 0.03, mat.wall, -WT / 2, WH / 2, -3.6 - WT / 2);
+box(WT, WH, DOOR_Z0 + 3.6, 0.03, mat.wall, WX, WH / 2, (DOOR_Z0 - 3.6) / 2);
+box(WT, WH, 3.6 - DOOR_Z1, 0.03, mat.wall, WX, WH / 2, (3.6 + DOOR_Z1) / 2);
+box(WT, WH - DOOR_H, DOOR_Z1 - DOOR_Z0, 0.02, mat.wall, WX, (WH + DOOR_H) / 2, (DOOR_Z0 + DOOR_Z1) / 2);
+box(9.4 + WT + 0.02, 0.05, WT + 0.02, 0.02, mat.cap, -WT / 2, WH + 0.02, -3.6 - WT / 2);
+box(WT + 0.02, 0.05, 7.22, 0.02, mat.cap, WX, WH + 0.02, 0);
+for (const z of [DOOR_Z0 - 0.03, DOOR_Z1 + 0.03]) box(0.05, DOOR_H + 0.06, 0.07, 0.015, mat.cap, -4.68, (DOOR_H + 0.06) / 2, z);
+box(0.05, 0.07, DOOR_Z1 - DOOR_Z0 + 0.13, 0.015, mat.cap, -4.68, DOOR_H + 0.03, (DOOR_Z0 + DOOR_Z1) / 2);
+box(0.75, 0.32, 1.3, 0.04, mat.slab, -5.25, -0.16, (DOOR_Z0 + DOOR_Z1) / 2);
+for (const wx of [-2.75, -0.45]) {
+  box(1.25, 1.05, 0.02, 0.01, mat.glass, wx, 1.5, -3.585);
+  box(1.37, 0.06, 0.06, 0.02, mat.cap, wx, 2.05, -3.57); box(1.37, 0.06, 0.06, 0.02, mat.cap, wx, 0.95, -3.57);
+  box(0.06, 1.16, 0.06, 0.02, mat.cap, wx - 0.655, 1.5, -3.57); box(0.06, 1.16, 0.06, 0.02, mat.cap, wx + 0.655, 1.5, -3.57);
+  box(0.04, 1.05, 0.04, 0.01, mat.cap, wx, 1.5, -3.57); box(1.25, 0.04, 0.04, 0.01, mat.cap, wx, 1.5, -3.57);
+  box(1.5, 0.05, 0.16, 0.02, mat.cap, wx, 0.92, -3.53);
+}
+const WINDOWS = [V(-2.75, 1.5, -3.58), V(-0.45, 1.5, -3.58)];
+const PLANTS = [V(4.4, 0.7, -1.6), V(-4.35, 0.5, -3.25), V(4.3, 0.45, 3.2), V(-4.35, 0.5, 3.25)], SHELF = V(-4.45, 1.0, 2.0), DOOR_PT = V(-4.6, 1.1, -1.35);
+const clockG = new THREE.Group(); clockG.position.set(1.25, 1.95, -3.575); scene.add(clockG);
+mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.035, 40), mat.clockRim, 0, 0, 0, clockG).rotation.x = Math.PI / 2;
+mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.04, 40), mat.clockFace, 0, 0, 0.004, clockG).rotation.x = Math.PI / 2;
+for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; box(0.018, i % 3 ? 0.03 : 0.05, 0.01, 0.004, mat.ink, Math.sin(a) * 0.19, Math.cos(a) * 0.19, 0.026, clockG).rotation.z = -a; }
+
+box(2.05, 0.22, 2.3, 0.04, mat.stage, 3.65, FY + 0.11, -2.45);
+box(0.46, 1.0, 0.5, 0.05, mat.woodDark, 2.95, 0.75, -2.95);
+box(0.56, 0.06, 0.62, 0.02, mat.wood, 2.95, 1.28, -2.95).rotation.x = -0.18;
+box(2.32, 1.22, 0.07, 0.03, mat.frame, 3.6, 1.6, -3.565);
+mesh(new THREE.PlaneGeometry(2.16, 1.06), new THREE.MeshStandardMaterial({ map: boardTex, roughness: 0.95 }), 3.6, 1.6, -3.527, scene, false);
+box(2.12, 0.04, 0.13, 0.01, mat.frame, 3.6, 0.98, -3.5);
+
+function plant(x, y, z, s = 1) {
+  const g = new THREE.Group(); g.position.set(x, y, z); g.scale.setScalar(s); scene.add(g);
+  mesh(GEO.pot, mat.pot, 0, 0.14, 0, g);
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2, l = mesh(GEO.leaf, i % 2 ? mat.leaf : mat.leaf2, Math.cos(a) * 0.07, 0.42 + (i % 3) * 0.04, Math.sin(a) * 0.07, g);
+    l.scale.set(0.55, 1.6, 0.55); l.rotation.set(Math.sin(a) * 0.55, 0, -Math.cos(a) * 0.55);
+  }
+}
+plant(4.4, 0.25, -1.6, 1.0); plant(-4.35, FY, -3.25, 1.1); plant(4.3, FY, 3.2, 0.95); plant(-4.35, FY, 3.25, 1.0);
+
+(function bookshelf(x, z) {
+  const g = new THREE.Group(); g.position.set(x, FY, z); g.rotation.y = Math.PI / 2; scene.add(g);
+  box(0.95, 1.62, 0.04, 0.01, mat.cream, 0, 0.81, -0.15, g);
+  for (const sx of [-0.455, 0.455]) box(0.04, 1.62, 0.34, 0.01, mat.cream, sx, 0.81, 0, g);
+  for (const y of [0.02, 0.42, 0.82, 1.22, 1.6]) box(0.95, 0.04, 0.34, 0.01, mat.cream, 0, y, 0, g);
+  let k = 0;
+  for (const y of [0.04, 0.44, 0.84]) {
+    let bx = -0.41;
+    while (bx < 0.36) { const w = 0.05 + ((k * 37) % 5) * 0.012, h = 0.24 + ((k * 13) % 4) * 0.025; box(w, h, 0.24, 0.006, mat.book[k % 6], bx + w / 2, y + h / 2 + 0.02, 0, g); bx += w + 0.006; k++; }
+  }
+})(-4.52, 2.0);
+
+/* ---------- desks and chairs ---------- */
+function table(cx) {
+  box(0.72, 0.06, 6.0, 0.02, mat.wood, cx, TOP - 0.03, 0);
+  for (const sx of [-0.3, 0.3]) for (const sz of [-2.9, 2.9]) box(0.05, TOP - 0.06 - FY, 0.05, 0.01, mat.leg, cx + sx, FY + (TOP - 0.06 - FY) / 2, sz);
+  box(0.03, 0.42, 5.95, 0.01, mat.wood, cx + 0.34, TOP - 0.27, 0);
+}
+function seatUnit(x, z, m) {
+  const u = new THREE.Group(); u.position.set(x, FY, z); u.rotation.y = Math.PI / 2; scene.add(u);
+  box(0.46, 0.07, 0.46, 0.03, m, 0, 0.42, 0, u);
+  box(0.46, 0.44, 0.07, 0.03, m, 0, 0.7, -0.235, u);
+  mesh(GEO.post, mat.base, 0, 0.2, 0, u); mesh(GEO.foot, mat.base, 0, 0.025, 0, u);
+  return u;
+}
+const ROWX = [0.95, -1.15, -3.25], SEATZ = [-2.3, -1.15, 0, 1.15, 2.3];
+const chairMats = [mat.sage, mat.peach, mat.cream];
+const units = {};
+ROWX.forEach((rx, ri) => { table(rx + 0.5); SEATZ.forEach((z, zi) => { units[ri + ':' + zi] = seatUnit(rx, z, chairMats[(ri + zi) % 3]); }); });
+
+/* merge the still parts of the room, one mesh per material */
+building = false;
+(function mergeStatics() {
+  scene.updateMatrixWorld(true);
+  const groups = new Map();
+  for (const m of statics) { if (!groups.has(m.material)) groups.set(m.material, []); groups.get(m.material).push(m); }
+  for (const [material, list] of groups) {
+    if (list.length < 2) continue;
+    const geos = list.map((m) => m.geometry.clone().applyMatrix4(m.matrixWorld));
+    const merged = mergeGeometries(geos, false);
+    geos.forEach((g) => g.dispose());
+    if (!merged) continue;
+    const big = new THREE.Mesh(merged, material);
+    big.castShadow = list.some((m) => m.castShadow); big.receiveShadow = true; scene.add(big);
+    for (const m of list) m.removeFromParent();
+  }
+})();
+
+const hourP = new THREE.Group(); hourP.position.z = 0.03; clockG.add(hourP); box(0.026, 0.12, 0.01, 0.004, mat.ink, 0, 0.05, 0, hourP);
+const minP = new THREE.Group(); minP.position.z = 0.036; clockG.add(minP); box(0.018, 0.18, 0.01, 0.004, mat.ink, 0, 0.08, 0, minP);
+const doorPivot = new THREE.Group(); doorPivot.position.set(WX, FY, DOOR_Z1); scene.add(doorPivot);
+box(WT * 0.55, DOOR_H - 0.04, 0.98, 0.02, mat.door, 0, (DOOR_H - 0.04) / 2, -0.49, doorPivot);
+mesh(GEO.knob, mat.knob, 0.09, 0.95, -0.86, doorPivot);
+
+/* ---------- people ---------- */
+function makePerson(o) {
+  const { skin = '#f1c7a1', hair = '#2c221d', shirt = '#6c7bd8', pants = '#4b4f6b', standing = false, bald = false, bun = false } = o;
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const shirtM = mc(shirt), skinM = mc(skin), hairM = mc(hair, { roughness: 0.55 }), pantsM = mc(pants);
+  if (standing) { mesh(GEO.robe, pantsM, 0, 0.31, 0, root); body.position.y = 0.55; }
+  else for (const s of [-1, 1]) { mesh(GEO.leg, pantsM, 0.09 * s, 0.06, 0.17, root).rotation.x = Math.PI / 2; mesh(GEO.leg, pantsM, 0.09 * s, -0.26, 0.33, root); }
+  const torso = mesh(GEO.torso, shirtM, 0, 0.29, 0, body);
+  const neck = new THREE.Group(); neck.position.y = 0.55; neck.rotation.order = 'YXZ'; body.add(neck);
+  const head = mesh(GEO.head, skinM, 0, 0.22, 0, neck);
+  if (!bald) { mesh(GEO.hair, hairM, 0, 0.235, -0.01, neck).rotation.x = -0.45; if (bun) mesh(GEO.bun, hairM, 0, 0.47, -0.12, neck); }
+  const eyes = [mesh(GEO.eye, mat.ink, 0.085, 0.2, 0.226, neck, false), mesh(GEO.eye, mat.ink, -0.085, 0.2, 0.226, neck, false)];
+  for (const x of [0.14, -0.14]) mesh(GEO.blush, mat.blush, x, 0.135, 0.2, neck, false).scale.set(1, 0.55, 0.35);
+  const arm = (s) => { const p = new THREE.Group(); p.position.set(0.215 * s, 0.46, 0); body.add(p); mesh(GEO.arm, shirtM, 0, -0.15, 0, p); return { p, hand: mesh(GEO.hand, skinM, 0, -0.3, 0, p) }; };
+  return { root, body, torso, neck, head, eyes, armL: arm(1), armR: arm(-1) };
+}
+function laptop(parent, scrMat) {
+  const g = new THREE.Group(); g.position.set(0, TOP - SEAT, 0.47); parent.add(g);
+  box(0.36, 0.018, 0.25, 0.006, mat.laptop, 0, 0.009, 0, g);
+  const hinge = new THREE.Group(); hinge.position.set(0, 0.018, 0.125); hinge.rotation.x = LID_OPEN; g.add(hinge);
+  box(0.36, 0.235, 0.012, 0.005, mat.laptop, 0, 0.1175, 0, hinge);
+  const scr = new THREE.Mesh(GEO.screen, scrMat); scr.position.set(0, 0.1175, -0.0068); scr.rotation.y = Math.PI; hinge.add(scr);
+  return { g, hinge, scr };
+}
+function phoneProp(scrMat) {
+  const g = new THREE.Group(); box(0.078, 0.155, 0.012, 0.006, mat.phone, 0, 0, 0, g);
+  const s = new THREE.Mesh(GEO.phoneScr, scrMat); s.position.z = 0.0066; g.add(s); return { g, s };
+}
+
+GEO.cookie = new THREE.CylinderGeometry(0.045, 0.045, 0.014, 16); mat.cookie = M('#c98b4f');
+/* name, look, focus (0 scattered, 1 steady), laptop or notebook, mug */
+const ROSTER = [
+  ['1:2', 'Aarav', { skin: '#f0c39a', hair: '#2a1f1a', shirt: '#2f9f8f', pants: '#3b4461' }, 0.1, 'lap'],
+  ['1:3', 'Emma', { skin: '#f3cfae', hair: '#7a5236', shirt: '#f0a15e', pants: '#4a4e69', bun: true }, 0.35, 'lap', 'mug'],
+  ['1:1', 'Kenji', { skin: '#f1c7a1', hair: '#1c1818', shirt: '#7c86e6', pants: '#3d405b' }, 0.28, 'book'],
+  ['0:0', 'Sophie', { skin: '#c88e63', hair: '#5b3a26', shirt: '#e07a8f', bun: true }, 0.62, 'book', 'mug'],
+  ['0:2', 'Nima', { skin: '#d9a07a', hair: '#1d1a24', shirt: '#f2cc8f' }, 0.92, 'book'],
+  ['0:3', 'Lucas', { skin: '#b9845e', hair: '#231c1a', shirt: '#6c9bd2' }, 0.22, 'lap'],
+  ['0:4', 'Mei', { skin: '#f1c7a1', hair: '#1d1a24', shirt: '#a78bfa', bun: true }, 0.45, 'lap'],
+  ['1:0', 'Noah', { skin: '#8e5c3f', hair: '#1c1818', shirt: '#e9a6a6' }, 0.4, 'book'],
+  ['1:4', 'Arjun', { skin: '#c48a64', hair: '#2b211d', shirt: '#81b29a' }, 0.3, 'lap', 'mug'],
+  ['2:0', 'Hana', { skin: '#e8b48f', hair: '#2a1f1a', shirt: '#f6bd60', bun: true }, 0.55, 'book'],
+  ['2:1', 'Jack', { skin: '#f2c9a5', hair: '#c79a5b', shirt: '#5e8ca8' }, 0.18, 'lap', 'mug'],
+  ['2:2', 'Yuna', { skin: '#f0c8a8', hair: '#231c1a', shirt: '#c3a6e0', bun: true }, 0.5, 'book'],
+  ['2:4', 'Olivia', { skin: '#a8714f', hair: '#3a2a20', shirt: '#ef8f6b' }, 0.33, 'lap'],
+];
+const deskP = V(-0.27, TOP - SEAT + 0.007, 0.34), handP = V(-0.07, 0.54, 0.31), handHi = V(-0.05, 0.8, 0.37), MUG_UP = V(0.02, 0.66, 0.22);
+const deskQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0.35));
+const deskQF = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, -0.35));
+const badgeMat = new THREE.SpriteMaterial({ map: badgeTexture(), transparent: true, depthTest: false });
+const pickMat = new THREE.MeshBasicMaterial(), picks = [];
+function domBubble() { const o = document.createElement('div'); o.className = 'bb'; const i = document.createElement('i'); o.appendChild(i); elBubbles.appendChild(o); return { o, i, on: false, offAt: -9, txt: null, cls: '' }; }
+
+const students = ROSTER.map(([seat, name, look, focus, kit, extra], i) => {
+  const [ri, zi] = seat.split(':').map(Number);
+  const p = makePerson(look); p.root.position.set(0, SEAT - FY, 0.03); units[seat].add(p.root);
+  const st = {
+    i, name, ri, zi, p, focus, focused: false, locked: false, act: null, lastKey: null, log: [], nbrs: [],
+    S: { yaw: 0, pitch: 0.1, roll: 0, torso: 0, aL: -1.12, aR: -1.12, aLz: 0, aRz: 0, up: 0, high: 0, flip: 0, type: 0, write: 0, eyes: 1, lid: LID_OPEN, mug: 0, breathe: 0 },
+    lidRest: LID_OPEN, flipRest: 0, pingUntil: -1, ringUntil: -1, bubUntil: -1, bubShape: 'pop', bubText: '', badgeSp: { x: 0, v: 0 },
+    head: V(), fwd: V(0, 0, 1), chest: V(), tgt: V(), pos: V(), db: domBubble(),
+  };
+  const scr = new THREE.MeshBasicMaterial({ map: feedTex.clone(), toneMapped: false });
+  st.feed = scr.map; st.feed.offset.y = rand();
+  st.phone = phoneProp(scr); st.phone.g.position.copy(deskP); st.phone.g.quaternion.copy(deskQ); p.root.add(st.phone.g);
+  st.dummy = new THREE.Object3D(); p.root.add(st.dummy);
+  if (kit === 'lap') st.lap = laptop(p.root, new THREE.MeshBasicMaterial({ map: LT.idle, toneMapped: false }));
+  else { st.book = box(0.2, 0.012, 0.27, 0.004, bookMat, 0.03, TOP - SEAT + 0.006, 0.44, p.root); st.pen = mesh(GEO.pen, mat.pen, 0.015, -0.34, 0.035, p.armR.p, false); st.pen.rotation.x = 1.1; }
+  st.cookie = mesh(GEO.cookie, mat.cookie, 0, -0.36, 0.05, p.armR.p, false); st.cookie.rotation.x = Math.PI / 2; st.cookie.visible = false;
+  if (extra === 'mug') { st.mugDesk = V(st.lap ? 0.27 : 0.2, TOP - SEAT + 0.05, 0.42); st.mug = mesh(GEO.mug, mat.mug, st.mugDesk.x, st.mugDesk.y, st.mugDesk.z, p.root); }
+  for (const o of [st.phone.g, st.lap && st.lap.g, st.book, st.mug]) if (o) o.traverse((m) => { m.userData.prop = true; });
+  st.badge = new THREE.Sprite(badgeMat); st.badge.renderOrder = 31; st.badge.visible = false; scene.add(st.badge);
+  const pk = new THREE.Mesh(GEO.pick, pickMat); pk.position.set(0, 0.6, 0.05); pk.layers.set(2); pk.userData.st = st; p.root.add(pk); picks.push(pk);
+  return st;
+});
+scene.updateMatrixWorld(true);
+for (const st of students) { st.p.root.getWorldPosition(st.pos); st.nbrs = students.filter((o) => o.ri === st.ri && Math.abs(o.zi - st.zi) === 1); }
+const focusOf = (st) => (st.focused ? 0.97 : st.focus);
+function setLayer(st, layer) { st.p.root.traverse((m) => { if (m.isMesh && !m.userData.prop && !m.userData.st) m.layers.set(layer); }); }
+
+const teacher = makePerson({ skin: '#c98e63', shirt: '#e58a36', pants: '#dd7f2c', standing: true, bald: true });
+teacher.root.position.set(3.55, 0.25, -2.15); teacher.root.rotation.y = -1.1; scene.add(teacher.root);
+const visitor = makePerson({ skin: '#e2b08a', hair: '#3a2a20', shirt: '#7a9aa8', pants: '#5d7480', standing: true });
+visitor.root.position.set(-5.4, FY, (DOOR_Z0 + DOOR_Z1) / 2); visitor.root.rotation.y = Math.PI / 2; visitor.root.visible = false; scene.add(visitor.root);
+const TB = { bubUntil: -1, bubShape: 'pop', bubText: '', db: domBubble() }, VB = { bubUntil: -1, bubShape: 'pop', bubText: '', db: domBubble() };
+const tHead = V(), vHead = V();
+
+/* props for room events */
+const plane = new THREE.Mesh((() => {
+  const g = new THREE.BufferGeometry(), N = [0, 0, 0.17], L = [-0.11, 0.01, -0.09], R = [0.11, 0.01, -0.09], C = [0, 0, -0.09], K = [0, -0.035, -0.09];
+  g.setAttribute('position', new THREE.Float32BufferAttribute([...N, ...L, ...C, ...N, ...C, ...R, ...N, ...K, ...C], 3)); g.computeVertexNormals(); return g;
+})(), mat.paper);
+plane.scale.setScalar(1.5); plane.castShadow = true; plane.visible = false; scene.add(plane);
+const fly = new THREE.Group(); fly.visible = false; scene.add(fly);
+mesh(GEO.flyBody, mat.flyBody, 0, 0, 0, fly, false).scale.set(1, 0.8, 1.35);
+const wingMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false });
+const flyWL = new THREE.Group(), flyWR = new THREE.Group(); flyWL.position.y = flyWR.position.y = 0.03; fly.add(flyWL, flyWR);
+for (const [w, s] of [[flyWL, 1], [flyWR, -1]]) { const m = new THREE.Mesh(GEO.wing, wingMat); m.rotation.x = -Math.PI / 2; m.position.x = 0.04 * s; w.add(m); }
+const noteM = box(0.08, 0.012, 0.055, 0.004, mat.mug, 0, 0, 0); noteM.visible = false;
+const dropBook = box(0.17, 0.035, 0.23, 0.006, mat.book[0], 0, 0, 0); dropBook.visible = false;
+const bird = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTexture('🐦', true), transparent: true })); bird.scale.set(0.3, 0.3, 1); bird.visible = false; scene.add(bird);
+
+/* ---------- attention view for the followed student ---------- */
+const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), transparent: true, depthWrite: false, depthTest: false }));
+glow.renderOrder = 25; glow.layers.set(1); scene.add(glow);
+const marker = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 0), new THREE.MeshStandardMaterial({ color: '#f6b931', emissive: '#e89a12', emissiveIntensity: 0.5, roughness: 0.3, flatShading: true }));
+marker.scale.y = 1.5; marker.layers.set(1); scene.add(marker);
+const ringT = ringTexture();
+const mkRings = (color, layer) => [0, 1].map(() => {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: ringT, color, transparent: true, depthWrite: false, depthTest: false, opacity: 0 }));
+  s.layers.set(layer); s.renderOrder = 24; s.visible = false; scene.add(s); return s;
+});
+const ringRips = mkRings('#ff7a59', 0);
+const curve = new THREE.QuadraticBezierCurve3(V(), V(), V());
+const tube = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color: '#f2a51f', transparent: true, opacity: 0.4, depthWrite: false, toneMapped: false }));
+tube.layers.set(1); tube.frustumCulled = false; scene.add(tube);
+const N_PART = 26;
+const parts = new THREE.InstancedMesh(GEO.part, new THREE.MeshBasicMaterial({ color: '#ffb31f', toneMapped: false }), N_PART);
+parts.layers.set(1); parts.frustumCulled = false; scene.add(parts);
+const dummy = new THREE.Object3D(), tmpP = V();
+function updateBeam(t, a, b, vis, steady) {
+  curve.v0.copy(a); curve.v2.copy(b);
+  const dist = a.distanceTo(b);
+  curve.v1.copy(a).add(b).multiplyScalar(0.5); curve.v1.y += 0.18 + dist * 0.16;
+  tube.geometry.dispose();
+  tube.geometry = new THREE.TubeGeometry(curve, 28, 0.013 + 0.008 * steady, 6, false);
+  tube.material.opacity = 0.55 * vis; tube.visible = vis > 0.03;
+  const speed = 0.85 - 0.35 * steady;
+  for (let i = 0; i < N_PART; i++) {
+    const u = (t * speed + i / N_PART) % 1;
+    curve.getPoint(u, tmpP); dummy.position.copy(tmpP);
+    dummy.scale.setScalar(vis * (1 + 0.45 * steady) * Math.sin(Math.PI * u) + 1e-4);
+    dummy.updateMatrix(); parts.setMatrixAt(i, dummy.matrix);
+  }
+  parts.instanceMatrix.needsUpdate = true; parts.visible = vis > 0.03;
+}
+
+/* ---------- what attention can land on ---------- */
+const THOUGHTS = ['✈️', '🍕', '🎮', '⚽', '🏖️', '🎵', '🐶', '🍔', '🎬', '💸', '🍦', '🛹', '🏀', '🎂', '🧋', '🐱', '🚗', '🏔️', '🌮', '🎸', '🍜', '🛏️', '🎁', '🏆'];
+const TALK = ['…', '😂', '👀', '🤔', '…', '🙃', '😮', '🤭', '…', '🍕?'];
+const PHONE_MODES = [{ m: 'scroll', w: 3 }, { m: 'chat', w: 2 }, { m: 'video', w: 1.6 }, { m: 'photo', w: 0.6 }, { m: 'selfie', w: 0.6 }];
+const LAP_MODES = [{ m: 'code', w: 1.2 }, { m: 'shop', w: 1.4 }, { m: 'video', w: 1.3 }, { m: 'game', w: 1 }, { m: 'chat', w: 1.2 }, { m: 'mail', w: 1 }, { m: 'news', w: 1 }];
+const PHONE_LABEL = { scroll: 'Scrolling', chat: 'Texting', video: 'A video', photo: 'A photo', selfie: 'A selfie' };
+const PHONE_ICON = { scroll: '📱', chat: '💬', video: '🎬', photo: '📸', selfie: '🤳' };
+const LAP_LABEL = { code: 'Laptop', shop: 'Shopping', video: 'A video', game: 'A game', chat: 'Chatting', mail: 'Email', news: 'News' };
+const LAP_ICON = { code: '💻', shop: '🛒', video: '🍿', game: '🎮', chat: '💬', mail: '📧', news: '📰' };
+const ACT = {
+  listen: { key: 'lecture', label: 'Teacher' }, board: { key: 'lecture', label: 'The board' }, hand: { key: 'lecture', label: 'Raising a hand', icon: '✋', hold: true },
+  notes: { key: 'notes', label: 'Notes' }, lapNotes: { key: 'notes', label: 'Notes' }, doodle: { key: 'doodle', label: 'Doodling', icon: '🖍️' },
+  phone: { key: 'phone' }, silence: { key: 'phone', label: 'A ringing phone', icon: '😳' }, laptop: { key: 'laptop' },
+  thought: { key: 'thought', label: 'A thought' }, talk: { key: 'talk' }, peek: { key: 'peek', icon: '👀' },
+  window: { key: 'window', label: 'The window', icon: '🌤️' }, clock: { key: 'clock', label: 'The clock', icon: '🕐' }, watch: { key: 'watch', label: 'The watch', icon: '⌚' },
+  drink: { key: 'drink', label: 'Coffee', icon: '☕' }, stretch: { key: 'stretch', label: 'A stretch', icon: '🥱' }, doze: { key: 'doze', label: 'Dozing off', icon: '💤', hold: true },
+  throw: { key: 'ev:plane', label: 'Paper plane' }, sneeze: { key: 'sneeze', label: 'A sneeze' }, event: { key: 'ev' },
+  putAway: { key: 'self', label: 'Phone away' },
+  lookBack: { key: 'back', label: 'Looking back', icon: '👀' }, shelf: { key: 'shelf', label: 'The bookshelf', icon: '📚' }, plant: { key: 'plant', label: 'A plant', icon: '🪴' },
+  door: { key: 'doorway', label: 'The door', icon: '🚪' }, floor: { key: 'floor', label: 'The floor', icon: '👟' }, zone: { key: 'zone', label: 'Zoning out', icon: '😶', hold: true },
+  other: { key: 'other', icon: '👀' }, snack: { key: 'snack', label: 'A snack', icon: '🍪' }, pen: { key: 'pen', label: 'Pen spinning', icon: '🖊️' },
+  rubEyes: { key: 'rub', label: 'Tired eyes', icon: '😪' }, neck: { key: 'neck', label: 'A neck stretch', icon: '🙆' },
+  passNote: { key: 'note', label: 'Passing a note', icon: '📝' }, readNote: { key: 'note', label: 'A note' },
+  laugh: { key: 'lecture', label: 'A joke', icon: '😂' }, pickUp: { key: 'drop', label: 'A dropped book', icon: '😬' },
+};
+
+let now = 0, prerolling = false, sel = null;
+function setBubble(o, shape, text, until) { o.bubShape = shape; o.bubText = text; o.bubUntil = until; }
+function setAct(st, id, dur, o = {}) {
+  const a = Object.assign({ id, t0: now, dur, until: now + dur }, o);
+  st.act = a;
+  if (id === 'phone') { st.flipRest = 0; if (!a.mode) a.mode = pickW(PHONE_MODES).m; if (a.ping) st.pingUntil = now + 0.55; }
+  if (id === 'laptop' && !a.mode) a.mode = pickW(LAP_MODES).m;
+  if (id === 'laptop' || id === 'lapNotes') st.lidRest = LID_OPEN;
+  if (id === 'thought' && !a.emoji) a.emoji = pick(THOUGHTS);
+  if (id === 'window' && a.w === undefined) a.w = rand() < 0.5 ? 0 : 1;
+  if (id === 'board' && a.slot === undefined) { const filled = slotState.map((s, i) => (s ? i : -1)).filter((i) => i >= 0); a.slot = filled.length ? pick(filled) : -1; }
+  const key = a.key || (id === 'talk' ? 'talk:' + a.partner.name : ACT[id].key);
+  if (key !== st.lastKey) { st.log.push(now); st.lastKey = key; if (st.log.length > 120) st.log.shift(); if (st === sel) { monitorKick(); switchSound(st, a); } }
+  const spec = ACT[id];
+  if (id === 'thought') setBubble(st, 'cloud', a.emoji, a.until);
+  else {
+    const icon = a.icon !== undefined ? a.icon : id === 'phone' ? PHONE_ICON[a.mode] : id === 'laptop' ? LAP_ICON[a.mode] : spec.icon;
+    if (icon) setBubble(st, 'pop', icon, spec.hold ? a.until : now + 1.5);
+  }
+  return a;
+}
+function startTalk(st, dur) {
+  const partner = pick(st.nbrs);
+  const a = setAct(st, 'talk', dur, { partner, leader: true });
+  if (!partner.locked && !partner.focused && partner.act.id !== 'talk' && rand() < 0.15 + 0.85 * (1 - focusOf(partner))) setAct(partner, 'talk', dur, { partner: st, leader: false, t0: a.t0 });
+  else { setBubble(partner, 'pop', '🤫', now + 1.6); a.until = now + Math.min(dur, 1.7); }
+}
+const NOTE = { active: false, from: null, to: null, t0: 0, landed: false, until: 0 }, tmpN1 = V(), tmpN2 = V();
+function startNote(st, partner, dur) { Object.assign(NOTE, { active: true, from: st, to: partner, t0: now, landed: false }); setAct(st, 'passNote', dur, { partner }); }
+function updateNote() {
+  if (!NOTE.active) return;
+  const el = now - NOTE.t0, k = smooth01((el - 0.35) / 0.7);
+  NOTE.from.p.armR.hand.getWorldPosition(tmpN1); NOTE.to.p.root.localToWorld(tmpN2.set(0.12, TOP - SEAT + 0.012, 0.42));
+  noteM.visible = el > 0.3; noteM.position.lerpVectors(tmpN1, tmpN2, k); noteM.position.y += Math.sin(Math.PI * k) * 0.12; noteM.rotation.y = k * 2.2;
+  if (!NOTE.landed && k >= 1) {
+    NOTE.landed = true; NOTE.until = now + 3.2;
+    const p = NOTE.to;
+    if (!p.focused && canReact(p)) setAct(p, 'readNote', 2.4, { icon: pick(['😂', '🤭', '😳']) }); else setBubble(p, 'pop', '🤫', now + 1.5);
+  }
+  if (NOTE.landed && now > NOTE.until) { NOTE.active = false; noteM.visible = false; }
+}
+function nextAct(st) {
+  if (st.focused) {
+    const F = [{ id: 'listen', w: 5 }, { id: 'board', w: TCH.state === 'write' ? 3 : 1.4 }];
+    if (st.book) F.push({ id: 'notes', w: 2.4 });
+    if (st.lap) F.push({ id: 'lapNotes', w: 2.2 });
+    const c = pickW(F.filter((o) => o.id !== st.act.id)).id;
+    return setAct(st, c, c === 'listen' ? rnd(8, 14) : rnd(5, 9));
+  }
+  const f = focusOf(st), d = 1 - f, cur = st.lastKey, away = cur !== 'lecture' && cur !== 'notes';
+  const L = [], add = (id, w) => { if (w > 0.001 && id !== st.act.id) L.push({ id, w }); };
+  add('listen', (2.5 + 6 * f) * (away ? 2.2 : cur === 'lecture' ? 0.35 : 1));
+  add('board', (0.7 + 1.5 * f) * (TCH.state === 'write' ? 2.5 : 1));
+  if (st.book) { add('notes', 0.7 + 2.2 * f); add('doodle', 0.7 * d); }
+  if (st.lap) { add('lapNotes', 0.5 + 1.6 * f); add('laptop', 2.0 * d); }
+  add('phone', 2.6 * d); add('thought', 1.8 * d);
+  if (st.nbrs.length) add('talk', 1.3 * d);
+  const screens = st.nbrs.filter((o) => (o.act.id === 'phone' && o.S.up > 0.5) || o.act.id === 'laptop');
+  if (screens.length) add('peek', 1.2 * d);
+  add('window', 0.7 * d); add('clock', 0.5 * d); add('watch', 0.3 * d); add('stretch', 0.25 * d); add('doze', 0.12 * d * d);
+  if (st.mug) add('drink', 0.4);
+  add('lookBack', 0.5 * d); add('shelf', 0.3 * d); add('plant', 0.3 * d); add('door', 0.3 * d); add('floor', 0.25 * d);
+  add('zone', 0.55 * d); add('other', 0.5 * d); add('snack', 0.3 * d); add('rubEyes', 0.2 * d); add('neck', 0.2 * d);
+  if (st.pen) add('pen', 0.45 * d);
+  if (st.nbrs.length && !NOTE.active) add('passNote', 0.3 * d);
+  const c = pickW(L).id;
+  const dur = {
+    listen: () => rnd(1.6, 3.5) + 12 * f * rnd(0.6, 1.2), board: () => rnd(1.4, 3) + 4 * f,
+    notes: () => rnd(2.5, 5) + 4 * f, lapNotes: () => rnd(2.5, 5) + 4 * f, doodle: () => rnd(2.5, 5),
+    phone: () => rnd(1.8, 5.5) * (1 + d * 0.4), laptop: () => rnd(2.2, 5.5), thought: () => rnd(1.6, 3), talk: () => rnd(2.4, 4.4), peek: () => rnd(1.2, 2.4),
+    window: () => rnd(1.2, 2.6), clock: () => rnd(0.8, 1.5), watch: () => rnd(0.9, 1.6), drink: () => rnd(1.6, 2.4), stretch: () => rnd(1.6, 2.4), doze: () => rnd(3, 6),
+    lookBack: () => rnd(1.4, 2.8), shelf: () => rnd(1, 2.2), plant: () => rnd(1, 2), door: () => rnd(1, 2), floor: () => rnd(1, 2), zone: () => rnd(2.5, 5),
+    other: () => rnd(1.2, 2.4), snack: () => rnd(2, 3.5), pen: () => rnd(2, 3.5), rubEyes: () => rnd(1.5, 2.5), neck: () => rnd(1.6, 2.4), passNote: () => 1.4,
+  }[c]();
+  if (c === 'talk') return startTalk(st, dur);
+  if (c === 'peek') return setAct(st, 'peek', dur, { partner: pick(screens) });
+  if (c === 'phone') return setAct(st, 'phone', dur, { ping: rand() < 0.55 });
+  if (c === 'lookBack') { const b = students.filter((o) => o.ri === st.ri + 1 && Math.abs(o.zi - st.zi) <= 1); return setAct(st, c, dur, b.length ? { partner: pick(b) } : { pt: V(st.pos.x - 3.2, 1.1, st.pos.z + (rand() < 0.5 ? -1 : 1) * rnd(0.6, 1.6)) }); }
+  if (c === 'plant') return setAct(st, c, dur, { k: Math.floor(rand() * PLANTS.length) });
+  if (c === 'floor') return setAct(st, c, dur, { pt: st.p.root.localToWorld(V(rnd(-0.35, 0.35), FY - SEAT + 0.02, rnd(0.15, 0.4))) });
+  if (c === 'zone') return setAct(st, c, dur, { pt: st.p.root.localToWorld(V(rnd(-0.6, 0.6), rnd(0.9, 1.4), 3)) });
+  if (c === 'other') return setAct(st, c, dur, { partner: pick(students.filter((o) => o !== st && !st.nbrs.includes(o))) });
+  if (c === 'passNote') return startNote(st, pick(st.nbrs), dur);
+  setAct(st, c, dur);
+}
+function actDone(st) {
+  const a = st.act;
+  if (a.id === 'putAway') { st.flipRest = 1; st.locked = false; setAct(st, 'listen', rnd(6, 10)); return; }
+  if (a.id === 'throw' && plane.visible) { setAct(st, 'event', 2, { key: 'ev:plane', label: 'Paper plane', target: (o) => o.copy(plane.position), icon: '😏' }); return; }
+  nextAct(st);
+}
+function labelOf(st) {
+  const a = st.act;
+  if (a.label) return a.label;
+  switch (a.id) {
+    case 'listen': return 'Teacher';
+    case 'phone': return a.ping && now - a.t0 < 0.55 ? 'A ping' : PHONE_LABEL[a.mode];
+    case 'laptop': return LAP_LABEL[a.mode];
+    case 'talk': return a.partner.name;
+    case 'peek': return a.partner.name + '’s screen';
+    case 'other': return a.partner.name;
+  }
+  return ACT[a.id].label || 'Teacher';
+}
+
+/* ---------- the teacher walks, writes, wipes and asks ---------- */
+const TCH = { state: 'talk', t0: 0, until: 4, walkTo: V(), then: null, slot: -1, lookFn: null, lookUntil: -1, gaze: null, gazeUntil: 0 };
+const TSPOTS = [V(3.55, 0.25, -2.15), V(4.2, 0.25, -1.75), V(3.3, 0.25, -1.7), V(4.0, 0.25, -2.55)];
+const CLASS_C = V(-1.1, 1.0, 0.1), tmpT = V(), LA = { yaw: 0, pitch: 0 }, tmpLA = V();
+function lookAngles(root, eyeY, world, out) {
+  tmpLA.copy(world); root.worldToLocal(tmpLA);
+  const dx = tmpLA.x, dy = tmpLA.y - eyeY, dz = tmpLA.z;
+  out.yaw = Math.atan2(dx, dz); out.pitch = Math.atan2(-dy, Math.hypot(dx, dz) + 1e-6); return out;
+}
+function tSet(state, dur) { TCH.state = state; TCH.t0 = now; TCH.until = now + dur; }
+function tWalk(to, then) { TCH.walkTo.copy(to); TCH.then = then; tSet('walk', 99); }
+function teacherLook(fn, dur, icon) { TCH.lookFn = fn; TCH.lookUntil = now + dur; if (icon) setBubble(TB, 'pop', icon, now + 1.6); }
+function startWrite(i) {
+  const wide = SLOTS[i].w > 200;
+  fillSlot(i, pick(wide ? ['wave', 'lines', 'scatter', 'word'] : ['target', 'loop', 'scatter', 'word']), 0);
+  TCH.slot = i; tSet('write', rnd(3, 4.5));
+}
+function tNext() {
+  const r = rand(), free = slotState.map((s, i) => (s ? -1 : i)).filter((i) => i >= 0);
+  if (r < 0.45) {
+    if (free.length) { const i = pick(free); boardWorld(SLOTS[i].cx, SLOTS[i].cy, tmpT); TCH.slot = i; tWalk(V(clamp(tmpT.x, 3.55, 4.4), 0.25, -2.95), () => startWrite(i)); }
+    else tWalk(V(3.9, 0.25, -2.95), () => tSet('erase', 2.4));
+  } else if (r < 0.75) { const spots = TSPOTS.filter((p) => p.distanceTo(teacher.root.position) > 0.3); tWalk(pick(spots), () => tSet('talk', rnd(4, 8))); }
+  else if (r < 0.88) {
+    const away = students.filter((s) => !s.locked && !s.focused && s.lastKey !== 'lecture' && s.lastKey !== 'notes');
+    if (away.length) { TCH.target = pick(away); TCH.caught = false; tSet('point', 2.4); setBubble(TB, 'pop', '👀', now + 1.6); } else tSet('talk', rnd(3, 6));
+  } else tSet('talk', rnd(3, 6));
+}
+function teacherLogic(dt) {
+  const R = teacher.root;
+  if (TCH.state === 'walk') {
+    tmpT.copy(TCH.walkTo).sub(R.position); tmpT.y = 0; const d = tmpT.length();
+    if (d < 0.03) { R.position.x = TCH.walkTo.x; R.position.z = TCH.walkTo.z; const f = TCH.then; TCH.then = null; if (f) f(); else tSet('talk', 3); }
+    else R.position.addScaledVector(tmpT.normalize(), Math.min(d, 0.85 * dt));
+  } else if (now >= TCH.until) {
+    if (TCH.state === 'write' && slotState[TCH.slot]) slotState[TCH.slot].p = 1;
+    if (TCH.state === 'erase') slotState.fill(null);
+    boardDirty = true; TCH.slot = -1; tNext();
+  }
+  if (TCH.state === 'write' && slotState[TCH.slot]) { slotState[TCH.slot].p = clamp((now - TCH.t0) / (TCH.until - TCH.t0), 0, 1); boardDirty = true; }
+  if (TCH.state === 'erase') { const k = clamp((now - TCH.t0) / 2.2, 0, 1); slotState.forEach((s) => { if (s) s.a = 1 - k; }); boardDirty = true; }
+  if (TCH.state === 'point' && !TCH.caught && now - TCH.t0 > 0.7) { TCH.caught = true; const s = TCH.target; if (!s.locked && !s.focused) setAct(s, 'listen', rnd(3, 6), { icon: '😳', label: 'Caught' }); }
+}
+function poseTeacher(dt) {
+  const R = teacher.root, st = TCH.state, writing = st === 'write' || st === 'erase';
+  const lookOn = now < TCH.lookUntil && TCH.lookFn && !writing;
+  let face;
+  if (lookOn) { TCH.lookFn(tmpT); face = Math.atan2(tmpT.x - R.position.x, tmpT.z - R.position.z); }
+  else if (st === 'walk') face = Math.atan2(TCH.walkTo.x - R.position.x, TCH.walkTo.z - R.position.z);
+  else if (writing) face = Math.PI;
+  else if (st === 'point') face = Math.atan2(TCH.target.pos.x - R.position.x, TCH.target.pos.z - R.position.z);
+  else face = Math.atan2(CLASS_C.x - R.position.x, CLASS_C.z - R.position.z);
+  R.rotation.y = dampAngle(R.rotation.y, face, st === 'walk' ? 8 : 5, dt);
+  let ny = 0, np = writing ? -0.12 : 0.06;
+  let gaze = lookOn ? tmpT : st === 'point' ? TCH.target.head : null;
+  if (!gaze && (st === 'talk' || st === 'ask')) { if (now > TCH.gazeUntil || !TCH.gaze) { TCH.gaze = pick(students); TCH.gazeUntil = now + rnd(1.2, 2.4); } gaze = TCH.gaze.head; }
+  if (gaze) { lookAngles(R, 1.3, gaze, LA); ny = clamp(LA.yaw, -0.9, 0.9); np = clamp(LA.pitch, -0.3, 0.5); }
+  teacher.neck.rotation.x = damp(teacher.neck.rotation.x, np, 6, dt); teacher.neck.rotation.y = damp(teacher.neck.rotation.y, ny, 6, dt);
+  let aR, aRz, aL, aLz;
+  if (st === 'write') { aR = -2.5 + Math.sin(now * 9) * 0.12; aRz = 0.2 + Math.sin(now * 6.5) * 0.12; aL = -0.25; aLz = -0.1; }
+  else if (st === 'erase') { aR = -2.2; aRz = Math.sin(now * 6) * 0.6; aL = -0.25; aLz = -0.1; }
+  else if (st === 'ask') { aR = -2.7; aRz = -0.1; aL = -0.3; aLz = 0; }
+  else if (st === 'point') { aR = -1.6; aRz = 0.05; aL = -0.3; aLz = 0; }
+  else if (st === 'walk') { const sw = Math.sin(now * 7) * 0.3; aR = -0.15 + sw; aL = -0.15 - sw; aRz = 0.08; aLz = -0.08; }
+  else { const g1 = Math.max(0, Math.sin(now * 1.15)), g2 = Math.max(0, Math.sin(now * 0.83 + 2.1)); aR = -0.35 - g1; aRz = 0.25 * g1; aL = -0.3 - 0.6 * g2; aLz = -0.2 * g2; }
+  const ar = teacher.armR.p.rotation, al = teacher.armL.p.rotation;
+  ar.x = damp(ar.x, aR, 10, dt); ar.z = damp(ar.z, aRz, 10, dt); al.x = damp(al.x, aL, 10, dt); al.z = damp(al.z, aLz, 10, dt);
+  teacher.body.position.y = 0.55 + (st === 'walk' ? Math.abs(Math.sin(now * 7)) * 0.03 : 0);
+}
+
+/* ---------- room events ---------- */
+const canReact = (st) => !st.locked && !['throw', 'silence', 'sneeze', 'passNote', 'pickUp'].includes(st.act.id);
+let ev = null, lastKind = '', forced = qs.get('ev');
+const tmpE = V();
+function react(st, o) { return setAct(st, 'event', st.focused ? Math.min(o.dur, rnd(0.7, 1.2)) : o.dur, { key: 'ev:' + ev.kind, label: o.label || ev.label, target: o.target, icon: o.icon, swat: o.swat }); }
+const EV = {
+  plane(e) {
+    e.label = 'Paper plane';
+    const pool = students.filter((s) => !s.locked && !s.focused && s.focus < 0.6), th = pick(pool.length ? pool : students.filter((s) => !s.locked));
+    const others = students.filter((s) => s !== th), land = V();
+    let target = null;
+    if (rand() < 0.35) land.set(rnd(3.0, 4.2), 0.26, rnd(-2.0, -1.5));
+    else { target = pick(others); target.p.root.localToWorld(land.set(rnd(-0.12, 0.12), TOP - SEAT + 0.03, 0.5)); }
+    setAct(th, 'throw', 0.8, { to: land.clone() }); sfx('fwip', 0.4);
+    let flying = false, tf = 0, fd = 0, landT = 0, yaw = 0, crv = null;
+    e.update = (el) => {
+      if (!flying && el > 0.45) {
+        flying = true; tf = el; fd = rnd(2.2, 2.9);
+        const from = th.p.armR.hand.getWorldPosition(V()); from.y += 0.08;
+        const mid = from.clone().lerp(land, 0.5); mid.y = Math.max(from.y, land.y) + rnd(0.9, 1.3);
+        crv = new THREE.QuadraticBezierCurve3(from, mid, land.clone());
+        plane.visible = true; plane.scale.setScalar(1.5); sfx('whoosh', 0, fd);
+        for (const s of others) if (canReact(s) && rand() < 0.15 + 0.8 * (1 - focusOf(s))) react(s, { dur: fd + rnd(0.3, 1.2), target: (o) => o.copy(plane.position), icon: '😮' });
+        teacherLook((o) => o.copy(plane.position), fd + 0.8, '🤨');
+      }
+      if (!flying) return true;
+      const k = Math.min(1, (el - tf) / fd);
+      crv.getPoint(k, plane.position);
+      if (k < 1) { crv.getTangent(k, tmpE); yaw = Math.atan2(tmpE.x, tmpE.z); plane.lookAt(tmpE.add(plane.position)); plane.rotateZ(Math.sin(el * 6) * 0.3); return true; }
+      if (!landT) { landT = el; plane.rotation.set(0, yaw, 0); if (target && !target.locked) setBubble(target, 'pop', '😲', now + 1.6); }
+      const after = el - landT;
+      if (after > 3.5) plane.scale.setScalar(Math.max(0.001, 1.5 * (1 - (after - 3.5) / 0.5)));
+      if (after > 4) { plane.visible = false; return false; }
+      return true;
+    };
+  },
+  chat(e) {
+    e.label = 'Group chat';
+    const members = shuffle(students).slice(0, 5 + Math.floor(rand() * 4)); let i = 0;
+    e.update = (el) => {
+      while (i < members.length && el > i * 0.22) {
+        const s = members[i++]; s.pingUntil = now + 0.9; if (i <= 5) sfx(i % 2 ? 'ping' : 'buzz');
+        if (canReact(s) && !s.focused && s.act.id !== 'phone' && rand() < 0.1 + 0.9 * (1 - focusOf(s))) setAct(s, 'phone', rnd(2.5, 5), { mode: 'chat', ping: true, label: 'Group chat', icon: '📳' });
+        else if (!s.locked) setBubble(s, 'pop', '📳', now + 1.2);
+      }
+      return el < 3;
+    };
+  },
+  ring(e) {
+    e.label = 'A ringing phone';
+    const owner = pick(students.filter((s) => !s.locked && !s.focused)); e.owner = owner;
+    owner.ringUntil = now + 2.4; setAct(owner, 'silence', 2.4); sfx('ring');
+    for (const s of students) if (s !== owner && canReact(s) && s.pos.distanceTo(owner.pos) < 2.9 && rand() < 0.2 + 0.8 * (1 - focusOf(s))) react(s, { dur: rnd(1.2, 2.4), target: (o) => owner.phone.s.getWorldPosition(o), icon: '👀' });
+    teacherLook((o) => o.copy(owner.head), 2.2, '🤨');
+    e.update = (el) => el < 2.6;
+  },
+  fly(e) {
+    e.label = 'A fly';
+    const a = pick(students), near = students.filter((s) => s !== a && s.pos.distanceTo(a.pos) < 3), b = near.length ? pick(near) : a;
+    const ph = rand() * 10, D = 7; let last = 0; fly.visible = true; sfx('fly', 0, D + 0.8);
+    e.update = (el) => {
+      const k = smooth01(el / D), t2 = el + ph;
+      tmpE.copy(a.head).lerp(b.head, k);
+      fly.position.set(tmpE.x + Math.sin(t2 * 2.3) * 0.45 + Math.sin(t2 * 5.1) * 0.12, tmpE.y + 0.2 + Math.sin(t2 * 3.7) * 0.16, tmpE.z + Math.cos(t2 * 1.9) * 0.5 + Math.cos(t2 * 6.3) * 0.1);
+      if (el > D) { const kk = el - D; fly.position.y += kk * kk * 1.6; fly.position.x -= kk * 1.4; }
+      if (el < D && el - last > 0.4) {
+        last = el;
+        for (const s of students) if (canReact(s) && s.act.id !== 'event' && s.head.distanceTo(fly.position) < 1.25 && rand() < 0.05 + 0.55 * (1 - focusOf(s)))
+          react(s, { dur: rnd(1.6, 3), target: (o) => o.copy(fly.position), icon: '🪰', swat: rand() < 0.5 });
+      }
+      if (el > D + 1.3) { fly.visible = false; return false; }
+      return true;
+    };
+  },
+  sneeze(e) {
+    e.label = 'A sneeze';
+    const sn = pick(students.filter((s) => !s.locked)), near = [];
+    setAct(sn, 'sneeze', 1.4); setBubble(sn, 'say', 'Achoo!', now + 1.3); sfx('sneeze');
+    for (const s of students) if (s !== sn && canReact(s) && s.pos.distanceTo(sn.pos) < 2.5 && rand() < 0.25 + 0.7 * (1 - focusOf(s))) { react(s, { dur: rnd(1.2, 2.2), target: (o) => o.copy(sn.head), icon: '😮' }); near.push(s); }
+    let blessed = false;
+    e.update = (el) => {
+      if (!blessed && el > 1.3) { blessed = true; const pool = near.length ? near : students.filter((s) => s !== sn && !s.locked); if (pool.length) setBubble(pick(pool), 'say', 'Bless you!', now + 1.6); }
+      return el < 3;
+    };
+  },
+  door(e) {
+    e.label = 'The door';
+    visitor.root.visible = true; let reacted = false, waved = false, shut = false; sfx('knock'); sfx('creak', 0.35);
+    const T1 = 0.6, T2 = 1.4, T3 = 3.9, T4 = 4.7, T5 = 5.3;
+    e.update = (el) => {
+      doorPivot.rotation.y = -1.2 * (el < T4 ? smooth01(el / T1) : 1 - smooth01((el - T4) / (T5 - T4)));
+      const inK = el < T3 ? smooth01((el - T1) / (T2 - T1)) : 1 - smooth01((el - T3) / (T4 - T3));
+      visitor.root.position.x = -5.4 + 0.95 * inK;
+      const waving = el > T2 && el < T3;
+      visitor.armR.p.rotation.set(waving ? -2.7 : -0.1, 0, waving ? -0.3 + Math.sin(el * 10) * 0.35 : 0.08);
+      if (!reacted && el > 0.35) {
+        reacted = true;
+        for (const s of students) if (canReact(s) && rand() < 0.15 + 0.8 * (1 - focusOf(s))) react(s, { dur: rnd(2.2, 3.6), target: (o) => o.copy(vHead), icon: '👀' });
+        teacherLook((o) => o.copy(vHead), 3.2, null);
+      }
+      if (!waved && el > T2) { waved = true; setBubble(VB, 'pop', '👋', now + 2); }
+      if (!shut && el > T4) { shut = true; sfx('creak'); }
+      if (el > T5) { visitor.root.visible = false; doorPivot.rotation.y = 0; return false; }
+      return true;
+    };
+  },
+  bird(e) {
+    e.label = 'A bird';
+    bird.visible = true; let reacted = false, flew = false; sfx('chirp', 0.6);
+    e.update = (el) => {
+      let x, y;
+      if (el < 1.4) { const k = smooth01(el / 1.4); x = -3.9 + 1.15 * k; y = 1.95 - 0.88 * k; }
+      else if (el < 3.6) { x = -2.75 + Math.sin((el - 1.4) * 2) * 0.05; y = 1.07 + Math.abs(Math.sin((el - 1.4) * 5)) * 0.03; }
+      else { const k = (el - 3.6) / 1.6; x = -2.75 + 3.6 * k; y = 1.07 + 1.2 * k * k + Math.sin(el * 12) * 0.03; }
+      bird.position.set(x, y, -3.5);
+      if (!flew && el > 3.6) { flew = true; sfx('chirp'); }
+      if (!reacted && el > 0.8) { reacted = true; for (const s of students) if (canReact(s) && rand() < 0.08 + 0.6 * (1 - focusOf(s))) react(s, { dur: rnd(1.6, 3), target: (o) => o.copy(bird.position), icon: '🐦' }); }
+      if (el > 5.2) { bird.visible = false; return false; }
+      return true;
+    };
+  },
+  joke(e) {
+    e.label = 'A joke'; setBubble(TB, 'pop', '😄', now + 1.8); sfx('chuckle', 0.3);
+    for (const s of students) {
+      if (!canReact(s)) continue;
+      const on = s.focused || s.lastKey === 'lecture' || s.lastKey === 'notes';
+      if (on && rand() < 0.85) setAct(s, 'laugh', rnd(1.4, 2.4));
+      else if (!on && rand() < 0.35) react(s, { dur: rnd(1, 1.8), target: (o) => o.copy(tHead), icon: '🤔', label: 'Missed the joke' });
+    }
+    e.update = (el) => el < 2.6;
+  },
+  drop(e) {
+    e.label = 'A dropped book';
+    const s0 = pick(students.filter((s) => !s.locked && !s.focused));
+    const from = s0.p.root.localToWorld(V(0.2, TOP - SEAT + 0.02, 0.35)), to = s0.p.root.localToWorld(V(0.32, FY - SEAT + 0.02, 0.2));
+    dropBook.visible = true; dropBook.position.copy(from); dropBook.rotation.set(0, rand() * 3, 0); let landed = false;
+    e.update = (el) => {
+      const k = clamp(el / 0.45, 0, 1);
+      dropBook.position.lerpVectors(from, to, k); dropBook.position.y = from.y + (to.y - from.y) * k * k; dropBook.rotation.z = k * 1.3;
+      if (k >= 1 && el < 0.75) dropBook.position.y += Math.sin(((el - 0.45) / 0.3) * Math.PI) * 0.03;
+      if (!landed && k >= 1) {
+        landed = true; sfx('thud'); if (canReact(s0)) setAct(s0, 'pickUp', 1.8, { item: to.clone() });
+        for (const s of students) if (s !== s0 && canReact(s) && s.pos.distanceTo(s0.pos) < 2.4 && rand() < 0.2 + 0.7 * (1 - focusOf(s))) react(s, { dur: rnd(1, 2), target: (o) => o.copy(dropBook.position), icon: '😮' });
+      }
+      if (el > 1.9) dropBook.position.y = to.y + (el - 1.9) * 0.5;
+      if (el > 2.3) { dropBook.visible = false; return false; }
+      return true;
+    };
+  },
+  thunder(e) {
+    e.label = 'Thunder'; let reacted = false, rumbled = false;
+    e.update = (el) => {
+      const flash = el < 0.08 || (el > 0.18 && el < 0.26) ? 1 : el > 0.26 ? Math.max(0, 1 - (el - 0.26) / 0.6) * 0.5 : 0;
+      mat.glass.emissiveIntensity = 0.45 + 3 * flash;
+      if (!reacted && el > 0.3) {
+        reacted = true;
+        for (const s of students) if (canReact(s) && rand() < 0.15 + 0.75 * (1 - focusOf(s))) { const w = Math.abs(s.pos.x - WINDOWS[0].x) < Math.abs(s.pos.x - WINDOWS[1].x) ? 0 : 1; react(s, { dur: rnd(1.5, 3), target: (o) => o.copy(WINDOWS[w]), icon: '⛈️' }); }
+        teacherLook((o) => o.copy(WINDOWS[1]), 2, null);
+      }
+      if (!rumbled && el > 0.5) { rumbled = true; sfx('rumble'); }
+      if (el > 3.5) { mat.glass.emissiveIntensity = 0.45; return false; }
+      return true;
+    };
+  },
+  question(e) {
+    e.label = 'A question';
+    tSet('ask', 4.2); setBubble(TB, 'pop', '❓', now + 2.6); sfx('rise');
+    const ranked = students.filter((s) => !s.locked).sort((a, b) => focusOf(b) - focusOf(a));
+    const hands = ranked.filter((s) => focusOf(s) > 0.45).slice(0, 1 + Math.floor(rand() * 3));
+    for (const s of hands) setAct(s, 'hand', rnd(2.6, 3.6));
+    for (const s of ranked) if (!hands.includes(s) && rand() < 0.25 + 0.7 * focusOf(s)) setAct(s, 'listen', rnd(2, 3.5), { label: 'A question' });
+    let picked = false;
+    e.update = (el) => { if (!picked && el > 2.2 && hands.length) { picked = true; teacherLook((o) => o.copy(hands[0].head), 1.8, '👍'); } return el < 4.4; };
+  },
+};
+function scheduleEvent() {
+  const W = { plane: 1.2, chat: 1.1, ring: 0.9, fly: 1, sneeze: 0.9, door: 0.8, bird: 0.8, question: 1, joke: 1, drop: 0.8, thunder: 0.6 };
+  let kinds = Object.keys(EV).filter((k) => k !== lastKind && (k !== 'question' || (TCH.state !== 'write' && TCH.state !== 'erase')));
+  let kind = pickW(kinds.map((k) => ({ k, w: W[k] }))).k;
+  if (forced && EV[forced]) { kind = forced; forced = null; }
+  lastKind = kind; ev = { kind, t0: now, label: '' }; EV[kind](ev);
+}
+
+/* ---------- per-frame student motion ---------- */
+const P = {};
+function poseAct(st, a, out) {
+  const el = now - a.t0;
+  switch (a.id) {
+    case 'listen': out.copy(tHead); return true;
+    case 'hand': P.aR = -3.05; P.aRz = -0.12; out.copy(tHead); return true;
+    case 'board': { const i = TCH.state === 'write' && TCH.slot >= 0 ? TCH.slot : a.slot; return !!(i >= 0 ? boardWorld(SLOTS[i].cx, SLOTS[i].cy, out) : boardWorld(190, 118, out)); }
+    case 'notes': case 'doodle': P.write = 1; P.aL = -1.18; if (a.id === 'doodle') P.roll = 0.16; st.book.getWorldPosition(out); return true;
+    case 'lapNotes': P.type = 1; P.aL = P.aR = -1.28; st.lap.scr.getWorldPosition(out); return true;
+    case 'laptop': P.aL = P.aR = -1.28; P.type = a.mode === 'video' ? 0 : 1; st.lap.scr.getWorldPosition(out); return true;
+    case 'phone':
+      P.flip = 0;
+      if (a.ping && el < 0.55) { st.phone.s.getWorldPosition(out); return true; }
+      P.up = 1; P.aR = -1.75; P.aRz = 0.35; P.aL = -1.2;
+      if (a.mode === 'photo') { P.high = 1; P.aR = -2.2; P.aL = -2.0; P.aLz = -0.25; }
+      if (a.mode === 'selfie') { P.high = 1; P.aR = -2.45; P.aRz = 0.55; P.aL = -1.15; P.roll = 0.18; }
+      st.phone.s.getWorldPosition(out); return true;
+    case 'silence': P.flip = 0; P.up = 1; P.aR = -1.75; P.aRz = 0.35; P.aL = -1.2; P.rate = 12; st.phone.s.getWorldPosition(out); return true;
+    case 'thought': P.look = false; P.yaw = 0.25; P.pitch = -0.42; P.roll = 0.15; P.aR = -2.35; P.aRz = 0.6; out.copy(st.head); out.y += 0.55; return true;
+    case 'talk': out.copy(a.partner.head); return true;
+    case 'peek': { const o = a.partner; if (o.lap && (o.act.id === 'laptop' || o.act.id === 'lapNotes')) o.lap.scr.getWorldPosition(out); else o.phone.s.getWorldPosition(out); return true; }
+    case 'window': out.copy(WINDOWS[a.w]); return true;
+    case 'clock': clockG.getWorldPosition(out); return true;
+    case 'watch': P.aL = -1.95; P.aLz = -0.75; st.p.armL.hand.getWorldPosition(out); return true;
+    case 'drink': P.look = false; P.mug = 1; P.aR = -2.2; P.aRz = 0.45; P.pitch = -0.12; P.yaw = 0.1; st.mug.getWorldPosition(out); return true;
+    case 'stretch': P.look = false; P.pitch = -0.38; P.aL = P.aR = -3.0; P.aLz = 0.25; P.aRz = -0.25; out.copy(st.head); out.y += 0.8; return true;
+    case 'doze': P.look = false; P.eyes = 0.06; P.pitch = 0.42 + 0.22 * Math.sin(now * 1.4 + st.i); P.rate = 3; out.copy(st.head); out.y += 0.5; return true;
+    case 'throw': { const k = el / a.dur; P.rate = 16; P.aR = k < 0.55 ? -1.1 - 2.0 * (k / 0.55) : -3.1 + 1.7 * ((k - 0.55) / 0.45); P.aRz = 0.2; out.copy(a.to); return true; }
+    case 'sneeze': P.look = false; P.rate = 14; P.pitch = el < 0.4 ? -0.35 : 0.45; P.eyes = el < 0.7 ? 0.08 : 1; out.copy(st.head).addScaledVector(st.fwd, 0.6); return true;
+    case 'event': a.target(out); P.rate = 11; if (a.swat && el > a.dur - 0.5) { P.aR = -2.5; P.aRz = 0.4 + Math.sin(now * 28) * 0.45; } return true;
+    case 'putAway': P.look = false; P.pitch = 0.36; P.flip = 1; P.aR = -1.3; P.aRz = 0.2; st.phone.g.getWorldPosition(out); return true;
+    case 'lookBack': P.wide = true; if (a.partner) out.copy(a.partner.head); else out.copy(a.pt); return true;
+    case 'shelf': P.wide = true; out.copy(SHELF); return true;
+    case 'plant': P.wide = true; out.copy(PLANTS[a.k]); return true;
+    case 'door': P.wide = true; out.copy(DOOR_PT); return true;
+    case 'floor': out.copy(a.pt); return true;
+    case 'zone': P.eyes = 0.45; P.rate = 2.5; out.copy(a.pt); return true;
+    case 'other': P.wide = true; out.copy(a.partner.head); return true;
+    case 'snack': P.look = false; P.pitch = 0.05; P.yaw = 0.15; P.aR = -2.25 + Math.sin(el * 6) * 0.25; P.aRz = 0.45; P.cookie = 1; st.p.armR.hand.getWorldPosition(out); return true;
+    case 'pen': P.aR = -1.45; P.aRz = 0.3; P.spin = 1; st.p.armR.hand.getWorldPosition(out); return true;
+    case 'rubEyes': P.look = false; P.pitch = 0.18; P.eyes = 0.1; P.aL = P.aR = -2.45; P.aLz = -0.55; P.aRz = 0.55 + Math.sin(el * 9) * 0.08; out.copy(st.head); return true;
+    case 'neck': P.look = false; P.pitch = 0.1 + 0.3 * Math.sin(el * 2.4); P.roll = 0.35 * Math.cos(el * 2.4); P.rate = 10; out.copy(st.head); out.y += 0.4; return true;
+    case 'passNote': P.aR = -1.65; P.aRz = 0.2; out.copy(a.partner.head); return true;
+    case 'readNote': out.copy(noteM.position); return true;
+    case 'laugh': P.laugh = 1; out.copy(tHead); return true;
+    case 'pickUp': P.lean = 1; P.aR = -0.55; P.aRz = 0.2; P.rate = 8; out.copy(a.item); return true;
+  }
+  return false;
+}
+function poseStudent(st, dt) {
+  const a = st.act, S = st.S;
+  Object.assign(P, { look: true, yaw: 0, pitch: 0.1, roll: 0, aL: -1.12, aR: -1.12, aLz: 0, aRz: 0, up: 0, high: 0, flip: st.flipRest, type: 0, write: 0, eyes: 1, lid: st.lidRest, mug: 0, breathe: 0, rate: 7, wide: false, lean: 0, laugh: 0, cookie: 0, spin: 0 });
+  if (a.id === 'laptop' || a.id === 'lapNotes') P.lid = LID_OPEN;
+  if (poseAct(st, a, st.tgt)) { if (P.look) { lookAngles(st.p.root, 0.75, st.tgt, LA); P.yaw = LA.yaw; P.pitch = LA.pitch; } }
+  else st.tgt.copy(st.head).addScaledVector(st.fwd, 1);
+  const r = P.rate, tor = P.wide ? clamp(P.yaw * 0.45, -1, 1) : clamp(P.yaw * 0.35, -0.55, 0.55);
+  S.torso = damp(S.torso, tor, r, dt);
+  S.yaw = damp(S.yaw, clamp(P.yaw - tor, -1.45, 1.45), r, dt);
+  S.pitch = damp(S.pitch, clamp(P.pitch, -0.6, 0.78), r, dt);
+  S.roll = damp(S.roll, P.roll, r, dt);
+  S.aL = damp(S.aL, P.aL, r, dt); S.aR = damp(S.aR, P.aR, r, dt); S.aLz = damp(S.aLz, P.aLz, r, dt); S.aRz = damp(S.aRz, P.aRz, r, dt);
+  S.up = damp(S.up, P.up, 7, dt); S.high = damp(S.high, P.high, 6, dt); S.flip = damp(S.flip, P.flip, 5, dt);
+  S.type = damp(S.type, P.type, 9, dt); S.write = damp(S.write, P.write, 9, dt); S.eyes = damp(S.eyes, P.eyes, 9, dt);
+  S.lid = damp(S.lid, P.lid, 4, dt); S.mug = damp(S.mug, P.mug, 6, dt); S.breathe = damp(S.breathe, P.breathe, 2.5, dt);
+  S.lean = damp(S.lean || 0, P.lean, 6, dt); S.laugh = damp(S.laugh || 0, P.laugh, 8, dt);
+  const p = st.p, ty = S.type, wr = S.write, ph = st.i * 1.7;
+  const blink = S.eyes > 0.9 && ((now + ph) % 3.7) < 0.11 ? 0.1 : 1;
+  p.neck.rotation.set(S.pitch + ty * Math.sin(now * 9 + ph) * 0.02, S.yaw, S.roll);
+  p.body.rotation.y = S.torso; p.body.rotation.x = S.lean * 0.45; p.body.position.y = S.laugh * Math.abs(Math.sin(now * 13 + ph)) * 0.035;
+  p.armL.p.rotation.set(S.aL + ty * Math.sin(now * 25 + ph) * 0.07, 0, S.aLz);
+  p.armR.p.rotation.set(S.aR + ty * Math.sin(now * 22 + 1.3 + ph) * 0.07 + wr * (-0.2 + Math.sin(now * 14 + ph) * 0.06), 0, S.aRz + wr * (0.3 + Math.sin(now * 9 + ph) * 0.05));
+  p.body.scale.y = 1 + Math.sin(now * 1.9 + ph) * 0.01 + S.breathe * (Math.sin(now * 1.5) * 0.5 + 0.5) * 0.06;
+  for (const e of p.eyes) e.scale.y = Math.max(0.1, Math.min(S.eyes, blink));
+  if (st.lap) st.lap.hinge.rotation.x = S.lid;
+  st.cookie.visible = P.cookie > 0;
+  if (st.pen && P.spin) st.pen.rotation.y += dt * 18;
+}
+const use = { pvideo: false, code: false, video: false, game: false }, tmpH = V(), tmpB = V(), q1 = new THREE.Quaternion(), dq = new THREE.Quaternion();
+function placeProps(st, dt) {
+  const p = st.p, S = st.S, a = st.act;
+  p.head.getWorldPosition(st.head);
+  p.neck.getWorldQuaternion(q1); st.fwd.set(0, 0, 1).applyQuaternion(q1);
+  p.torso.getWorldPosition(st.chest);
+  tmpH.lerpVectors(handP, handHi, S.high);
+  st.dummy.position.copy(tmpH); st.dummy.lookAt(st.head);
+  const up = S.up, ringing = now < st.ringUntil, pinging = now < st.pingUntil, g = st.phone.g;
+  dq.copy(deskQ).slerp(deskQF, S.flip);
+  g.position.lerpVectors(deskP, tmpH, up);
+  g.position.y += Math.sin(Math.PI * up) * 0.06 + Math.sin(Math.PI * S.flip) * 0.05;
+  if ((pinging || ringing) && up < 0.6) { g.position.z += Math.sin(now * 95) * 0.004; g.position.x += Math.cos(now * 83) * 0.003; }
+  g.quaternion.copy(dq).slerp(st.dummy.quaternion, up);
+  const scr = st.phone.s.material;
+  scr.color.copy((up > 0.15 || pinging || ringing) && S.flip < 0.5 ? SCREEN_ON : SCREEN_OFF);
+  if (a.id === 'phone' && !(a.ping && now - a.t0 < 0.55)) { scr.map = a.mode === 'scroll' ? st.feed : PT[a.mode]; if (a.mode === 'scroll' && up > 0.8) st.feed.offset.y -= dt * 0.38; if (a.mode === 'video') use.pvideo = true; }
+  else if (pinging || ringing || a.id === 'silence') scr.map = PT.lock;
+  if (st.lap) { const m = a.id === 'laptop' ? a.mode : a.id === 'lapNotes' ? 'doc' : 'idle'; st.lap.scr.material.map = LT[m]; if (m in use) use[m] = true; }
+  if (st.mug) { st.mug.position.lerpVectors(st.mugDesk, MUG_UP, S.mug); st.mug.rotation.x = -S.mug * 0.9; }
+  const bs = Math.max(0, spring(st.badgeSp, pinging || ringing ? 1 : 0, dt, 260, 18));
+  st.badge.visible = bs > 0.02;
+  if (st.badge.visible) { g.getWorldPosition(st.badge.position); st.badge.position.y += 0.15; st.badge.scale.setScalar(0.13 * bs); }
+}
+
+/* ---------- speech and status bubbles (HTML, so they stay sharp) ---------- */
+const proj = V(), PICTO = /\p{Extended_Pictographic}/u;
+function showDom(b, anchor, on, shape, text, me) {
+  const d = b.db, cls = 'bb ' + shape + (me ? ' me' : '');
+  if (on && (d.txt !== text || d.cls !== cls)) { d.i.textContent = text; d.txt = text; d.cls = cls; d.o.className = cls + (d.on ? ' on' : ''); }
+  if (on !== d.on) { d.on = on; d.o.classList.toggle('on', on); if (!on) d.offAt = now; }
+  if (on || now - d.offAt < 0.35) {
+    proj.copy(anchor).project(camera);
+    d.o.style.transform = 'translate(' + ((proj.x + 1) * 0.5 * innerWidth).toFixed(1) + 'px,' + ((1 - proj.y) * 0.5 * innerHeight).toFixed(1) + 'px)';
+  }
+}
+function updateBubbles() {
+  for (const st of students) {
+    let on = now < st.bubUntil, shape = st.bubShape, text = st.bubText;
+    const a = st.act;
+    if (a.id === 'talk' && !on) {
+      const k = Math.floor((now - a.t0) / 0.85);
+      if ((k + (a.leader ? 0 : 1)) % 2 === 0) { on = true; text = TALK[(k * 3 + st.i) % TALK.length]; shape = PICTO.test(text) ? 'pop' : 'say'; }
+    }
+    if (shape === 'say' && PICTO.test(text) && text.length < 4) shape = 'pop';
+    tmpB.copy(st.head); tmpB.y += st === sel ? 0.84 : 0.36;
+    showDom(st, tmpB, on, shape, text, st === sel);
+  }
+  showDom(TB, tmpB.copy(tHead).setY(tHead.y + 0.4), now < TB.bubUntil, TB.bubShape, TB.bubText, false);
+  showDom(VB, tmpB.copy(vHead).setY(vHead.y + 0.38), now < VB.bubUntil && visitor.root.visible, VB.bubShape, VB.bubText, false);
+}
+
+/* ---------- the mind monitor: a jumpy trace while attention is scattered, a still line when focused ---------- */
+const MON = { buf: new Float32Array(512), n: 196, head: 0, acc: 0, er: 0, erT: 0, erNext: 0, spike: 0, A: 0.4, ctx: elMonC.getContext('2d'), w: 196, h: 54, dpr: 1 };
+const MON_CALM = new THREE.Color('#3ee08f'), MON_WILD = new THREE.Color('#ffb547'), monCol = new THREE.Color();
+function sizeMonitor() {
+  const r = elMonC.getBoundingClientRect(); MON.dpr = Math.min(devicePixelRatio || 1, 2);
+  MON.w = Math.max(60, Math.round(r.width)); MON.h = Math.max(30, Math.round(r.height)); MON.n = Math.min(512, MON.w);
+  elMonC.width = MON.w * MON.dpr; elMonC.height = MON.h * MON.dpr;
+}
+function monitorStep(dt) {
+  const s = sel, away = s.lastKey !== 'lecture' && s.lastKey !== 'notes';
+  MON.A = damp(MON.A, s.focused ? 0.03 : clamp(0.12 + (1 - s.focus) * 0.45 + (away ? 0.28 : 0), 0, 0.95), s.focused ? 1.4 : 0.9, dt);
+  for (MON.acc += dt * 60; MON.acc >= 1; MON.acc -= 1) {
+    const ds = 1 / 60, A = MON.A;
+    if ((MON.erNext -= ds) <= 0) { MON.erT = (Math.random() * 2 - 1) * (0.2 + 0.8 * A); MON.erNext = (0.45 - 0.37 * A) * (0.4 + Math.random()); }
+    MON.er += (MON.erT - MON.er) * 0.3 + (Math.random() - 0.5) * 0.22 * A;
+    MON.spike *= 0.8;
+    MON.buf[MON.head] = clamp(MON.er * A + MON.spike, -1.15, 1.15);
+    MON.head = (MON.head + 1) % 512;
+  }
+}
+function monitorKick() { MON.A = Math.min(1, MON.A + (sel.focused ? 0.05 : 0.28)); MON.spike = (Math.random() < 0.5 ? -1 : 1) * (0.7 + 0.4 * Math.random()) * (sel.focused ? 0.3 : 1); }
+function drawMonitor() {
+  const g = MON.ctx, w = MON.w, h = MON.h, n = MON.n;
+  g.setTransform(MON.dpr, 0, 0, MON.dpr, 0, 0); g.clearRect(0, 0, w, h);
+  monCol.copy(MON_CALM).lerp(MON_WILD, smooth01((MON.A - 0.15) / 0.5)); const col = '#' + monCol.getHexString();
+  g.strokeStyle = 'rgba(62,224,143,.08)'; g.lineWidth = 1;
+  for (let x = 0.5; x < w; x += 12) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  for (let y = 0.5; y < h; y += 12) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  const base = h * 0.58, amp = h * 0.4;
+  let lx = 0, ly = 0;
+  g.strokeStyle = col; g.lineWidth = 1.6; g.lineJoin = 'round'; g.shadowColor = col; g.shadowBlur = 6; g.beginPath();
+  for (let i = 0; i < n; i++) { lx = (i * (w - 6)) / (n - 1); ly = base - MON.buf[(MON.head - n + i + 512) % 512] * amp; if (i) g.lineTo(lx, ly); else g.moveTo(lx, ly); }
+  g.stroke(); g.shadowBlur = 10; g.fillStyle = col; g.beginPath(); g.arc(lx, ly, 2.4, 0, Math.PI * 2); g.fill(); g.shadowBlur = 0;
+  elMon.style.setProperty('--mc', col);
+  const label = sel.focused ? 'Focused' : MON.A > 0.55 ? 'Scattered' : MON.A > 0.3 ? 'Wandering' : 'Calm';
+  if (elMonS.textContent !== label) elMonS.textContent = label;
+}
+
+/* ---------- sound: a different sound for every switch, a low hum once focused (off until the reader turns it on) ---------- */
+const AU = { ctx: null, out: null, noise: null, drone: null, on: false, active: false, droneWant: -1 };
+function env(g, t, a, d, v) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + d); }
+function tone(f0, f1, dur, type, vol, w = 0, attack = 0.005, lp = 0, dest = AU.fx) {
+  const c = AU.ctx, t = c.currentTime + w, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  env(g, t, attack, dur, vol);
+  if (lp) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp; o.connect(f); f.connect(g); } else o.connect(g);
+  g.connect(dest); o.start(t); o.stop(t + dur + 0.05);
+}
+function noise(dur, type, f0, f1, q, vol, w = 0, attack = 0) {
+  const c = AU.ctx, t = c.currentTime + w, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = AU.noise; s.loop = true; f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  env(g, t, attack || Math.min(0.02, dur / 3), dur, vol);
+  s.connect(f); f.connect(g); g.connect(AU.fx); s.start(t, Math.random() * 0.8); s.stop(t + dur + 0.05);
+}
+function creak(w) {
+  const c = AU.ctx, t = c.currentTime + w, o = c.createOscillator(), l = c.createOscillator(), lg = c.createGain(), f = c.createBiquadFilter(), g = c.createGain();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(118, t + 0.8);
+  l.frequency.value = 9; lg.gain.value = 18; l.connect(lg); lg.connect(o.frequency);
+  f.type = 'bandpass'; f.frequency.value = 650; f.Q.value = 6; env(g, t, 0.06, 0.85, 0.07);
+  o.connect(f); f.connect(g); g.connect(AU.fx); for (const n of [o, l]) { n.start(t); n.stop(t + 0.95); }
+}
+function flyBuzz(w, d) {
+  const c = AU.ctx, t = c.currentTime + w, o = c.createOscillator(), v = c.createOscillator(), vg = c.createGain(), s = c.createOscillator(), sg = c.createGain(), amp = c.createGain(), f = c.createBiquadFilter(), g = c.createGain();
+  o.type = 'sawtooth'; o.frequency.value = 215; v.frequency.value = 11; vg.gain.value = 14; v.connect(vg); vg.connect(o.frequency);
+  s.frequency.value = 0.7; sg.gain.value = 0.6; amp.gain.value = 1; s.connect(sg); sg.connect(amp.gain);
+  f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 1.2;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.028, t + 0.4); g.gain.setValueAtTime(0.028, t + d - 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(f); f.connect(amp); amp.connect(g); g.connect(AU.fx); for (const n of [o, v, s]) { n.start(t); n.stop(t + d + 0.1); }
+}
+const SFX = {
+  ping: (w) => { tone(1318, 1318, 0.2, 'sine', 0.13, w); tone(1760, 1760, 0.4, 'sine', 0.11, w + 0.1); },
+  buzz: (w) => { for (let i = 0; i < 2; i++) tone(165, 160, 0.16, 'triangle', 0.018, w + i * 0.24, 0.02, 320); },
+  bloop: (w) => tone(330 + Math.random() * 120, 880 + Math.random() * 300, 0.17, 'sine', 0.14, w),
+  click: (w) => { for (let i = 0; i < 5; i++) noise(0.025, 'bandpass', 2600 + Math.random() * 1400, 0, 2.5, 0.16, w + i * 0.075 + Math.random() * 0.03); },
+  scroll: (w) => { for (let i = 0; i < 3; i++) noise(0.06, 'bandpass', 1800, 900, 1.5, 0.08, w + i * 0.11); },
+  chirp: (w) => { tone(2500, 3900, 0.07, 'sine', 0.07, w); tone(2800, 4300, 0.06, 'sine', 0.06, w + 0.11); tone(2600, 3600, 0.08, 'sine', 0.05, w + 0.3); },
+  chatter: (w) => { for (let i = 0; i < 4; i++) { const f = 170 + Math.random() * 110; tone(f, f * (0.75 + Math.random() * 0.6), 0.11, 'triangle', 0.09, w + i * 0.12); } },
+  tick: (w) => { noise(0.018, 'highpass', 3800, 0, 1, 0.2, w); noise(0.018, 'highpass', 2600, 0, 1, 0.16, w + 0.42); },
+  pluck: (w) => { tone(392, 390, 0.5, 'triangle', 0.07, w); tone(587, 585, 0.4, 'sine', 0.025, w); },
+  rise: (w) => tone(280, 420, 0.35, 'triangle', 0.09, w),
+  scratch: (w) => { noise(0.18, 'bandpass', 4200, 3000, 1.8, 0.05, w); noise(0.14, 'bandpass', 3600, 4500, 1.8, 0.04, w + 0.22); },
+  slurp: (w) => noise(0.45, 'bandpass', 1100, 500, 5, 0.07, w),
+  yawn: (w) => tone(520, 230, 0.8, 'triangle', 0.06, w, 0.15),
+  zzz: (w) => noise(1.4, 'lowpass', 500, 260, 1, 0.06, w, 0.4),
+  thud: (w) => tone(140, 70, 0.18, 'sine', 0.2, w),
+  shutter: (w) => { noise(0.05, 'highpass', 2000, 0, 0.8, 0.2, w); noise(0.06, 'highpass', 1500, 0, 0.8, 0.15, w + 0.09); },
+  game: (w) => [523, 659, 784].forEach((f, i) => tone(f, f, 0.07, 'square', 0.025, w + i * 0.07, 0.005, 2400)),
+  fwip: (w) => noise(0.18, 'bandpass', 700, 2500, 2, 0.08, w),
+  whoosh: (w, d = 2.4) => noise(d, 'bandpass', 500, 2200, 1.4, 0.07, w, d * 0.4),
+  ring: (w) => { for (let b = 0; b < 2; b++) for (let k = 0; k < 10; k++) tone(k % 2 ? 1480 : 1245, k % 2 ? 1480 : 1245, 0.075, 'triangle', 0.08, w + b * 1.1 + k * 0.075); },
+  knock: (w) => { for (let i = 0; i < 2; i++) { tone(120, 80, 0.08, 'sine', 0.3, w + i * 0.22); noise(0.04, 'lowpass', 900, 0, 1, 0.15, w + i * 0.22); } },
+  bowl: (w) => {
+    for (const [r, v, d] of [[1, 0.1, 11], [1.004, 0.07, 11], [2.71, 0.025, 7], [4.95, 0.008, 4.5]]) tone(293.7 * r, 293.7 * r, d, 'sine', v, w, 0.18, 2600, AU.out);
+  },
+  swish: (w) => noise(0.3, 'bandpass', 900, 350, 1.2, 0.05, w, 0.08),
+  crunch: (w) => { for (let i = 0; i < 3; i++) noise(0.05, 'bandpass', 2200 + Math.random() * 800, 0, 1.5, 0.1, w + i * 0.16); },
+  flick: (w) => { for (let i = 0; i < 6; i++) noise(0.015, 'highpass', 5000, 0, 1, 0.07, w + i * 0.06); },
+  rustle: (w) => { noise(0.3, 'highpass', 3500, 2500, 0.7, 0.05, w, 0.05); noise(0.2, 'highpass', 3000, 2200, 0.7, 0.04, w + 0.4, 0.04); },
+  chuckle: (w) => [440, 560, 500, 620].forEach((f, i) => tone(f, f * 0.9, 0.09, 'triangle', 0.06, w + i * 0.1)),
+  hollow: (w) => tone(240, 200, 0.9, 'sine', 0.05, w, 0.3),
+  rumble: (w) => { noise(3.2, 'lowpass', 300, 70, 0.8, 0.3, w, 0.4); noise(1.6, 'lowpass', 200, 60, 0.8, 0.2, w + 0.9, 0.3); },
+  creak, fly: (w, d = 7) => flyBuzz(w, d),
+  sneeze: (w) => { tone(320, 470, 0.32, 'triangle', 0.06, w, 0.2); noise(0.28, 'bandpass', 2800, 1800, 1.2, 0.16, w + 0.36); },
+  blip: (w) => { const f = 500 + Math.random() * 1700; tone(f, f * (0.7 + Math.random() * 0.8), 0.06, 'sine', 0.022, w); },
+};
+const ACT_SFX = { listen: 'pluck', board: 'pluck', hand: 'rise', notes: 'scratch', doodle: 'scratch', lapNotes: 'click', thought: 'bloop', talk: 'chatter', peek: 'bloop', window: 'chirp', clock: 'tick', watch: 'tick', drink: 'slurp', stretch: 'yawn', doze: 'zzz', putAway: 'thud', silence: 'buzz', event: 'bloop', throw: 'fwip', lookBack: 'swish', shelf: 'bloop', plant: 'bloop', door: 'bloop', floor: 'bloop', zone: 'hollow', other: 'bloop', snack: 'crunch', pen: 'flick', rubEyes: 'yawn', neck: 'swish', passNote: 'rustle', readNote: 'chuckle', laugh: 'chuckle' };
+const PHONE_SFX = { scroll: 'scroll', chat: 'click', video: 'bloop', photo: 'shutter', selfie: 'shutter' }, LAP_SFX = { code: 'click', shop: 'ping', video: 'bloop', game: 'game', chat: 'click', mail: 'ping', news: 'scroll' };
+const audible = () => AU.on && AU.active && started && !prerolling;
+function sfx(k, w = 0, x) { if (!audible() || !SFX[k]) return; try { SFX[k](w, x); } catch (e) { /* audio is optional */ } }
+function switchSound(st, a) {
+  if (st.focused && a.id !== 'putAway') return;
+  if (a.id === 'phone') { if (a.ping) { sfx(Math.random() < 0.5 ? 'ping' : 'buzz'); sfx(PHONE_SFX[a.mode], 0.6); } else sfx(PHONE_SFX[a.mode]); }
+  else sfx(a.id === 'laptop' ? LAP_SFX[a.mode] : ACT_SFX[a.id]);
+}
+function initAudio() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  const c = (AU.ctx = new AC()), comp = c.createDynamicsCompressor();
+  comp.connect(c.destination); AU.out = c.createGain(); AU.out.gain.value = 0; AU.out.connect(comp); AU.fx = c.createGain(); AU.fx.connect(AU.out);
+  AU.noise = c.createBuffer(1, c.sampleRate, c.sampleRate);
+  const d = AU.noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const g = (AU.drone = c.createGain()), swell = c.createGain(), lp = c.createBiquadFilter();
+  g.gain.value = 0; swell.gain.value = 1; lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = 0.2;
+  lp.connect(swell); swell.connect(g); g.connect(AU.out);
+  for (const [f, v] of [[196, 0.3], [293.7, 0.24], [392, 0.1]]) {
+    const o = c.createOscillator(), og = c.createGain(); o.type = 'sine'; o.frequency.value = f; og.gain.value = v; o.connect(og); og.connect(lp); o.start();
+  }
+  const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 0.07; lg.gain.value = 0.18; l.connect(lg); lg.connect(swell.gain); l.start();
+  return true;
+}
+function setSound(on) {
+  if (on && !AU.ctx && !initAudio()) return;
+  AU.on = on; AU.droneWant = -1;
+  const c = AU.ctx;
+  if (on) { c.resume(); AU.out.gain.setTargetAtTime(0.6, c.currentTime, 0.1); }
+  else { AU.out.gain.setTargetAtTime(0, c.currentTime, 0.06); setTimeout(() => { if (!AU.on) c.suspend(); }, 400); }
+  elSnd.classList.toggle('on', on); elSnd.setAttribute('aria-pressed', String(on));
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && AU.ctx) { AU.active = false; AU.ctx.suspend(); } });
+
+/* ---------- the followed student: beam, glow, eyes view, HUD ---------- */
+const SV = { beam: 1, steady: 0, dream: 0 };
+const attn = V(), povLook = V(), tmpA = V();
+let attnInit = false, clockA = 0.9, lastLabel = '', lastCount = -1, countT = -9, lastBtn = null, hovered = null;
+function setLabel(s) { elTarget.textContent = s; elTarget.classList.remove('pop'); void elTarget.offsetWidth; elTarget.classList.add('pop'); }
+function countRecent(st) { const lim = now - 60; while (st.log.length && st.log[0] < lim) st.log.shift(); return st.log.length; }
+function updateSelected(dt) {
+  const s = sel, a = s.act;
+  SV.beam = damp(SV.beam, a.id === 'doze' ? 0 : 1, 6, dt);
+  SV.steady = damp(SV.steady, s.focused ? 1 : 0, 2.2, dt);
+  if (!attnInit) { attn.copy(s.tgt); povLook.copy(s.tgt); attnInit = true; }
+  attn.lerp(s.tgt, 1 - Math.exp(-11 * dt));
+  tmpA.copy(s.head).addScaledVector(s.fwd, 0.2); tmpA.y += 0.04;
+  updateBeam(now, tmpA, attn, SV.beam, SV.steady);
+  glow.position.copy(attn);
+  glow.scale.setScalar((0.5 + 0.06 * Math.sin(now * 6)) * (1 + 0.45 * SV.steady) * (0.35 + 0.65 * SV.beam));
+  spot.target.position.copy(attn);
+  const d = spot.position.distanceTo(attn);
+  spot.angle = clamp(Math.atan((0.7 + 0.35 * SV.steady) / d), 0.06, 0.5);
+  spot.intensity = (2.6 + 1.6 * SV.steady) * Math.pow(d, spot.decay) * (0.25 + 0.75 * SV.beam);
+  marker.position.copy(s.head); marker.position.y += 0.56 + Math.sin(now * 2.2) * 0.03; marker.rotation.y += dt * (s.focused ? 0.5 : 1.6);
+  const ro = ev && ev.kind === 'ring' && now < ev.owner.ringUntil ? ev.owner : null;
+  ringRips.forEach((sp, i) => { const u = (now * 1.6 + i * 0.5) % 1; sp.visible = !!ro; if (ro) { ro.phone.g.getWorldPosition(sp.position); sp.scale.setScalar(0.12 + 0.45 * u); sp.material.opacity = 1 - u; } });
+  pov.position.copy(s.head).addScaledVector(s.fwd, 0.12);
+  povLook.lerp(attn, 1 - Math.exp(-12 * dt)); pov.lookAt(povLook);
+  clockA += dt * (a.id === 'phone' && a.mode === 'scroll' ? 3.4 : 0.1);
+  minP.rotation.z = -clockA; hourP.rotation.z = -clockA / 12;
+  monitorStep(dt);
+  if (prerolling) return;
+  drawMonitor();
+  if (AU.on) {
+    const want = s.focused ? 0.012 : 0;
+    if (s.focused) { if (AU.bowlAt === undefined) AU.bowlAt = now + 0.9; if (AU.bowlAt !== null && now >= AU.bowlAt) { sfx('bowl'); AU.bowlAt = null; } } else AU.bowlAt = undefined;
+    if (want !== AU.droneWant) { AU.droneWant = want; AU.drone.gain.setTargetAtTime(want, AU.ctx.currentTime, want ? 3 : 0.6); AU.fx.gain.setTargetAtTime(s.focused ? 0.3 : 1, AU.ctx.currentTime, 0.8); }
+    if (!s.focused && Math.random() < MON.A * MON.A * dt * 1.6) sfx('blip');
+  }
+  elShade.style.opacity = clamp((1 - s.S.eyes) * 1.05, 0, 1).toFixed(3);
+  SV.dream = damp(SV.dream, a.id === 'thought' ? 1 : 0, 8, dt);
+  if (a.id === 'thought' && elDreamE.textContent !== a.emoji) elDreamE.textContent = a.emoji;
+  elDream.style.opacity = SV.dream.toFixed(3);
+  const lab = labelOf(s); if (lab !== lastLabel) { setLabel(lab); lastLabel = lab; }
+  if (now - countT > 0.25) { countT = now; const n = countRecent(s); if (n !== lastCount) { lastCount = n; elN.textContent = n; elNL.innerHTML = (n === 1 ? 'switch' : 'switches') + '<br>in 1 min'; } }
+  const bk = s.focused + ':' + s.locked;
+  if (bk !== lastBtn) { lastBtn = bk; elFocus.disabled = s.locked; elFocus.classList.toggle('on', s.focused); elFocusL.textContent = s.focused ? 'Let it wander' : 'Focus'; }
+}
+
+/* ---------- one simulation step ---------- */
+let nextEvAt = forced ? 1.2 : rnd(4, 7), boardDrawT = -9, texT = -9, typed = 0;
+function update(t, dt) {
+  now = t;
+  if (!ev && now >= nextEvAt) scheduleEvent();
+  if (ev && !ev.update(now - ev.t0, dt)) { ev = null; nextEvAt = now + rnd(6, 11); }
+  teacherLogic(dt);
+  for (const st of students) if (now >= st.act.until) actDone(st);
+  use.pvideo = use.code = use.video = use.game = false;
+  for (const st of students) poseStudent(st, dt);
+  poseTeacher(dt);
+  if (fly.visible) { const f = Math.sin(now * 90) * 0.7; flyWL.rotation.z = 0.5 + f; flyWR.rotation.z = -0.5 - f; }
+  scene.updateMatrixWorld();
+  for (const st of students) placeProps(st, dt);
+  updateNote();
+  teacher.head.getWorldPosition(tHead); visitor.head.getWorldPosition(vHead);
+  updateSelected(dt);
+  if (prerolling) return;
+  updateBubbles();
+  if (boardDirty && now - boardDrawT > 1 / 15) { drawBoard(); boardDirty = false; boardDrawT = now; }
+  if (now - texT > 1 / 12) {
+    texT = now;
+    if (use.pvideo) { drawVideo(pvG, 256, 532, now, true); PT.video.needsUpdate = true; }
+    if (use.video) { drawVideo(lvG, 320, 200, now, false); LT.video.needsUpdate = true; }
+    if (use.game) drawGame(now);
+    if (use.code) { typed = (typed + 6) % (CODE_TOTAL + 120); drawCode(Math.min(typed, CODE_TOTAL), Math.floor(now * 2.2) % 2 === 0); }
+  }
+}
+
+/* ---------- framing and rendering ---------- */
+const LOOK0 = V(0.2, 0.6, -0.35), LOOK = LOOK0.clone(), DIR = V(1.0, 0.95, 1.12).normalize(), UP = V(0, 1, 0), tmpD = V(), camRight = V(), camUp = V();
+const box8 = (x0, x1, z0, z1) => { const out = []; for (const x of [x0, x1]) for (const y of [-0.32, 2.47]) for (const z of [z0, z1]) out.push(V(x, y, z)); return out; };
+const wideCorners = box8(-4.88, 4.88, -3.78, 3.78), tallCorners = box8(-3.0, 4.88, -3.78, 2.6);
+let corners = wideCorners, camDist = 30, insetR = { x: 0, y: 0, w: 0, h: 0 };
+const insetBg = new THREE.Color();
+function placeCamera(dist, yawOff = 0) {
+  tmpD.copy(DIR).applyAxisAngle(UP, yawOff);
+  camera.position.copy(LOOK).addScaledVector(tmpD, dist);
+  camera.lookAt(LOOK); camera.updateMatrixWorld();
+}
+function fitCamera() {
+  camera.updateProjectionMatrix();
+  LOOK.copy(LOOK0);
+  corners = camera.aspect < 1 ? tallCorners : wideCorners;
+  const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  for (let pass = 0; pass < 3; pass++) {
+    let lo = 5, hi = 90;
+    for (let i = 0; i < 32; i++) {
+      const dd = (lo + hi) / 2; placeCamera(dd);
+      let ok = true;
+      for (const c of corners) { tmpP.copy(c).project(camera); if (Math.abs(tmpP.x) > 0.97 || tmpP.y > 0.84 || tmpP.y < -0.97) { ok = false; break; } }
+      if (ok) hi = dd; else lo = dd;
+    }
+    camDist = hi; placeCamera(camDist);
+    if (pass === 2) break;
+    let x0 = 1, x1 = -1, y0 = 1, y1 = -1;
+    for (const c of corners) { tmpP.copy(c).project(camera); x0 = Math.min(x0, tmpP.x); x1 = Math.max(x1, tmpP.x); y0 = Math.min(y0, tmpP.y); y1 = Math.max(y1, tmpP.y); }
+    camRight.setFromMatrixColumn(camera.matrixWorld, 0); camUp.setFromMatrixColumn(camera.matrixWorld, 1);
+    LOOK.addScaledVector(camRight, ((x0 + x1) / 2) * camDist * th * camera.aspect).addScaledVector(camUp, ((y0 + y1) / 2 + 0.065) * camDist * th);
+  }
+}
+function layout() {
+  const W = innerWidth, H = innerHeight;
+  renderer.setSize(W, H);
+  camera.aspect = W / H;
+  const iw = Math.round(Math.min(250, Math.max(118, W * (W < 520 ? 0.36 : 0.27)))), ih = Math.round(iw * 0.64);
+  insetR = { x: W - 14 - iw, y: 14, w: iw, h: ih };
+  elInset.style.width = iw + 4 + 'px'; elInset.style.height = ih + 4 + 'px';
+  elDreamE.style.fontSize = Math.round(ih * 0.42) + 'px';
+  pov.aspect = iw / ih; pov.updateProjectionMatrix();
+  sizeMonitor(); insetLabel();
+  fitCamera();
+}
+let frameNo = 0;
+function render(force) {
+  renderer.shadowMap.needsUpdate = force || frameNo++ % 2 === 0;
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, innerWidth, innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  renderer.render(scene, camera);
+  renderer.setScissorTest(true);
+  renderer.setScissor(insetR.x, insetR.y, insetR.w, insetR.h);
+  renderer.setViewport(insetR.x, insetR.y, insetR.w, insetR.h);
+  renderer.setClearColor(insetBg, 1);
+  renderer.render(scene, pov);
+  renderer.setScissorTest(false);
+}
+function isDark() { const a = document.documentElement.getAttribute('data-theme'); return a ? a === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
+function applyTheme() {
+  const dk = isDark();
+  gridMat.uniforms.uColor.value.set(dk ? '#9d8bd8' : '#a69481'); gridMat.uniforms.uOpacity.value = dk ? 0.22 : 0.16;
+  catcher.material.opacity = dk ? 0.34 : 0.2;
+  insetBg.set(dk ? '#1c1726' : '#efe6d9');
+  if (!playing && started) render(true);
+}
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+const mq = matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+
+/* ---------- tap a student to follow them ---------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); ray.layers.set(2);
+function studentAt(x, y) {
+  if (x > innerWidth - 18 - insetR.w && y > innerHeight - 18 - insetR.h) return null;
+  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const h = ray.intersectObjects(picks, false); return h.length ? h[0].object.userData.st : null;
+}
+function placeTag() {
+  if (!hovered) { elTag.classList.remove('on'); return; }
+  proj.copy(hovered.head); proj.y -= 0.34; proj.project(camera);
+  elTag.textContent = hovered.name;
+  elTag.style.transform = 'translate(' + ((proj.x + 1) * 0.5 * innerWidth).toFixed(1) + 'px,' + ((1 - proj.y) * 0.5 * innerHeight).toFixed(1) + 'px) translate(-50%,0)';
+  elTag.classList.add('on');
+}
+function insetLabel() { elInsetLabel.textContent = (innerWidth < 440 ? '' : 'Through ') + sel.name + '’s eyes'; }
+function select(st) {
+  if (st) elTip.classList.add('gone');
+  if (!st || st === sel) return;
+  setLayer(sel, 0); sel = st; setLayer(sel, 1);
+  attnInit = false; lastLabel = ''; lastCount = -1; countT = -9; lastBtn = null;
+  elName.textContent = st.name; insetLabel();
+  elTip.classList.add('gone');
+  if (!playing && started) { update(t, 1 / 60); render(true); }
+}
+renderer.domElement.addEventListener('click', (e) => select(studentAt(e.clientX, e.clientY)));
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  hovered = studentAt(e.clientX, e.clientY); renderer.domElement.style.cursor = hovered ? 'pointer' : ''; placeTag();
+});
+renderer.domElement.addEventListener('pointerleave', () => { hovered = null; placeTag(); });
+elSnd.addEventListener('click', () => setSound(!AU.on));
+elFocus.addEventListener('click', () => {
+  const s = sel;
+  if (s.locked) return;
+  if (s.focused) { s.focused = false; s.act.until = Math.min(s.act.until, now + rnd(0.4, 1.2)); }
+  else { s.focused = true; s.locked = true; setAct(s, 'putAway', 0.9); }
+  lastBtn = null;
+  if (!playing && started) { update(t, 1 / 60); render(true); }
+});
+
+/* ---------- run ---------- */
+let playing = !reduceMotion && fixedT === null, started = false, onScreen = true, t = 0, last = performance.now();
+if (qs.has('play')) playing = true;
+sel = students.find((s) => s.name.toLowerCase() === (qs.get('sel') || 'lucas').toLowerCase()) || students[0];
+fillSlot(0, 'target', 1); fillSlot(3, 'word', 1);
+for (const st of students) setAct(st, 'listen', rnd(0.5, 4) + st.focus * 6);
+scene.updateMatrixWorld(true);
+for (const st of students) { placeProps(st, 0); st.log.length = 0; }
+teacher.head.getWorldPosition(tHead);
+setLayer(sel, 1); elName.textContent = sel.name;
+elTip.textContent = (matchMedia('(pointer: coarse)').matches ? 'Tap' : 'Click') + ' any student to follow their attention';
+applyTheme();
+layout();
+addEventListener('resize', () => { layout(); if (!playing && started) { updateBubbles(); drawMonitor(); render(true); } });
+setInterval(() => {
+  try { const fe = window.frameElement; if (fe) { const r = fe.getBoundingClientRect(), vh = window.parent.innerHeight; onScreen = r.bottom > 0 && r.top < vh; } }
+  catch (e) { onScreen = true; }
+}, 400);
+const startAt = fixedT !== null ? fixedT : reduceMotion ? 24 : 0;
+prerolling = true;
+for (let s = 0; s < startAt; s += 1 / 30) update(s, 1 / 30);
+prerolling = false;
+t = startAt; update(t, 1 / 60); drawBoard(); render(true);
+started = true; note.hidden = true; document.body.classList.add('ready'); window.__sceneStarted = true;
+window.__scene = { students, select: (n) => select(students.find((s) => s.name === n)), get sel() { return sel.name; }, get now() { return now; }, get ev() { return ev && ev.kind; }, plane, camera, AU, sfx, step(sec) { for (let i = 0; i < sec * 60; i++) { t += 1 / 60; update(t, 1 / 60); } render(true); } };
+if (document.fonts) document.fonts.load('600 116px "Caveat"', 'Focus').then(() => { drawBoard(); drawCamera(); if (!playing && started) render(true); }).catch(() => {});
+if (reduceMotion && fixedT === null) elPlay.hidden = false;
+elPlay.addEventListener('click', () => { playing = true; elPlay.hidden = true; last = performance.now(); });
+function frame(ms) {
+  const dt = Math.min(0.05, (ms - last) / 1000); last = ms;
+  const active = playing && onScreen && !document.hidden;
+  if (AU.ctx && active !== AU.active) { AU.active = active; if (AU.on) { if (active) AU.ctx.resume(); else AU.ctx.suspend(); } }
+  if (active) {
+    t += dt; placeCamera(camDist, Math.sin(t * 0.13) * 0.035); update(t, dt); render(false);
+    if (hovered) placeTag();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

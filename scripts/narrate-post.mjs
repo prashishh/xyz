@@ -114,7 +114,8 @@ export function readPost(file) {
     // "narrate: false" in the front matter keeps a post out of --missing.
     skip: field("narrate") === "false",
     // A post with a walkthrough is read with the walkthrough's own explanation clips (scripts/narrate-walkthrough.mjs).
-    walkthrough: raw.match(/\{\{<\s*walkthrough\s+src="([^"]+)"/)?.[1],
+    // Other pages embedded with the same shortcode, such as the scenes in /scenes/, have no clips, so the post text is read.
+    walkthrough: raw.match(/\{\{<\s*walkthrough\s+src="(\/walkthroughs\/[^"]+)"/)?.[1],
     titleText,
     paragraphs,
     plainText: [titleText, ...paragraphs].join("\n\n"),
