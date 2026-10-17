@@ -1107,6 +1107,24 @@
           "prashish2": true
         }
       }
+    },
+    "ai/daily-ai-briefing.md": {
+      "audio": "ai/daily-ai-briefing/",
+      "seconds": {
+        "v4": {
+          "prashish2": 298.7
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "a3d1d1953b8a4601"
+        }
+      },
+      "words": {
+        "v4": {
+          "prashish2": true
+        }
+      }
     }
   }
 }
