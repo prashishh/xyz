@@ -9,6 +9,7 @@ tags:
   - research
 description: "reads 50+ sources, checks every story, and posts across social media on its own"
 article_kind: Technical
+cover: /img/ai-atlas-og.png
 ---
 
 <style>
