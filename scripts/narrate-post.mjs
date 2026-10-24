@@ -40,11 +40,17 @@ const CHUNK_GAP = 0.4; // seconds of silence between the requests a long post is
 const STEP_GAP = 0.8; // seconds of silence between the steps of a walkthrough
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-// An ElevenLabs pronunciation dictionary that reads "Prashish" as "Praashish", and the words listed in scripts/pronunciations.json
-// (Sanskrit, Pali and Arabic names) as their respellings, used for posts that say one of them. scripts/pronunciations.mjs updates the version.
+// An ElevenLabs pronunciation dictionary that reads "Prashish" as "Praashish", used for posts that say the name.
+const PRONUNCIATION = { pronunciation_dictionary_id: "3brYeu1vQCiBl0OQnWWL", version_id: "ZA2tg56axpoCjwZqYXrk" };
+// The words listed in scripts/pronunciations.json (Sanskrit, Pali and Arabic names) are read as their respellings from a second
+// dictionary, used for posts that say one of them. scripts/pronunciations.mjs creates it and saves its id and version there; until then
+// (no id) those posts are read as written.
 const PRON = JSON.parse(fs.readFileSync(path.join(ROOT, "scripts/pronunciations.json"), "utf8"));
-const PRONUNCIATION = { pronunciation_dictionary_id: PRON.dictionary_id, version_id: PRON.version_id };
-const PRONOUNCED = new RegExp(["prashish", ...PRON.rules.map((r) => r.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))].join("|"), "i");
+const WORDS = new RegExp(PRON.rules.map((r) => r.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "i");
+const pronunciations = (text) => [
+  ...(/prashish/i.test(text) ? [PRONUNCIATION] : []),
+  ...(PRON.dictionary_id && WORDS.test(text) ? [{ pronunciation_dictionary_id: PRON.dictionary_id, version_id: PRON.version_id }] : []),
+];
 const CONTENT = path.join(ROOT, "site/content");
 const DATA = path.join(ROOT, "site/data/audiobook.json");
 // Clips live in the Cloudflare R2 bucket, at <section>/<post>/<model>/<voice>.mp3, and the site plays them from AUDIO_BASE.
@@ -145,7 +151,7 @@ export function clipRequests(post, model, voice) {
     text,
     model_id,
     voice_settings: settings,
-    ...(PRONOUNCED.test(text) ? { pronunciation_dictionary_locators: [PRONUNCIATION] } : {}),
+    ...(pronunciations(text).length ? { pronunciation_dictionary_locators: pronunciations(text) } : {}),
   }));
   const hash = crypto.createHash("sha256").update(JSON.stringify([VOICES[voice].id, FORMAT, requests, ...(requests.length > 1 ? [CHUNK_GAP] : [])])).digest("hex").slice(0, 16);
   return { requests, hash };
