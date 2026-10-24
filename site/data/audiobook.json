@@ -1125,6 +1125,24 @@
           "prashish2": true
         }
       }
+    },
+    "seeking/inner-divinity.md": {
+      "audio": "seeking/inner-divinity/",
+      "seconds": {
+        "v4": {
+          "prashish2": 54.3
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "18b8da2f136df263"
+        }
+      },
+      "words": {
+        "v4": {
+          "prashish2": true
+        }
+      }
     }
   }
 }
