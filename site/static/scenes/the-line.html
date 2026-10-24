@@ -1,0 +1,1778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The line</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+/* ?embed follows the parent page theme, ?theme=dark|light forces one, otherwise the OS setting applies.
+   Testing: ?seed=7 replays the same night, ?t=20 renders one still frame, ?sel=Sita follows someone, ?in=1 starts with everyone looking within, ?scene=temple|church|shrine|stupa picks the place, ?stay=1 turns off the automatic switching between places. */
+(function(){
+  var root=document.documentElement,q=new URLSearchParams(location.search),t=q.get("theme");
+  if(t==="dark"||t==="light"){root.setAttribute("data-theme",t);return}
+  if(!q.has("embed"))return;
+  root.classList.add("embedded");
+  var P;try{P=window.parent.document;if(!P||P===document)return}catch(e){return}
+  function read(){var v=(P.documentElement.getAttribute("data-theme")||"")+" "+P.documentElement.className;root.setAttribute("data-theme",/dark/i.test(v)?"dark":"light")}
+  read();new MutationObserver(read).observe(P.documentElement,{attributes:true,attributeFilter:["data-theme","class"]});
+})();
+setTimeout(function(){if(!window.__sceneStarted){var n=document.getElementById("note");if(n)n.textContent="The 3D scene could not load here."}},12000);
+</script>
+<style>
+:root{--bg1:#f8f2e9;--bg2:#ebe0d1;--ink:#2b2622;--muted:#7d7064;--chip:rgba(255,251,245,.88);--line:rgba(43,38,34,.12);--gold:#e9a320;--shadow:rgba(70,45,20,.10);--bub:#fffdf9;--bubInk:#2b2622}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#232a3d;--bg2:#10121b;--ink:#eef0f8;--muted:#a3a9bd;--chip:rgba(30,34,50,.88);--line:rgba(238,240,248,.14);--gold:#f5c04a;--shadow:rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg1:#232a3d;--bg2:#10121b;--ink:#eef0f8;--muted:#a3a9bd;--chip:rgba(30,34,50,.88);--line:rgba(238,240,248,.14);--gold:#f5c04a;--shadow:rgba(0,0,0,.35)}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:radial-gradient(120% 95% at 50% 32%,var(--bg1) 0%,var(--bg2) 100%);font-family:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+#bk{position:fixed;inset:0;background:#04050b;opacity:0;pointer-events:none}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none;z-index:3}
+.col{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;flex:1 1 auto}
+.col .pill{max-width:100%;box-sizing:border-box;overflow:hidden}
+.pill{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px 0 11px;border-radius:999px;background:var(--chip);border:1px solid var(--line);box-shadow:0 6px 20px var(--shadow);font-size:13px;white-space:nowrap;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 26%,transparent);flex:none}
+.muted{color:var(--muted)}
+#name{font-weight:600}
+#target{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.tip{font-size:12px;color:var(--muted);padding:0 6px;transition:opacity .8s}
+.tip.gone{opacity:0}
+.meter{flex:none;display:grid;gap:7px;padding:9px 12px 10px;border-radius:12px;background:#0f1219;border:1px solid rgba(255,255,255,.1);box-shadow:0 6px 20px var(--shadow);color:#dfe6f5;font-size:10px;letter-spacing:.07em;text-transform:uppercase}
+.meter .row{display:grid;grid-template-columns:100px 58px;align-items:center;column-gap:8px;row-gap:4px}
+.meter .lab{opacity:.75;font-weight:600}
+.meter b{font:600 17px/1 "Hanken Grotesk",system-ui,sans-serif;letter-spacing:0;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meter .bar{grid-column:1/3;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+.meter .bar u{display:block;height:100%;width:0;border-radius:3px;background:#6fb1ff;box-shadow:0 0 8px #6fb1ff;transition:width .5s}
+.meter .warm u{background:#ff8a6b;box-shadow:0 0 8px #ff8a6b}
+.meter .gold u{background:#ffc94a;box-shadow:0 0 8px #ffc94a}
+.meter .wait b{color:#8cc2ff}
+.meter .seen b{color:#ffa58c}
+.meter .in b{color:#ffd36b}
+#bubbles{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.bb{position:absolute;left:0;top:0;will-change:transform}
+.bb i{position:relative;display:flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 7px;box-sizing:border-box;border-radius:15px;background:var(--bub);color:var(--bubInk);border:1px solid rgba(43,38,34,.14);box-shadow:0 4px 12px var(--shadow);font:600 13px "Hanken Grotesk",system-ui,sans-serif;font-style:normal;line-height:1;white-space:nowrap;transform:translate(-50%,-100%) scale(0);transform-origin:50% 100%;opacity:0;transition:transform .24s cubic-bezier(.3,1.6,.5,1),opacity .18s}
+.bb i::after{content:"";position:absolute;left:50%;bottom:-5px;width:8px;height:8px;margin-left:-5px;background:var(--bub);border-right:1px solid rgba(43,38,34,.14);border-bottom:1px solid rgba(43,38,34,.14);transform:rotate(45deg)}
+.bb.on i{transform:translate(-50%,-100%) scale(1);opacity:1}
+.bb.pop i{font-size:17px}
+.bb.me i{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 40%,transparent),0 4px 12px var(--shadow)}
+.seg{display:inline-flex;padding:3px;gap:2px;border-radius:999px;background:var(--chip);border:1px solid var(--line);box-shadow:0 6px 20px var(--shadow);pointer-events:auto;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.seg button{font:600 12px "Hanken Grotesk",system-ui,sans-serif;color:var(--muted);background:none;border:0;border-radius:999px;height:26px;padding:0 11px;cursor:pointer}
+.seg button.on{color:var(--ink);background:color-mix(in srgb,var(--gold) 26%,transparent)}
+.ctl{position:fixed;left:12px;bottom:12px;z-index:3;display:flex;align-items:center;gap:8px}
+.look,.snd{display:inline-flex;align-items:center;gap:9px;height:36px;padding:0 15px 0 12px;font:600 13px "Hanken Grotesk",system-ui,sans-serif;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:999px;cursor:pointer;box-shadow:0 6px 20px var(--shadow);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.look i{position:relative;width:13px;height:13px;border-radius:50%;border:2px solid var(--gold);box-sizing:border-box}
+.look i::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--gold)}
+.snd{gap:7px;padding:0 14px 0 11px}
+.snd svg{width:16px;height:16px;flex:none}
+.snd .w,.snd.on .x{opacity:0}
+.snd.on .w{opacity:1}
+.look.on,.snd.on{background:color-mix(in srgb,var(--gold) 22%,var(--chip));border-color:color-mix(in srgb,var(--gold) 55%,transparent)}
+.tag{position:fixed;left:0;top:0;z-index:2;pointer-events:none;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--chip);border:1px solid var(--line);color:var(--ink);opacity:0;transition:opacity .15s;white-space:nowrap}
+.tag.on{opacity:1}
+body:not(.ready) .hud,body:not(.ready) .ctl{opacity:0}
+.hud,.ctl{transition:opacity .4s}
+.note[hidden]{display:none}
+.note{position:fixed;inset:0;display:grid;place-items:center;margin:0;color:var(--muted);font-size:14px;pointer-events:none}
+.play{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:4;font:600 13px "Hanken Grotesk",system-ui,sans-serif;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;box-shadow:0 6px 20px var(--shadow)}
+.look{height:50px;padding:0 24px 0 18px;gap:11px;font-size:16px;color:#2a1d0c;background:#f5b72e;border:0;box-shadow:0 10px 28px rgba(245,166,35,.5);animation:ring 2s ease-out infinite}
+.look i{width:16px;height:16px;border-color:#2a1d0c}
+.look i::after{background:#2a1d0c}
+.look.on{height:40px;padding:0 15px 0 12px;gap:9px;font-size:13px;color:var(--ink);background:color-mix(in srgb,var(--gold) 22%,var(--chip));border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);box-shadow:0 6px 20px var(--shadow);animation:none}
+.look.on i{width:13px;height:13px;border-color:var(--gold)}
+.look.on i::after{background:var(--gold)}
+@keyframes ring{0%{box-shadow:0 10px 28px rgba(245,166,35,.5),0 0 0 0 rgba(245,183,46,.55)}70%,100%{box-shadow:0 10px 28px rgba(245,166,35,.5),0 0 0 16px rgba(245,183,46,0)}}
+.nudge{position:fixed;left:14px;bottom:70px;z-index:3;font-size:13px;font-weight:600;color:var(--ink);background:var(--chip);border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);padding:7px 12px;border-radius:12px;box-shadow:0 6px 20px var(--shadow);pointer-events:none;transition:opacity .5s}
+.nudge::after{content:"";position:absolute;left:34px;bottom:-6px;width:10px;height:10px;background:var(--chip);border-right:1px solid color-mix(in srgb,var(--gold) 55%,transparent);border-bottom:1px solid color-mix(in srgb,var(--gold) 55%,transparent);transform:rotate(45deg)}
+.nudge.gone{opacity:0}
+body:not(.ready) .nudge{opacity:0}
+.quote{position:fixed;right:12px;bottom:12px;z-index:3;max-width:min(340px,calc(100vw - 310px));padding:11px 15px 12px;border-radius:12px;background:var(--chip);border:1px solid var(--line);box-shadow:0 6px 20px var(--shadow);pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:qin .6s ease both}
+.quote q{display:block;quotes:none;font:italic 500 16px/1.35 Georgia,"Iowan Old Style","Palatino Linotype",serif;color:var(--ink)}
+.quote small{display:block;margin-top:6px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+@keyframes qin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+body:not(.ready) .quote{opacity:0}
+@media (prefers-reduced-motion:reduce){.look,.quote{animation:none}}
+html.embedded .quote{display:none}
+@media (max-width:480px){.seg button{height:22px;padding:0 8px;font-size:11px}.pill{height:28px;font-size:12px;padding:0 10px 0 9px;gap:6px}.ctl{flex-direction:column-reverse;align-items:flex-start;gap:6px}.snd{height:32px;font-size:12px}.look{height:46px;font-size:15px}.look.on{height:32px;font-size:12px}.ctl{bottom:96px}.nudge{bottom:202px;font-size:12px}.quote{left:12px;right:12px;max-width:none;bottom:12px;padding:9px 13px 10px}.quote q{font-size:14px}.embedded .ctl{bottom:12px}.embedded .nudge{bottom:118px}.meter{padding:7px 9px 8px;gap:5px;font-size:8px}.meter .row{grid-template-columns:76px 46px}.meter b{font-size:13px}.bb i{height:26px;min-width:26px;border-radius:13px;font-size:12px}.bb.pop i{font-size:15px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="bk"></div>
+<div id="stage"></div>
+<div id="bubbles" aria-hidden="true"></div>
+<div class="hud" aria-hidden="true">
+  <div class="col">
+    <div class="pill"><span class="dot"></span><b id="name">Sita</b><span class="muted">→</span><span id="target">In line</span></div>
+    <div class="seg" id="seg" role="group" aria-label="Place"><button type="button" data-s="temple">Temple</button><button type="button" data-s="church">Church</button><button type="button" data-s="shrine">Mosque</button><button type="button" data-s="stupa">Stupa</button></div>
+    <div class="tip" id="tip">Click or tap anyone to let them look within</div>
+  </div>
+  <div class="meter" id="meter">
+    <div class="row wait"><span class="lab">Waited</span><b id="mWait">0m</b><i class="bar"><u id="mWaitBar"></u></i></div>
+    <div class="row seen"><span class="lab">Glimpse</span><b id="mSeen">–</b><i class="bar warm"><u id="mSeenBar"></u></i></div>
+    <div class="row in"><span class="lab">Looking within</span><b id="mIn">0</b><i class="bar gold"><u id="mInBar"></u></i></div>
+  </div>
+</div>
+<div class="ctl"><button class="look" id="within" type="button"><i></i><span id="withinL">Look within</span></button><button class="snd" id="snd" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" stroke="none"/><path class="w" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg><span>Sound</span></button></div>
+<div class="nudge" id="nudge">Click to look within</div>
+<div class="quote" id="quote" aria-live="polite"><q id="quoteT"></q><small id="quoteS"></small></div>
+<div class="tag" id="tag" aria-hidden="true"></div>
+<p class="note" id="note">Loading…</p>
+<button class="play" id="play" hidden>Play</button>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const qs = new URLSearchParams(location.search);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fixedT = qs.has('t') ? parseFloat(qs.get('t')) : null;
+const $ = (id) => document.getElementById(id);
+const elName = $('name'), elTarget = $('target'), elTip = $('tip'), elTag = $('tag'), elBubbles = $('bubbles'), elSeg = $('seg');
+const elIn = $('within'), elInL = $('withinL'), elSnd = $('snd'), elPlay = $('play'), note = $('note');
+const elBk = $('bk'), elNudge = $('nudge'), elQuote = $('quote'), elQuoteT = $('quoteT'), elQuoteS = $('quoteS');
+const elWait = $('mWait'), elWaitBar = $('mWaitBar'), elSeen = $('mSeen'), elSeenBar = $('mSeenBar'), elInN = $('mIn'), elInBar = $('mInBar');
+const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const clamp = THREE.MathUtils.clamp;
+const smooth01 = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+
+/* ---------- seeded randomness, so ?seed=7 replays the same night ---------- */
+let seed = (qs.has('seed') ? parseInt(qs.get('seed'), 10) : Math.floor(Math.random() * 1e9)) >>> 0;
+function rand() { seed = (seed + 0x6D2B79F5) | 0; let x = Math.imul(seed ^ (seed >>> 15), 1 | seed); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }
+const rnd = (a, b) => a + (b - a) * rand();
+const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+function pickW(list) { let s = 0; for (const o of list) s += o.w; let r = rand() * s; for (const o of list) if ((r -= o.w) <= 0) return o; return list[list.length - 1]; }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- renderer, camera, night lights ---------- */
+const smallScreen = Math.min(innerWidth || 800, innerHeight || 600) < 560;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;
+renderer.domElement.setAttribute('role', 'img');
+renderer.domElement.setAttribute('aria-label', 'A temple, a church, a mosque and a stupa on a festival night. At each, a very long line of people winds between railings and out of the gate to wait for two seconds at the sanctum door, while around them people ring bells, light lamps and candles, tie threads, turn prayer wheels, sing, sell flowers and tea, and feed pigeons. Each person carries a small light in the chest. Look within turns every light on.');
+$('stage').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.3;
+const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
+
+const hemi = new THREE.HemisphereLight('#9fb0ff', '#2e2236', 0.45); scene.add(hemi);
+const COLD = new THREE.Color('#9fb0ff'), WARM = new THREE.Color('#ffd9b0');
+const moon = new THREE.DirectionalLight('#c3cdff', 0.75);
+moon.position.set(6, 11, 7.5);
+moon.castShadow = true;
+moon.shadow.mapSize.set(smallScreen ? 1024 : 2048, smallScreen ? 1024 : 2048);
+Object.assign(moon.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 34 });
+moon.shadow.camera.updateProjectionMatrix();
+moon.shadow.bias = -0.0004;
+moon.shadow.normalBias = 0.025;
+scene.add(moon);
+const fill = new THREE.DirectionalLight('#ffd2a8', 0.32);
+fill.position.set(-6, 5, 6);
+scene.add(fill);
+
+/* ---------- ground grid ---------- */
+const gridMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false,
+  uniforms: { uColor: { value: new THREE.Color('#a69481') }, uOpacity: { value: 0.16 } },
+  vertexShader: 'varying vec2 vP; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vP = w.xz; gl_Position = projectionMatrix * viewMatrix * w; }',
+  fragmentShader: 'uniform vec3 uColor; uniform float uOpacity; varying vec2 vP; void main(){ vec2 g = abs(fract(vP - 0.5) - 0.5) / fwidth(vP); float l = 1.0 - min(min(g.x, g.y), 1.0); float f = 1.0 - smoothstep(8.0, 24.0, length(vP)); gl_FragColor = vec4(uColor, l * uOpacity * f); }'
+});
+const grid = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), gridMat);
+grid.rotation.x = -Math.PI / 2; grid.position.y = -0.34; scene.add(grid);
+const catcher = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ color: '#1d1a2a', opacity: 0.22, depthWrite: false }));
+catcher.rotation.x = -Math.PI / 2; catcher.position.y = -0.335; catcher.receiveShadow = true; scene.add(catcher);
+
+/* ---------- materials and helpers ---------- */
+const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.82, metalness: 0, ...o });
+const mat = {
+  ink: M('#2a2421', { roughness: 0.4 }), blush: M('#f29b8f', { roughness: 0.9 }), tika: M('#d6182f', { roughness: 0.5 }),
+  brass: M('#c9993e', { metalness: 0.6, roughness: 0.35 }), gold: M('#dcaa3c', { metalness: 0.65, roughness: 0.3 }),
+  steel: M('#9aa1aa', { metalness: 0.6, roughness: 0.35 }), clay: M('#b5653d'), wood: M('#5a3826'), woodLight: M('#a8774f'), redWood: M('#8e2b23'),
+  leaf: M('#4f8a57'), leaf2: M('#3e7349'), bark: M('#6b4a35'), white: M('#f4f1ea'), phone: M('#1f1d24', { roughness: 0.35, metalness: 0.2 }),
+  marigold: M('#f39c12', { roughness: 0.7 }), marigold2: M('#f6c143', { roughness: 0.7 }), rose: M('#c0283c', { roughness: 0.7 }), wax: M('#f7f1e1', { roughness: 0.5 }),
+  pigeon: M('#8a93a3'), pigeonHead: M('#596579'), beak: M('#3a3433'), screen: new THREE.MeshBasicMaterial({ color: '#9fc4ff' }),
+  cream: M('#efe4cf'), basket: M('#9a6b3c'), cup: M('#f2ede4', { roughness: 0.4 }),
+};
+const matCache = new Map();
+const mc = (c, o) => { const k = c + (o ? JSON.stringify(o) : ''); if (!matCache.has(k)) matCache.set(k, M(c, o)); return matCache.get(k); };
+const geoCache = new Map();
+function rgeo(w, h, d, r) {
+  const k = w + '|' + h + '|' + d + '|' + r;
+  if (!geoCache.has(k)) geoCache.set(k, new RoundedBoxGeometry(w, h, d, 3, Math.min(r, Math.min(w, h, d) / 2 - 0.001)));
+  return geoCache.get(k);
+}
+/* everything built while `building` is true never moves, and gets merged into a few meshes */
+let building = false, buildRoot = scene;
+const statics = [];
+function mesh(geo, m, x, y, z, parent = buildRoot, shadow = true) {
+  const me = new THREE.Mesh(geo, m); me.position.set(x, y, z);
+  me.castShadow = shadow; me.receiveShadow = true; parent.add(me);
+  if (building && parent === buildRoot) statics.push(me);
+  return me;
+}
+const box = (w, h, d, r, m, x, y, z, parent = buildRoot) => mesh(rgeo(w, h, d, r), m, x, y, z, parent);
+const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
+function dampAngle(a, b, l, dt) { const d = ((((b - a + Math.PI) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) - Math.PI; return a + d * (1 - Math.exp(-l * dt)); }
+const P = {}, LA = { yaw: 0, pitch: 0 }, tmpLA = V(), tmpA = V(), tmpB = V(), tmpD = V(), tmpW = V(), q1 = new THREE.Quaternion();
+const lathe = (pts, seg = 20) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
+
+const GEO = {
+  head: new THREE.SphereGeometry(0.24, 20, 14),
+  hair: new THREE.SphereGeometry(0.255, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.56),
+  bun: new THREE.SphereGeometry(0.095, 10, 7),
+  eye: new THREE.SphereGeometry(0.03, 8, 6),
+  blush: new THREE.SphereGeometry(0.04, 7, 5),
+  torso: new THREE.CapsuleGeometry(0.19, 0.2, 3, 10),
+  arm: new THREE.CapsuleGeometry(0.055, 0.2, 2, 6),
+  hand: new THREE.SphereGeometry(0.06, 8, 6),
+  leg: new THREE.CapsuleGeometry(0.07, 0.22, 2, 6),
+  legS: new THREE.CapsuleGeometry(0.075, 0.28, 2, 6),
+  ring: new THREE.TorusGeometry(0.058, 0.009, 4, 12),
+  capTop: new THREE.SphereGeometry(0.262, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.5),
+  skirt: new THREE.CylinderGeometry(0.2, 0.27, 0.46, 14),
+  scarf: new THREE.SphereGeometry(0.272, 16, 10, Math.PI / 2 + 0.95, Math.PI * 2 - 1.9, 0, Math.PI * 0.72),
+  drape: new THREE.CylinderGeometry(0.16, 0.28, 0.24, 12),
+  topi: new THREE.CylinderGeometry(0.19, 0.215, 0.14, 12),
+  kufi: new THREE.SphereGeometry(0.252, 14, 6, 0, Math.PI * 2, 0, Math.PI * 0.4),
+  beard: new THREE.SphereGeometry(0.15, 10, 7),
+  tika: new THREE.SphereGeometry(0.024, 6, 4),
+  plate: new THREE.CylinderGeometry(0.15, 0.13, 0.025, 22),
+  flower: new THREE.SphereGeometry(0.042, 10, 8),
+  candle: new THREE.CylinderGeometry(0.018, 0.018, 0.17, 10),
+  lamp: new THREE.CylinderGeometry(0.055, 0.032, 0.035, 14),
+  pipe: new THREE.CylinderGeometry(0.022, 0.022, 1, 8),
+  post: new THREE.CylinderGeometry(0.03, 0.034, 0.98, 10),
+  pick: new THREE.CapsuleGeometry(0.3, 0.5, 2, 8),
+  stick: new THREE.CylinderGeometry(0.012, 0.012, 0.3, 6),
+  wheel: new THREE.CylinderGeometry(0.055, 0.055, 0.09, 14),
+  pBody: new THREE.SphereGeometry(0.06, 12, 8), pHead: new THREE.SphereGeometry(0.034, 10, 8), pBeak: new THREE.ConeGeometry(0.01, 0.03, 6),
+  bell: lathe([[0, 0.3], [0.05, 0.3], [0.09, 0.27], [0.11, 0.17], [0.14, 0.06], [0.19, 0]], 22),
+  shoe: new THREE.CapsuleGeometry(0.035, 0.09, 3, 8),
+  kettle: new THREE.SphereGeometry(0.08, 14, 10),
+  cupG: new THREE.CylinderGeometry(0.025, 0.02, 0.05, 10),
+  leafBall: new THREE.SphereGeometry(0.5, 14, 10),
+};
+
+/* ---------- canvas textures ---------- */
+function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; }
+function tex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+const UI = '"Hanken Grotesk",system-ui,sans-serif';
+
+/* ---------- light points: the light in every chest, lamp flames, festival lights ---------- */
+function glowLayer(max, depthTest, order) {
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(max * 3), size = new Float32Array(max), alpha = new Float32Array(max), col = new Float32Array(max * 3);
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute('aAlpha', new THREE.BufferAttribute(alpha, 1).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3).setUsage(THREE.DynamicDrawUsage));
+  const m = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, depthTest, blending: THREE.AdditiveBlending, uniforms: { uScale: { value: 400 } },
+    vertexShader: 'attribute float aSize; attribute float aAlpha; attribute vec3 aColor; uniform float uScale; varying float vA; varying vec3 vC; void main(){ vA = aAlpha; vC = aColor; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aSize * uScale / -mv.z; gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'varying float vA; varying vec3 vC; void main(){ float d = length(gl_PointCoord - 0.5) * 2.0; float a = exp(-d * d * 3.2) * (1.0 - smoothstep(0.8, 1.0, d)); gl_FragColor = vec4(vC, a * vA); }',
+  });
+  const pts = new THREE.Points(geo, m); pts.frustumCulled = false; pts.renderOrder = order; scene.add(pts);
+  const L = { pts, m, n: 0, max };
+  L.add = (p, s, a, c) => { if (L.n >= max) return; const i = L.n++; pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z; size[i] = s; alpha[i] = a; col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; };
+  L.flush = () => { geo.setDrawRange(0, L.n); for (const k of ['position', 'aSize', 'aAlpha', 'aColor']) geo.attributes[k].needsUpdate = true; L.n = 0; };
+  return L;
+}
+const halos = glowLayer(900, true, 3), cores = glowLayer(300, false, 8);
+const C_CORE = new THREE.Color('#fff2cc'), C_HALO = new THREE.Color('#ffb04a'), C_FLAME = new THREE.Color('#ffbd5c'), C_FLAME2 = new THREE.Color('#fff0c4'), C_STR = new THREE.Color('#ffcf7a'), C_SANCT = new THREE.Color('#ffc86e');
+
+/* ---------- people ---------- */
+function makePerson(o) {
+  const { skin = '#f1c7a1', hair = '#2c221d', shirt = '#6c7bd8', pants = '#4b4f6b', bun = false, bald = false, glasses = false, cap = null, topi = null, kufi = null, scarf = null, beard = null, sash = null, skirt = null, apron = null } = o;
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const shirtM = M(shirt), skinM = mc(skin), hairM = mc(hair, { roughness: 0.55 }), pantsM = mc(pants);
+  shirtM.emissive = new THREE.Color('#ff9a2e'); shirtM.emissiveIntensity = 0;
+  const legM = skirt ? mc(skirt) : pantsM;
+  const standing = new THREE.Group(); root.add(standing);
+  const legs = [-1, 1].map((s) => { const pv = new THREE.Group(); pv.position.set(0.09 * s, 0.44, 0); standing.add(pv); mesh(GEO.legS, pantsM, 0, -0.21, 0, pv); return pv; });
+  if (skirt) mesh(GEO.skirt, mc(skirt), 0, 0.25, 0, standing);
+  const crossed = new THREE.Group(); crossed.visible = false; root.add(crossed);
+  for (const s of [-1, 1]) { const l = mesh(GEO.leg, legM, 0.03 * s, 0.075, 0.15, crossed); l.rotation.set(0, s * 0.42, Math.PI / 2); }
+  const seated = new THREE.Group(); seated.visible = false; root.add(seated);
+  for (const s of [-1, 1]) { mesh(GEO.leg, legM, 0.09 * s, 0.06, 0.17, seated).rotation.x = Math.PI / 2; mesh(GEO.leg, legM, 0.09 * s, -0.26, 0.33, seated); }
+  const kneel = new THREE.Group(); kneel.visible = false; root.add(kneel);
+  for (const s of [-1, 1]) { mesh(GEO.leg, legM, 0.09 * s, 0.15, 0.02, kneel); mesh(GEO.leg, legM, 0.09 * s, 0.07, -0.16, kneel).rotation.x = Math.PI / 2; }
+  const torso = mesh(GEO.torso, shirtM, 0, 0.29, 0, body);
+  if (sash) { const sm = mc(sash); box(0.11, 0.64, 0.035, 0.012, sm, 0.02, 0.3, 0.168, body).rotation.z = 0.62; box(0.11, 0.64, 0.035, 0.012, sm, 0.02, 0.3, -0.168, body).rotation.z = -0.62; }
+  if (apron) box(0.27, 0.36, 0.03, 0.01, apron, 0, 0.1, 0.18, body);
+  const neck = new THREE.Group(); neck.position.y = 0.55; neck.rotation.order = 'YXZ'; body.add(neck);
+  mesh(GEO.head, skinM, 0, 0.22, 0, neck);
+  if (scarf) { mesh(GEO.scarf, mc(scarf, { side: THREE.DoubleSide }), 0, 0.22, -0.006, neck); mesh(GEO.drape, mc(scarf), 0, -0.01, 0, neck); }
+  else if (!bald) {
+    mesh(GEO.hair, hairM, 0, 0.235, -0.01, neck).rotation.x = -0.45;
+    if (bun) mesh(GEO.bun, hairM, 0, 0.47, -0.12, neck);
+  }
+  if (cap) { mesh(GEO.capTop, mc(cap), 0, 0.25, -0.01, neck); box(0.3, 0.025, 0.2, 0.01, mc(cap), 0, 0.31, 0.2, neck).rotation.x = 0.12; }
+  if (topi) mesh(GEO.topi, mc(topi), 0, 0.425, -0.015, neck).rotation.x = -0.14;
+  if (kufi) mesh(GEO.kufi, mc(kufi), 0, 0.22, -0.01, neck).rotation.x = -0.28;
+  const eyes = [mesh(GEO.eye, mat.ink, 0.085, 0.2, 0.226, neck, false), mesh(GEO.eye, mat.ink, -0.085, 0.2, 0.226, neck, false)];
+  for (const x of [0.14, -0.14]) mesh(GEO.blush, mat.blush, x, 0.135, 0.2, neck, false).scale.set(1, 0.55, 0.35);
+  if (beard) mesh(GEO.beard, mc(beard), 0, 0.085, 0.125, neck, false).scale.set(1.12, 0.92, 0.82);
+  if (glasses) { for (const x of [0.085, -0.085]) mesh(GEO.ring, mat.ink, x, 0.2, 0.236, neck, false); box(0.05, 0.01, 0.01, 0.004, mat.ink, 0, 0.205, 0.245, neck); }
+  const tika = mesh(GEO.tika, mat.tika, 0, 0.272, 0.232, neck, false); tika.visible = false;
+  const arm = (s) => { const p = new THREE.Group(); p.position.set(0.215 * s, 0.46, 0); body.add(p); mesh(GEO.arm, shirtM, 0, -0.15, 0, p); return { p, hand: mesh(GEO.hand, skinM, 0, -0.3, 0, p) }; };
+  const chest = new THREE.Object3D(); chest.position.set(0, 0.33, 0.05); body.add(chest);
+  return { root, body, torso, shirtM, neck, eyes, standing, legs, crossed, seated, kneel, armL: arm(1), armR: arm(-1), chest, tika };
+}
+
+/* things people carry: offerings, candles, phones, a baby, a hand prayer wheel */
+function makeProp(kind, pp) {
+  const g = new THREE.Group(), b = pp.p.body; b.add(g);
+  const pr = { kind, g, vis: true, flames: [] };
+  if (kind === 'plate') {
+    mesh(GEO.plate, mat.brass, 0, 0.3, 0.27, g);
+    [[-0.05, 0.02, mat.marigold], [0.05, -0.02, mat.rose], [0, 0.06, mat.marigold2], [0.02, -0.06, mat.marigold]].forEach(([x, z, m]) => mesh(GEO.flower, m, x, 0.33, 0.27 + z, g, false));
+    mesh(GEO.lamp, mat.clay, -0.07, 0.33, 0.21, g, false).scale.setScalar(0.6);
+    pr.flames.push(V(-0.07, 0.365, 0.21));
+  } else if (kind === 'garland') {
+    for (let i = 0; i <= 10; i++) { const u = i / 10; mesh(GEO.flower, i % 2 ? mat.marigold : mat.marigold2, -0.13 + 0.26 * u, 0.27 - 0.14 * Math.sin(Math.PI * u), 0.25, g, false).scale.setScalar(0.85); }
+  } else if (kind === 'candle') {
+    mesh(GEO.candle, mat.wax, -0.12, 0.38, 0.25, g, false);
+    pr.flames.push(V(-0.12, 0.48, 0.25));
+  } else if (kind === 'phone') {
+    const ph = box(0.078, 0.155, 0.012, 0.006, mat.phone, -0.06, 0.52, 0.3, g); ph.rotation.x = -0.75;
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.066, 0.13), mat.screen); s.position.z = 0.007; ph.add(s);
+  } else if (kind === 'baby') {
+    const bb = mesh(GEO.kettle, mc('#f4e3c3'), 0.02, 0.33, 0.21, g); bb.scale.set(0.9, 0.85, 1.6); bb.rotation.y = 1.3;
+    mesh(GEO.pBody, mc(pp.look.skin), 0.17, 0.38, 0.2, g).scale.setScalar(1.1);
+  } else if (kind === 'wheel') {
+    mesh(GEO.stick, mat.wood, -0.17, 0.42, 0.27, g);
+    const w = new THREE.Group(); w.position.set(-0.17, 0.6, 0.27); g.add(w);
+    mesh(GEO.wheel, mat.gold, 0, 0, 0, w); mesh(GEO.tika, mat.ink, 0.08, -0.02, 0, w);
+    pr.spin = w;
+  } else if (kind === 'chadar') {
+    const cm = mc('#1e7b4f'); box(0.56, 0.05, 0.4, 0.02, cm, 0, 1.04, 0.02, g); for (const x of [-0.27, 0.27]) box(0.04, 0.3, 0.38, 0.01, cm, x, 0.9, 0.02, g); box(0.58, 0.02, 0.42, 0.01, mat.gold, 0, 1.065, 0.02, g);
+  } else if (kind === 'basket') {
+    mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.1, 14), mat.basket, 0.3, 0.07, 0.1, g);
+    for (let i = 0; i < 5; i++) mesh(GEO.flower, mat.rose, 0.3 + Math.cos(i * 1.3) * 0.05, 0.13, 0.1 + Math.sin(i * 1.3) * 0.05, g, false);
+  } else if (kind === 'camera') {
+    box(0.15, 0.1, 0.07, 0.015, mat.phone, 0, 0.66, 0.28, g); mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.06, 12), mat.phone, 0, 0.66, 0.34, g).rotation.x = Math.PI / 2;
+  } else if (kind === 'bouquet') {
+    const w = mesh(new THREE.ConeGeometry(0.065, 0.18, 12, 1, true), mc('#f1ece2', { side: THREE.DoubleSide }), -0.12, 0.37, 0.25, g); w.rotation.x = Math.PI;
+    for (let i = 0; i < 5; i++) mesh(GEO.flower, [mat.rose, mat.white, mat.marigold2][i % 3], -0.12 + Math.cos(i * 1.3) * 0.035, 0.47, 0.25 + Math.sin(i * 1.3) * 0.035, g, false);
+  } else if (kind === 'khata') {
+    box(0.3, 0.015, 0.1, 0.005, mat.white, 0, 0.3, 0.26, g); for (const x of [-0.15, 0.15]) box(0.08, 0.2, 0.01, 0.004, mat.white, x, 0.2, 0.27, g);
+  } else if (kind === 'quran') {
+    box(0.17, 0.035, 0.22, 0.01, mc('#1e6b47'), 0, 0.32, 0.26, g); box(0.13, 0.036, 0.18, 0.008, mat.gold, 0, 0.32, 0.26, g);
+  } else if (kind === 'tasbih') {
+    mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 14), mc('#6b4a35'), -0.14, 0.37, 0.25, g).rotation.y = Math.PI / 2; mesh(GEO.tika, mat.gold, -0.14, 0.3, 0.25, g, false).scale.setScalar(1.5);
+  } else if (kind === 'fan') {
+    mesh(GEO.stick, mat.wood, -0.17, 0.42, 0.27, g);
+    mesh(GEO.leafBall, mc('#1f7a7a'), -0.17, 0.72, 0.27, g).scale.set(0.3, 0.42, 0.08);
+    for (let i = 0; i < 5; i++) mesh(GEO.tika, mc('#e8b100'), -0.17 + (i - 2) * 0.05, 0.76 - Math.abs(i - 2) * 0.03, 0.31, g, false);
+  } else if (kind === 'balloons') {
+    ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#8e44ad', '#3a86ff', '#ff6f91'].forEach((c, i, all) => {
+      const a = (i / all.length) * Math.PI * 2, bx = -0.17 + Math.cos(a) * 0.17, bz = 0.3 + Math.sin(a) * 0.12, by = 1.25 + (i % 3) * 0.1;
+      mesh(GEO.balloon, mc(c, { roughness: 0.3 }), bx, by, bz, g).scale.y = 1.2;
+      const st = mesh(GEO.thread, mat.string, (bx - 0.17) / 2, (by - 0.1 + 0.44) / 2, (bz + 0.3) / 2, g, false);
+      st.quaternion.setFromUnitVectors(UPV, tmpA.set(bx + 0.17, by - 0.1 - 0.44, bz - 0.3).normalize()); st.scale.y = Math.hypot(bx + 0.17, by - 0.1 - 0.44, bz - 0.3);
+    });
+    pr.sway = g;
+  } else if (kind === 'kettle') {
+    mesh(GEO.kettle, mat.steel, 0.27, 0.06, 0.12, g);
+    for (let i = 0; i < 3; i++) mesh(GEO.cupG, mat.cup, -0.12 + i * 0.05, 0.33, 0.25, g, false);
+  }
+  return pr;
+}
+function setProp(pp, kind) {
+  if (pp.prop) { pp.prop.g.removeFromParent(); pp.prop = null; }
+  if (kind) pp.prop = makeProp(kind, pp);
+}
+
+const FY = 0.03, STAND_Y = 0.44, SEAT = 0.44;
+const LEG_Y = { stand: STAND_Y, cross: 0.1, seat: 0, kneel: 0.27 };
+const pickMat = new THREE.MeshBasicMaterial();
+function domBubble() { const o = document.createElement('div'); o.className = 'bb'; const i = document.createElement('i'); o.appendChild(i); elBubbles.appendChild(o); return { o, i, on: false, offAt: -9, txt: null, cls: '' }; }
+
+/* ---------- places: each one keeps its own courtyard, people and line ---------- */
+const SC = {};
+let ACTIVE = null, people = [], pid = 0;
+function makeScene(id, label) {
+  const root = new THREE.Group(); root.visible = false; scene.add(root);
+  return (SC[id] = { id, label, root, people: [], picks: [], lamps: [], strings: [], flames: [], pigeons: [], rowLights: [], tick() {}, pose() {}, amb() {}, L: {} });
+}
+const built = new Set(['temple']);
+function beginBuild(sc) { buildRoot = sc.root; statics.length = 0; building = true; }
+function* endBuildG() {
+  building = false;
+  const root = buildRoot; root.updateMatrixWorld(true);
+  yield;
+  const groups = new Map();
+  for (const m of statics) { if (!groups.has(m.material)) groups.set(m.material, []); groups.get(m.material).push(m); }
+  for (const [material, list] of groups) {
+    if (list.length < 2) continue;
+    const geos = list.map((m) => { const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone(); return g.applyMatrix4(m.matrixWorld); });
+    const merged = mergeGeometries(geos, false);
+    geos.forEach((g) => g.dispose());
+    if (!merged) continue;
+    const big = new THREE.Mesh(merged, material);
+    big.castShadow = list.some((m) => m.castShadow); big.receiveShadow = true; root.add(big);
+    for (const m of list) m.removeFromParent();
+    yield;
+  }
+}
+function endBuild() { for (const _ of endBuildG()); }
+function addPerson(sc, name, kind, look, role = null) {
+  const p = makePerson(look); sc.root.add(p.root);
+  p.root.scale.setScalar(kind === 'kid' ? 0.56 : kind === 'elder' ? 0.7 : 0.74);
+  const pp = {
+    i: pid++, sc, name, kind, look, role, p, legs: 'stand', act: { id: 'wait', t0: 0, until: 0 }, q: null, route: null, walk: null, moving: 0, face: 0,
+    S: { yaw: 0, pitch: 0.05, roll: 0, bow: 0, lift: 0, prone: 0, aL: 0, aR: 0, aLz: 0.07, aRz: -0.07, torso: 0 }, head: V(), fwd: V(0, 0, 1), tgt: V(), chestW: V(),
+    bubUntil: -1, bubShape: 'pop', bubText: '', db: domBubble(), phase: rand() * 10, lit: 0, lane: 0, forced: false, inAt: Infinity, waited: 0, seen: -1, prop: null,
+  };
+  const pk = new THREE.Mesh(GEO.pick, pickMat); pk.position.set(0, 0.62, 0.05); pk.layers.set(2); pk.userData.pp = pp; p.root.add(pk); sc.picks.push(pk);
+  sc.people.push(pp);
+  return pp;
+}
+function setLegs(pp, mode) {
+  pp.legs = mode; const p = pp.p;
+  p.standing.visible = mode === 'stand'; p.crossed.visible = mode === 'cross'; p.seated.visible = mode === 'seat'; p.kneel.visible = mode === 'kneel';
+}
+let everyoneIn = qs.has('in');
+const isIn = (pp) => pp.role === 'sitter' || (everyoneIn ? now >= pp.inAt : pp.forced);
+// Look within, in order: everyone goes still at once, the lights then rise from the one who was already sitting, the room holds bright, then goes dark
+const STILL = 1.1, RIPPLE = 0.06, HOLD = 1.8, DARKEN = 1.3;
+const paused = (pp) => pp.role !== 'sitter' && (everyoneIn || (pp.lit > 0.15 && isIn(pp)));
+const say = (o, text, dur = 1.8) => { o.bubShape = /\p{Extended_Pictographic}/u.test(text) && text.length < 5 ? 'pop' : 'say'; o.bubText = text; o.bubUntil = now + dur; };
+function walkTo(o, pts, speed, then, delay = 0) { o.walk = { pts, i: 0, speed, then, delay }; }
+let now = 0, prerolling = false, sel = null;
+function setAct(pp, id, dur, o = {}) { pp.act = Object.assign({ id, t0: now, dur, until: now + dur }, o); return pp.act; }
+
+/* ---------- the line: a path from the sanctum door back out of the gate and down the road ---------- */
+const SP = 0.36, GLIMPSE = 2.0, MIN_PER_STEP = 3, STEP_SECS = 3.4, WALK = 0.95;
+const NQ = smallScreen ? 84 : 126;
+function makePath(pts) {
+  const segs = []; let L = 0;
+  for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], len = a.distanceTo(b); segs.push({ a, b, len, s0: L }); L += len; }
+  return {
+    L, segs,
+    at(s, out, dir) {
+      s = clamp(s, 0, L);
+      let sg = segs[segs.length - 1];
+      for (const q of segs) if (s <= q.s0 + q.len) { sg = q; break; }
+      out.lerpVectors(sg.a, sg.b, (s - sg.s0) / sg.len);
+      if (dir) dir.subVectors(sg.a, sg.b).normalize();
+      return out;
+    },
+  };
+}
+function joinTail(sc, pp, s) {
+  const Q = sc.Q, slot = Q.list.length;
+  pp.q = { slot, s: s !== undefined ? s : Math.max(slot * SP, Q.path.L - 0.4), delay: 0 };
+  pp.lane = (slot % 2 ? 1 : -1) * 0.13;
+  Q.list.push(pp); pp.route = null; pp.walk = null; setLegs(pp, 'stand');
+  Q.path.at(pp.q.s, pp.p.root.position, tmpD); pp.p.root.position.y = FY; pp.p.root.position.x += tmpD.z * pp.lane; pp.p.root.position.z -= tmpD.x * pp.lane; pp.p.root.rotation.y = Math.atan2(tmpD.x, tmpD.z);
+  setAct(pp, 'wait', rnd(1, 4));
+}
+function queueStep(sc, dt) {
+  const Q = sc.Q;
+  // the person at the front steps up to the door, gets two seconds, and is moved along
+  if (!Q.glimpser && Q.list.length && now >= Q.nextAt) {
+    const f = Q.list[0];
+    if (f.q.s < 0.04 && !paused(f)) {
+      Q.list.shift(); f.q = null; Q.glimpser = f; f.seen = 0;
+      setLegs(f, 'stand'); f.face = Math.PI;
+      walkTo(f, [sc.GLIM.clone()], 0.6, () => { setAct(f, 'glimpse', GLIMPSE, { end: () => afterGlimpse(sc, f) }); });
+      setAct(f, 'step', Infinity);
+      Q.list.forEach((o, k) => { o.q.slot = k; o.q.delay = now + k * 0.07 + rand() * 0.25; });
+      if (sc.onStep) sc.onStep(f);
+    }
+  }
+  let prev = -Infinity;
+  for (const o of Q.list) {
+    const q = o.q, R = o.p.root;
+    const tgt = Math.max(q.slot * SP, prev + SP * 0.92);
+    o.moving = 0;
+    if (!paused(o) && now >= q.delay && q.s > tgt + 0.01) {
+      if (o.legs !== 'stand') { setLegs(o, 'stand'); setAct(o, 'wait', rnd(1, 3)); }
+      q.s -= Math.min(q.s - tgt, (q.s - tgt > 3 ? WALK : 0.8) * dt); o.moving = 1; o.phase += dt * 6.5;
+    }
+    prev = q.s;
+    Q.path.at(q.s, R.position, tmpD); R.position.y = FY; R.position.x += tmpD.z * o.lane; R.position.z -= tmpD.x * o.lane;
+    R.rotation.y = dampAngle(R.rotation.y, Math.atan2(tmpD.x, tmpD.z), 7, dt);
+    if (!paused(o)) o.waited += dt * (MIN_PER_STEP / STEP_SECS);
+  }
+}
+function afterGlimpse(sc, f) {
+  sc.Q.glimpser = null; sc.Q.nextAt = now + 0.2;
+  f.seen = GLIMPSE;
+  if (f.prop && f.prop.kind !== 'phone' && f.prop.kind !== 'baby' && f.prop.kind !== 'wheel') { f.prop.g.visible = false; f.prop.vis = false; }
+  if (sc.tika) f.p.tika.visible = true;
+  if (rand() < 0.45) say(f, pick(sc.after1 || ['🙏', 'Was that it?', 'I saw it!', 'So quick…', '🙏']), 1.8);
+  f.route = sc.planAfter(f);
+  nextStep(f);
+}
+/* after the glimpse: a few things in the courtyard, then home (and, a festival later, the back of the line again) */
+const CZ = -0.95;
+function goPts(pp, to) {
+  const P = pp.p.root.position, pts = [];
+  if (Math.abs(P.z - CZ) > 0.25) pts.push(V(P.x, FY, CZ));
+  pts.push(V(to.x, FY, CZ)); pts.push(V(to.x, FY, to.z));
+  return pts;
+}
+function nextStep(pp) {
+  const sc = pp.sc, st = pp.route && pp.route.shift();
+  if (!st) {
+    setAct(pp, 'leave', Infinity);
+    walkTo(pp, goPts(pp, sc.EXIT), WALK * rnd(0.95, 1.1), () => recycle(pp));
+    return;
+  }
+  st.go(pp);
+}
+function recycle(pp) {
+  const sc = pp.sc;
+  pp.p.root.visible = false; pp.p.tika.visible = false; pp.waited = rnd(0, 6); pp.seen = -1; pp.forced = false;
+  if (sc.offer) setProp(pp, sc.offer(pp));
+  joinTail(sc, pp);
+  if (sel === pp) followSomeone();
+}
+
+/* station helpers shared by every place */
+function bellStation(B) {
+  return {
+    go(pp) {
+      if (B.busy) return nextStep(pp);
+      B.busy = pp; setAct(pp, 'go', Infinity, { lab: B.goLab });
+      walkTo(pp, goPts(pp, B.spot), WALK, () => { pp.face = B.face; setAct(pp, 'ring', 2.4, { B, rang: false, end: () => { B.busy = null; nextStep(pp); } }); });
+    },
+  };
+}
+function lampStation(sc, lab) {
+  return {
+    go(pp) {
+      const free = sc.lamps.filter((l) => !l.lit && !l.res);
+      if (!free.length) return nextStep(pp);
+      const l = pick(free); l.res = pp; setAct(pp, 'go', Infinity, { lab });
+      walkTo(pp, goPts(pp, l.spot), WALK, () => { pp.face = l.face; setAct(pp, 'light', 2.6, { l, done: false, end: () => { l.res = null; nextStep(pp); } }); });
+    },
+  };
+}
+function circleStation(C, r, laps, lab) {
+  return {
+    go(pp) {
+      setAct(pp, 'go', Infinity, { lab });
+      walkTo(pp, goPts(pp, V(C.x, FY, C.z + r)), WALK, () => { setAct(pp, 'circle', Infinity, { C, r, th: 0, tot: 0, laps, lap: 0, nam: rand() < 0.6, end: () => nextStep(pp) }); });
+    },
+  };
+}
+function circleStep(pp, dt) {
+  const a = pp.act, R = pp.p.root;
+  if (!paused(pp)) {
+    const d = (0.62 / a.r) * dt; a.th -= d; a.tot += d; pp.moving = 1; pp.phase += dt * 5;
+    const lap = Math.floor(a.tot / (Math.PI * 2));
+    if (lap !== a.lap && lap < a.laps) { a.lap = lap; if (rand() < 0.7) say(pp, 'Round ' + (lap + 1), 1.4); }
+    if (a.tot === d && rand() < 0.5) say(pp, 'Round 1', 1.4);
+    if (a.tot >= a.laps * Math.PI * 2) { const e = a.end; a.end = null; pp.moving = 0; return e(); }
+  } else pp.moving = 0;
+  R.position.set(a.C.x + a.r * Math.sin(a.th), FY, a.C.z + a.r * Math.cos(a.th));
+  R.rotation.y = dampAngle(R.rotation.y, Math.atan2(-Math.cos(a.th), Math.sin(a.th)), 10, dt);
+}
+
+/* a few places to stand, kneel or sit; each person takes a free one */
+const spots = (arr, face) => arr.map(([x, z]) => ({ p: V(x, FY, z), face, res: null }));
+function spotStation(list, act, dur, lab, legs, prop) {
+  return {
+    go(pp) {
+      const free = list.filter((s) => !s.res);
+      if (!free.length) return nextStep(pp);
+      const s = pick(free); s.res = pp; setAct(pp, 'go', Infinity, { lab });
+      walkTo(pp, goPts(pp, s.p), WALK, () => {
+        pp.face = s.face; if (legs) setLegs(pp, legs); if (prop) setProp(pp, prop);
+        setAct(pp, act, dur * rnd(0.85, 1.2), { s, done: false, end: () => { s.res = null; setLegs(pp, 'stand'); if (prop) setProp(pp, null); nextStep(pp); } });
+      });
+    },
+  };
+}
+/* walking clockwise round a wall of prayer wheels, turning each one with the right hand */
+function koraStation(pts, laps, lab) {
+  const path = makePath(pts.concat([pts[0]]));
+  return { go(pp) { setAct(pp, 'go', Infinity, { lab }); walkTo(pp, goPts(pp, pts[0]), WALK, () => setAct(pp, 'kora', Infinity, { path, s: 0, laps, lap: 0, end: () => nextStep(pp) })); } };
+}
+function koraStep(pp, dt) {
+  const a = pp.act, R = pp.p.root;
+  if (!paused(pp)) {
+    a.s += 0.6 * dt; pp.moving = 1; pp.phase += dt * 5;
+    const lap = Math.floor(a.s / a.path.L);
+    if (lap !== a.lap && lap < a.laps) { a.lap = lap; if (rand() < 0.6) say(pp, 'Round ' + (lap + 1), 1.4); }
+    if (a.s >= a.laps * a.path.L) { const e = a.end; a.end = null; pp.moving = 0; return e(); }
+  } else pp.moving = 0;
+  a.path.at(a.s % a.path.L, R.position, tmpD); R.position.y = FY;
+  R.rotation.y = dampAngle(R.rotation.y, Math.atan2(-tmpD.x, -tmpD.z), 10, dt);
+  if (!paused(pp)) for (const w of pp.sc.wheels) if (w.p.distanceToSquared(R.position) < 0.14) { if (w.av < 4 && rand() < 0.2) sfx('ding'); w.av = 9; }
+}
+/* the qawwali keeps a clapping rhythm */
+const BEAT = 0.43, CLAP = [1, 0, 1, 1, 0, 1, 0, 1];
+const beatPulse = () => (CLAP[Math.floor(now / BEAT) % 8] ? Math.exp(-((now % BEAT) / BEAT) * 9) : 0);
+
+/* ---------- shared courtyard pieces ---------- */
+// the line's path, front to back: up to the door, four rows between railings, out of the gate and down the road
+const SX = -2.9, SZ = -2.3;
+const QPTS = [V(SX, FY, -0.6), V(SX, FY, -0.15), V(3.3, FY, -0.15), V(3.3, FY, 0.7), V(-3.9, FY, 0.7), V(-3.9, FY, 1.55), V(3.3, FY, 1.55), V(3.3, FY, 2.4), V(-3.9, FY, 2.4), V(-3.9, FY, 3.6), V(-3.9, FY, 19)];
+function rail(x0, z0, x1, z1, m, pm, hs = [0.52, 0.92], spacing = 1.15) {
+  const len = Math.hypot(x1 - x0, z1 - z0), ang = Math.atan2(x1 - x0, z1 - z0), n = Math.max(1, Math.round(len / spacing));
+  for (const y of hs) { const r = mesh(GEO.pipe, m, (x0 + x1) / 2, FY + y, (z0 + z1) / 2); r.rotation.set(Math.PI / 2, ang, 0, 'YXZ'); r.scale.y = len; }
+  for (let i = 0; i <= n; i++) { const u = i / n; mesh(GEO.post, pm, x0 + (x1 - x0) * u, FY + 0.49 * (hs[hs.length - 1] + 0.06) / 0.98, z0 + (z1 - z0) * u).scale.y = (hs[hs.length - 1] + 0.06) / 0.98; }
+}
+function railings(m, pm, hs, spacing) {
+  const R = (a, b, c, d) => rail(a, b, c, d, m, pm, hs, spacing);
+  R(-2.45, -0.55, 3.75, -0.55); R(-3.35, -0.55, -3.35, 0.275);
+  R(-3.35, 0.275, 2.85, 0.275); R(-3.45, 1.125, 3.75, 1.125); R(-4.3, 1.975, 2.85, 1.975); R(-3.45, 2.83, 3.75, 2.83);
+  R(3.75, -0.55, 3.75, 2.83); R(-4.3, 0.275, -4.3, 3.6); R(-3.45, 2.83, -3.45, 3.6);
+}
+function courtyard(sc, o) {
+  box(9.75, 0.32, 7.55, 0.06, o.slab, 0, -0.16, 0);
+  box(9.4, 0.03, 7.2, 0.012, o.floor, 0, 0.015, 0);
+  box(1.3, 0.32, 15.6, 0.04, o.slab, -3.9, -0.16, 3.7 + 7.8);
+  box(1.0, 0.03, 15.6, 0.012, o.road, -3.9, 0.015, 3.7 + 7.8);
+  box(8.2, 0.32, 1.1, 0.04, o.slab, 4.87 + 4.1, -0.16, CZ);
+  box(8.2, 0.03, 0.8, 0.012, o.road, 4.87 + 4.1, 0.015, CZ);
+  if (o.runner) for (let i = 0; i < 9; i++) { const a = QPTS[i], b = QPTS[i + 1], len = a.distanceTo(b) + 0.5, alongX = Math.abs(b.x - a.x) > 0.01; box(alongX ? len : 0.5, 0.008, alongX ? 0.5 : len, 0.003, o.runner, (a.x + b.x) / 2, FY + 0.006, (a.z + b.z) / 2); }
+  const H = o.wallH;
+  box(9.4 + 0.18, H, 0.18, 0.03, o.wall, -0.09, H / 2, -3.69);
+  box(0.18, H, 7.2, 0.03, o.wall, -4.79, H / 2, 0);
+  box(9.62, 0.07, 0.24, 0.02, o.cap, -0.09, H + 0.03, -3.69);
+  box(0.24, 0.07, 7.22, 0.02, o.cap, -4.79, H + 0.03, 0);
+  // a string of small festival lights along the top of the walls
+  for (let x = -4.6; x <= 4.6; x += 0.28) sc.strings.push({ p: V(x, H + 0.1, -3.62), ph: rand() * 6 });
+  for (let z = -3.4; z <= 3.5; z += 0.28) sc.strings.push({ p: V(-4.72, H + 0.1, z), ph: rand() * 6 });
+}
+function pigeonFlock(sc, n, x0, x1, z0, z1) {
+  for (let i = 0; i < n; i++) {
+    const g = new THREE.Group(); sc.root.add(g);
+    const b = mesh(GEO.pBody, mat.pigeon, 0, 0.075, 0, g); b.scale.set(0.95, 0.85, 1.5);
+    const hd = new THREE.Group(); hd.position.set(0, 0.11, 0.075); g.add(hd);
+    mesh(GEO.pHead, mat.pigeonHead, 0, 0, 0, hd); mesh(GEO.pBeak, mat.beak, 0, -0.005, 0.04, hd).rotation.x = Math.PI / 2;
+    box(0.07, 0.015, 0.09, 0.006, mat.pigeonHead, 0, 0.07, -0.1, g).rotation.x = -0.25;
+    const pos = V(rnd(x0, x1), FY, rnd(z0, z1));
+    g.position.copy(pos); g.rotation.y = rnd(0, 6.28); g.scale.setScalar(rnd(0.9, 1.1));
+    sc.pigeons.push({ g, hd, pos, from: pos.clone(), to: pos.clone(), t0: 0, dur: 0, h: 0, next: rnd(0, 3), area: [x0, x1, z0, z1], peck: rand() * 5 });
+  }
+}
+
+/* ==================== the temple ==================== */
+const T = makeScene('temple', 'Temple');
+Object.assign(T, { follow: 'Sita', tika: true, topY: 3.55, GLIM: V(SX, FY, -1.05), EXIT: V(12, FY, CZ), SG: V(SX, 0.8, -1.55) });
+Object.assign(T.L, { light: 'Lighting a lamp', ring: 'Ringing the bell', circle: 'Walking round the shrine', sell: 'Selling flowers', tea: 'Selling tea', sit: 'Sitting under the tree, eyes closed', guard: 'Keeping the line moving', photo: 'Taking photos of the temple', feed: 'Feeding the pigeons', shoes: 'Minding everyone’s shoes' });
+beginBuild(T);
+{
+  const stone = M('#b9a588'), floor = M('#a48d72', { roughness: 0.9 }), brick = M('#9c4a33'), cap = M('#eadfcb'), road = M('#8f7c66', { roughness: 0.95 });
+  courtyard(T, { slab: M('#f1e9de'), floor, road, wall: brick, cap, wallH: 0.95, runner: M('#7a3324', { roughness: 0.95 }) });
+  railings(mat.steel, mat.steel);
+  // the pagoda: a plinth, a brick cella with a glowing door, two gilded roofs and a finial
+  box(2.5, 0.12, 2.3, 0.02, stone, SX, FY + 0.06, SZ);
+  box(1.7, 1.25, 1.5, 0.02, brick, SX, 0.15 + 0.625, SZ);
+  for (const x of [-0.37, 0.37]) box(0.09, 1.02, 0.09, 0.015, mat.wood, SX + x, 0.15 + 0.51, -1.53);
+  box(0.86, 0.1, 0.09, 0.015, mat.wood, SX, 1.2, -1.53);
+  box(1.8, 0.12, 1.6, 0.02, mat.wood, SX, 1.46, SZ);
+  const r1 = mesh(new THREE.ConeGeometry(1.6, 0.62, 4), mat.gold, SX, 1.52 + 0.31, SZ); r1.rotation.y = Math.PI / 4;
+  box(1.05, 0.42, 0.95, 0.02, brick, SX, 2.16, SZ);
+  box(1.12, 0.08, 1.02, 0.02, mat.wood, SX, 2.41, SZ);
+  const r2 = mesh(new THREE.ConeGeometry(1.05, 0.48, 4), mat.gold, SX, 2.45 + 0.24, SZ); r2.rotation.y = Math.PI / 4;
+  mesh(new THREE.SphereGeometry(0.1, 16, 12), mat.gold, SX, 2.98, SZ); mesh(new THREE.ConeGeometry(0.07, 0.32, 14), mat.gold, SX, 3.18, SZ); mesh(new THREE.SphereGeometry(0.045, 12, 10), mat.gold, SX, 3.37, SZ);
+  for (const [dx, dz] of [[-1.13, -1.13], [1.13, -1.13], [-1.13, 1.13], [1.13, 1.13]]) mesh(new THREE.ConeGeometry(0.05, 0.12, 10), mat.gold, SX + dx, 1.45, SZ + dz);
+  for (const x of [-0.6, -0.2, 0.2, 0.6]) box(0.05, 0.5, 0.04, 0.01, mat.wood, SX + x, 1.32, -1.38).rotation.x = 0.7;
+  for (const z of [-0.5, 0, 0.5]) box(0.04, 0.5, 0.05, 0.01, mat.wood, SX + 1.0, 1.32, SZ + z).rotation.z = -0.7;
+  for (let i = 0; i <= 14; i++) { const u = i / 14; mesh(GEO.flower, i % 2 ? mat.marigold : mat.marigold2, SX - 0.43 + 0.86 * u, 1.2 - 0.16 * Math.sin(Math.PI * u), -1.47, buildRoot, false); }
+  // two tall brass lamps beside the door
+  for (const x of [-0.72, 0.72]) {
+    mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.85, 10), mat.brass, SX + x, 0.15 + 0.425, -1.32);
+    mesh(new THREE.CylinderGeometry(0.12, 0.05, 0.05, 16), mat.brass, SX + x, 1.02, -1.32);
+    for (const a of [0, 2.1, 4.2]) T.flames.push({ p: V(SX + x + Math.cos(a) * 0.08, 1.08, -1.32 + Math.sin(a) * 0.08), ph: rand() * 6 });
+  }
+  // the bell on a wooden frame
+  for (const x of [-0.38, 0.38]) box(0.08, 1.78, 0.08, 0.015, mat.redWood, -1.05 + x, FY + 0.89, -1.85);
+  box(0.95, 0.09, 0.11, 0.02, mat.redWood, -1.05, 1.8, -1.85);
+  // a stepped stand for clay lamps along the back wall
+  box(2.1, 0.5, 0.3, 0.02, stone, 0.5, FY + 0.25, -3.12); box(2.1, 0.8, 0.28, 0.02, stone, 0.5, FY + 0.4, -3.42);
+  // a small shrine in the corner that people walk round
+  mesh(new THREE.CylinderGeometry(0.44, 0.48, 0.18, 22), stone, 2.6, FY + 0.09, -2.25);
+  box(0.42, 0.48, 0.42, 0.02, brick, 2.6, FY + 0.18 + 0.24, -2.25);
+  const r3 = mesh(new THREE.ConeGeometry(0.42, 0.3, 4), mat.gold, 2.6, FY + 0.66 + 0.15, -2.25); r3.rotation.y = Math.PI / 4;
+  mesh(new THREE.SphereGeometry(0.05, 10, 8), mat.gold, 2.6, FY + 0.99, -2.25);
+  for (let i = 0; i < 8; i++) mesh(GEO.flower, i % 3 ? mat.marigold : mat.rose, 2.6 + Math.cos(i) * 0.33, FY + 0.2, -2.25 + Math.sin(i) * 0.33, buildRoot, false);
+  // a pipal tree on a round platform
+  mesh(new THREE.CylinderGeometry(0.62, 0.64, 0.35, 26), brick, 4.08, FY + 0.175, -3.0);
+  mesh(new THREE.CylinderGeometry(0.64, 0.64, 0.04, 26), cap, 4.08, FY + 0.37, -3.0);
+  mesh(new THREE.CylinderGeometry(0.1, 0.16, 1.6, 12), mat.bark, 4.15, FY + 1.15, -3.15);
+  for (const [x, y, z, s] of [[4.15, 2.15, -3.15, 1.25], [3.6, 1.95, -3.0, 0.95], [4.55, 1.9, -2.75, 0.9], [4.0, 2.55, -3.3, 0.85], [4.5, 2.35, -3.45, 0.8]]) mesh(GEO.leafBall, s > 1 ? mat.leaf : mat.leaf2, x, y, z).scale.setScalar(s);
+  for (let i = 0; i < 6; i++) mesh(new THREE.TorusGeometry(0.135, 0.012, 6, 18), i % 2 ? mat.tika : mat.marigold, 4.15, FY + 0.6 + i * 0.05, -3.15).rotation.x = Math.PI / 2;
+  // the flower stall by the line, and a rack where everyone leaves their shoes
+  box(1.0, 0.55, 0.42, 0.02, mat.woodLight, -2.3, FY + 0.275, 3.12);
+  for (const x of [-2.62, -2.3, -1.98]) { mesh(new THREE.CylinderGeometry(0.13, 0.1, 0.1, 14), mat.basket, x, FY + 0.6, 3.1); for (let i = 0; i < 6; i++) mesh(GEO.flower, x === -2.3 ? mat.rose : i % 2 ? mat.marigold : mat.marigold2, x + Math.cos(i) * 0.06, FY + 0.67, 3.1 + Math.sin(i) * 0.06, buildRoot, false); }
+  for (const x of [-2.75, -1.85]) box(0.05, 0.9, 0.05, 0.01, mat.wood, x, FY + 0.45 + 0.27, 3.32);
+  box(0.95, 0.04, 0.05, 0.01, mat.wood, -2.3, FY + 1.16, 3.32);
+  for (const x of [-2.6, -2.4, -2.2, -2.0]) for (let i = 0; i < 6; i++) mesh(GEO.flower, i % 2 ? mat.marigold : mat.marigold2, x, FY + 1.1 - i * 0.07, 3.32, buildRoot, false);
+  box(0.36, 0.78, 1.7, 0.02, mat.woodLight, 4.4, FY + 0.39, 1.1);
+  for (let sh = 0; sh < 3; sh++) for (let k = 0; k < 6; k++) for (const dz of [-0.05, 0.05]) { const s = mesh(GEO.shoe, mc(['#2b2b30', '#7a3e3e', '#c9a27a', '#3d405b', '#e07a5f', '#f4f1ea'][(k + sh * 2) % 6]), 4.28, FY + 0.06 + sh * 0.27, 0.42 + k * 0.27 + dz, buildRoot, false); s.rotation.z = Math.PI / 2; s.rotation.y = Math.PI / 2; }
+  for (let i = 0; i < 9; i++) { const s = mesh(GEO.shoe, mc(['#2b2b30', '#7a3e3e', '#c9a27a', '#3d405b', '#e07a5f'][i % 5]), 4.0 + rnd(-0.1, 0.1), FY + 0.03, -0.2 + i * 0.12, buildRoot, false); s.rotation.set(Math.PI / 2, 0, rnd(0, 3)); }
+  box(0.3, 0.42, 0.3, 0.02, mat.woodLight, 4.3, FY + 0.21, -0.22);
+  // the gate the line comes in through
+  for (const x of [-4.45, -3.35]) box(0.13, 2.05, 0.13, 0.02, mat.redWood, x, FY + 1.02, 3.62);
+  box(1.35, 0.14, 0.18, 0.03, mat.gold, -3.9, 2.08, 3.62);
+  for (let i = 0; i <= 12; i++) { const u = i / 12; mesh(GEO.flower, i % 2 ? mat.marigold : mat.marigold2, -4.4 + 1.0 * u, 1.92 - 0.22 * Math.sin(Math.PI * u), 3.62, buildRoot, false); }
+}
+endBuild();
+{
+  // the light inside the sanctum: what everyone came for
+  const doorM = new THREE.MeshBasicMaterial({ color: '#ffd38a', toneMapped: false });
+  mesh(new THREE.PlaneGeometry(0.66, 0.93), doorM, SX, 0.15 + 0.47, -1.545, T.root, false);
+  const L = new THREE.PointLight('#ffb35c', 6, 4.5, 2); L.position.set(SX, 0.9, -1.1); T.root.add(L);
+  T.sanct = { m: doorM, light: L, base: new THREE.Color('#ffd38a'), p: V(SX, 0.7, -1.45) };
+  // the bell can swing
+  const pv = new THREE.Group(); pv.position.set(-1.05, 1.75, -1.85); T.root.add(pv);
+  mesh(GEO.bell, mat.brass, 0, -0.32, 0, pv); mesh(GEO.tika, mat.brass, 0, -0.34, 0, pv).scale.setScalar(1.6);
+  T.bell = { pv, swing: 0, v: 0 };
+  // clay lamps: some already burning
+  for (let k = 0; k < 10; k++) for (const [y, z] of [[0.5, -3.08], [0.8, -3.4]]) {
+    const x = -0.4 + k * 0.2, m = mesh(GEO.lamp, mat.clay, x, FY + y + 0.018, z, T.root, false);
+    T.lamps.push({ m, p: V(x, FY + y + 0.07, z), lit: rand() < 0.45, until: rnd(10, 60), res: null, spot: V(x, FY, -2.55), face: Math.PI, ph: rand() * 6 });
+  }
+  // a few lights over the rows that warm up when people turn inward
+  for (const [x, z] of [[-1.5, 0.3], [1.5, 0.3], [-1.5, 2.0], [1.5, 2.0]]) { const l = new THREE.PointLight('#ffb35c', 0, 4.2, 2); l.position.set(x, 1.4, z); T.root.add(l); T.rowLights.push(l); }
+  T.lampLight = new THREE.PointLight('#ffb35c', 1.5, 3.5, 2); T.lampLight.position.set(0.5, 1.1, -2.6); T.root.add(T.lampLight);
+}
+T.Q = { path: makePath(QPTS), list: [], glimpser: null, nextAt: 1 };
+const ST_T = {
+  bell: bellStation({ spot: V(-1.05, FY, -1.42), face: Math.PI, goLab: 'Going to ring the bell', busy: null }),
+  lamp: lampStation(T, 'Going to light a lamp'),
+  circle: circleStation(V(2.6, FY, -2.25), 0.9, 3, 'Going to walk round the shrine'),
+};
+T.planAfter = () => { const r = []; if (rand() < 0.7) r.push(ST_T.bell); if (rand() < 0.55) r.push(ST_T.lamp); if (rand() < 0.4) r.push(ST_T.circle); return r; };
+T.after1 = ['🙏', 'Was that it?', 'I saw it!', 'So quick…', '🙏', 'Did you see?'];
+T.offer = () => { const r = rand(); return r < 0.42 ? 'plate' : r < 0.58 ? 'garland' : r < 0.66 ? 'phone' : null; };
+const SKINS = ['#f0c8a8', '#e8b48f', '#d9a07a', '#c88e63', '#b07650', '#8e5c3f', '#a8714f', '#f3cfae', '#c48a64'];
+const HAIRS = ['#2c221d', '#231c1a', '#1c1818', '#3a2a20', '#1d1a24'];
+function templeLook(kind) {
+  const woman = rand() < 0.55, skin = pick(SKINS), elder = kind === 'elder';
+  const hair = elder ? pick(['#dcd9d4', '#c9c5bf', '#e6e3de']) : pick(HAIRS);
+  if (kind === 'kid') return { skin, hair, shirt: pick(['#ff6f91', '#3ec1d3', '#f2c14e', '#7fc8a9', '#a78bfa']), pants: '#3d405b', bun: woman };
+  if (woman) { const c = pick(['#c0392b', '#e05a7a', '#f39c12', '#d35400', '#8e44ad', '#16a085', '#e84393', '#e3b505', '#b0306a']); return { skin, hair, bun: true, shirt: c, skirt: c, pants: c, sash: pick(['#f6c143', '#c0392b', '#2e8b57', '#f4d6a0', '#7d3c98']), glasses: elder && rand() < 0.5 }; }
+  return { skin, hair, shirt: pick(['#f4f1ea', '#d6dde6', '#9fb3c8', '#e8d9b5', '#7b8794', '#c9d6c3']), pants: pick(['#4b4f6b', '#3a3a40', '#e9e4da', '#5a4e44']), topi: rand() < 0.55 ? pick(['#2b2b30', '#b03a2e', '#7d3c98', '#1f6f5c']) : null, glasses: elder && rand() < 0.6, beard: elder && rand() < 0.3 ? hair : null };
+}
+const T_NAMES = shuffle(['Hari', 'Gita', 'Ram', 'Maya', 'Bishnu', 'Kamala', 'Arjun', 'Parbati', 'Krishna', 'Laxmi', 'Shyam', 'Radha', 'Gopal', 'Sarita', 'Bikash', 'Anita', 'Suman', 'Puja', 'Dinesh', 'Rita', 'Kiran', 'Asha', 'Nabin', 'Sunita', 'Raju', 'Mina', 'Prakash', 'Durga', 'Binod', 'Saraswati', 'Ramesh', 'Bimala', 'Santosh', 'Usha', 'Mohan', 'Indira', 'Sanjay', 'Kalpana', 'Dipak', 'Nirmala', 'Rajan', 'Shanti', 'Ganesh', 'Tara', 'Mahesh', 'Sabina', 'Ashok', 'Rekha', 'Bharat', 'Manju', 'Ajay', 'Kopila', 'Rabin', 'Sushila', 'Umesh', 'Yamuna', 'Bijay', 'Goma', 'Pabitra', 'Sagar', 'Tulasi', 'Hira', 'Jamuna', 'Keshav', 'Laxman', 'Nisha', 'Pramila', 'Ritu', 'Sabin', 'Dawa']);
+function* populateG(sc, names, lookFn, nQueue, nAfter) {
+  const kindOf = () => { const r = rand(); return r < 0.15 ? 'elder' : r < 0.23 ? 'kid' : 'adult'; };
+  for (let k = 0; k < nQueue + nAfter; k++) {
+    const kind = kindOf(), pp = addPerson(sc, names[k % names.length], kind, lookFn(kind));
+    if (kind !== 'kid') setProp(pp, sc.offer(pp));
+    if (k === 26) { pp.name = sc.follow; }
+    if (k < nQueue) { joinTail(sc, pp, k * SP + rnd(-0.03, 0.03)); pp.waited = (nQueue + 6 - k) * MIN_PER_STEP * rnd(0.95, 1.02) * 0.62; }
+    if (k % 4 === 3) yield;
+    if (k >= nQueue) { pp.p.root.visible = true; pp.p.root.position.set(rnd(-1.4, 4.4), FY, CZ - rnd(0, 0.1)); pp.route = sc.planAfter(pp); if (!pp.route.length) pp.route.push(Object.values(sc.ST)[0]); pp.waited = rnd(150, 230); pp.seen = GLIMPSE; if (sc.tika) pp.p.tika.visible = true; if (pp.prop && pp.prop.kind !== 'phone') { pp.prop.g.visible = false; pp.prop.vis = false; } nextStep(pp); }
+  }
+  // babies and parents
+  const mum = sc.Q.list.find((o) => o.kind === 'adult' && o.look.skirt && o.q.slot > 12);
+  if (mum) setProp(mum, 'baby');
+}
+function populate(...args) { for (const _ of populateG(...args)); }
+T.ST = ST_T;
+populate(T, T_NAMES, templeLook, NQ, 8);
+{
+  const priest = addPerson(T, 'Priest', 'adult', { skin: '#c88e63', hair: '#231c1a', shirt: '#f4f1ea', pants: '#f4f1ea', sash: '#e67e22', topi: '#f4f1ea', beard: '#231c1a' }, 'guard');
+  priest.p.root.position.set(-3.6, FY + 0.12, -1.36); priest.face = 0.55; priest.p.root.rotation.y = 0.55; setAct(priest, 'guard', 3);
+  const baba = addPerson(T, 'Baba', 'elder', { skin: '#a8714f', hair: '#8c8680', shirt: '#e67e22', skirt: '#e67e22', pants: '#e67e22', bun: true, beard: '#8c8680' }, 'sitter');
+  setLegs(baba, 'cross'); baba.p.root.position.set(4.0, FY + 0.35, -2.55); baba.face = 0.5; baba.p.root.rotation.y = 0.5; setAct(baba, 'sit', 999);
+  const fs = addPerson(T, 'Kanchi', 'adult', { skin: '#c48a64', hair: '#1d1a24', shirt: '#2e8b57', skirt: '#2e8b57', pants: '#2e8b57', sash: '#f6c143', bun: true }, 'vendor');
+  fs.p.root.position.set(-2.3, FY, 3.45); fs.face = Math.PI; fs.p.root.rotation.y = Math.PI; setProp(fs, 'garland'); setAct(fs, 'sell', 2);
+  const tea = addPerson(T, 'Bhim', 'adult', { skin: '#a8714f', hair: '#1c1818', shirt: '#d6dde6', pants: '#4b4f6b', topi: '#2b2b30' }, 'tea');
+  tea.p.root.position.set(0, FY, 3.05); setProp(tea, 'kettle'); setAct(tea, 'tea', 1);
+  const ph = addPerson(T, 'Lucy', 'adult', { skin: '#f3cfae', hair: '#c79a5b', shirt: '#4fb3a9', pants: '#5a4e44', cap: '#e07a5f', bun: true }, 'photo');
+  ph.p.root.position.set(0.9, FY, 3.25); ph.face = Math.atan2(SX - 0.9, SZ - 3.25); ph.p.root.rotation.y = ph.face; setProp(ph, 'camera'); setAct(ph, 'photo', 3);
+  const fd = addPerson(T, 'Ama', 'elder', { skin: '#d9a07a', hair: '#dcd9d4', shirt: '#b5523b', skirt: '#7d3c98', pants: '#7d3c98', bun: true, glasses: true }, 'feed');
+  fd.p.root.position.set(3.25, FY, 3.32); fd.face = Math.PI + 0.35; fd.p.root.rotation.y = fd.face; setAct(fd, 'feed', 3);
+  const sk = addPerson(T, 'Dai', 'elder', { skin: '#b07650', hair: '#c9c5bf', shirt: '#7b8794', pants: '#3a3a40', topi: '#2b2b30' }, 'shoes');
+  setLegs(sk, 'seat'); sk.p.root.position.set(4.3, FY + SEAT, -0.22); sk.face = -Math.PI / 2; sk.p.root.rotation.y = sk.face; setAct(sk, 'shoes', 3);
+  Object.assign(T, { priest, sitter: baba, tea, feeder: fd, feedPt: V(3.05, FY, 3.0) });
+  pigeonFlock(T, 6, 0.0, 1.6, -2.35, -1.45); pigeonFlock(T, 7, 2.4, 4.4, 2.95, 3.5);
+}
+T.onStep = (f) => { if (rand() < 0.3) say(T.priest, pick(['Next', 'Come', 'Next!']), 1.2); };
+T.tick = (dt) => {
+  // the bell swings after it is rung
+  const B = T.bell; B.v += (-B.swing * 26 - B.v * 1.6) * dt; B.swing += B.v * dt; B.pv.rotation.x = B.swing;
+  for (const l of T.lamps) if (l.lit && now > l.until && !l.res) l.lit = false;
+};
+T.wide = [-4.95, 4.88, -3.8, 3.75]; T.tall = [-4.95, 4.88, -3.8, 3.75];
+T.amb = () => drone(null, 0, 0);
+
+/* ---------- pieces the church, the shrine and the stupa share ---------- */
+Object.assign(GEO, {
+  votive: new THREE.CylinderGeometry(0.022, 0.022, 0.09, 8), thread: new THREE.CylinderGeometry(0.006, 0.006, 1, 4), flag: new THREE.PlaneGeometry(0.12, 0.1),
+  balloon: new THREE.SphereGeometry(0.09, 14, 10), pwheel: new THREE.CylinderGeometry(0.075, 0.075, 0.22, 14), pband: new THREE.CylinderGeometry(0.079, 0.079, 0.03, 14),
+});
+mat.string = M('#e8e2d6');
+const UPV = V(0, 1, 0), FLAGM = ['#2f6fd6', '#f4f1ea', '#d63a2f', '#2e9b57', '#f2c230'].map((c) => M(c, { side: THREE.DoubleSide }));
+function archGeo(w, h) { const s = new THREE.Shape(), r = w / 2; s.moveTo(-r, 0); s.lineTo(r, 0); s.lineTo(r, h - r * 0.95); s.quadraticCurveTo(r, h - r * 0.2, 0, h); s.quadraticCurveTo(-r, h - r * 0.2, -r, h - r * 0.95); s.closePath(); return new THREE.ShapeGeometry(s, 14); }
+const ARCH = archGeo(0.62, 0.98), ARCH_RIM = archGeo(0.8, 1.12), ARCH_BLIND = archGeo(0.3, 0.62);
+function sanctum(sc, geo, x, y, z, color = '#ffd38a') {
+  const m = new THREE.MeshBasicMaterial({ color, toneMapped: false });
+  mesh(geo, m, x, y, z, sc.root, false);
+  const L = new THREE.PointLight('#ffb35c', 6, 4.5, 2); L.position.set(x, 0.9, z + 0.45); sc.root.add(L);
+  sc.sanct = { m, light: L, base: new THREE.Color(color), p: V(x, 0.62, z + 0.1) };
+}
+function lampRow(sc, list, geo, m, up, litP = 0.45) { for (const [x, y, z, sx, sz] of list) sc.lamps.push({ m: mesh(geo, m, x, y, z, sc.root, false), p: V(x, y + up, z), lit: rand() < litP, until: rnd(10, 60), res: null, spot: V(sx, FY, sz), face: Math.PI, ph: rand() * 6 }); }
+function warmRows(sc, lampAt) {
+  for (const [x, z] of [[-1.5, 0.3], [1.5, 0.3], [-1.5, 2.0], [1.5, 2.0]]) { const l = new THREE.PointLight('#ffb35c', 0, 4.2, 2); l.position.set(x, 1.4, z); sc.root.add(l); sc.rowLights.push(l); }
+  if (lampAt) { sc.lampLight = new THREE.PointLight('#ffb35c', 1.5, 3.5, 2); sc.lampLight.position.copy(lampAt); sc.root.add(sc.lampLight); }
+}
+function treeAt(x, z, brick, cap) {
+  mesh(new THREE.CylinderGeometry(0.62, 0.64, 0.35, 26), brick, x, FY + 0.175, z);
+  mesh(new THREE.CylinderGeometry(0.64, 0.64, 0.04, 26), cap, x, FY + 0.37, z);
+  mesh(new THREE.CylinderGeometry(0.1, 0.16, 1.6, 12), mat.bark, x + 0.07, FY + 1.15, z - 0.15);
+  for (const [dx, y, dz, s] of [[0.07, 2.15, -0.15, 1.25], [-0.48, 1.95, 0, 0.95], [0.47, 1.9, 0.25, 0.9], [-0.08, 2.55, -0.3, 0.85], [0.42, 2.35, -0.45, 0.8]]) mesh(GEO.leafBall, s > 1 ? mat.leaf : mat.leaf2, x + dx, y, z + dz).scale.setScalar(s);
+}
+function shoeRack() {
+  box(0.36, 0.78, 1.7, 0.02, mat.woodLight, 4.4, FY + 0.39, 1.1);
+  const C = ['#2b2b30', '#7a3e3e', '#c9a27a', '#3d405b', '#e07a5f', '#f4f1ea'];
+  for (let sh = 0; sh < 3; sh++) for (let k = 0; k < 6; k++) for (const dz of [-0.05, 0.05]) { const s = mesh(GEO.shoe, mc(C[(k + sh * 2) % 6]), 4.28, FY + 0.06 + sh * 0.27, 0.42 + k * 0.27 + dz, buildRoot, false); s.rotation.z = Math.PI / 2; s.rotation.y = Math.PI / 2; }
+  for (let i = 0; i < 9; i++) { const s = mesh(GEO.shoe, mc(C[i % 5]), 4.0 + rnd(-0.1, 0.1), FY + 0.03, -0.2 + i * 0.12, buildRoot, false); s.rotation.set(Math.PI / 2, 0, rnd(0, 3)); }
+  box(0.3, 0.42, 0.3, 0.02, mat.woodLight, 4.3, FY + 0.21, -0.22);
+}
+function stallAt(x, items) { box(1.0, 0.55, 0.42, 0.02, mat.woodLight, x, FY + 0.275, 3.12); for (const x2 of [x - 0.45, x + 0.45]) box(0.05, 0.9, 0.05, 0.01, mat.wood, x2, FY + 0.72, 3.32); box(0.95, 0.04, 0.05, 0.01, mat.wood, x, FY + 1.16, 3.32); items(x); }
+function flagLine(a, b, sag) {
+  const n = Math.max(6, Math.round(a.distanceTo(b) / 0.17)), pt = (u) => V(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u - sag * 4 * u * (1 - u), a.z + (b.z - a.z) * u);
+  const ang = Math.atan2(-(b.z - a.z), b.x - a.x);
+  let prev = pt(0);
+  for (let i = 1; i <= n; i++) {
+    const c = pt(i / n), len = prev.distanceTo(c);
+    const r = mesh(GEO.thread, mat.string, (prev.x + c.x) / 2, (prev.y + c.y) / 2, (prev.z + c.z) / 2, buildRoot, false);
+    r.quaternion.setFromUnitVectors(UPV, tmpA.subVectors(c, prev).normalize()); r.scale.y = len;
+    if (i < n) { const f = mesh(GEO.flag, FLAGM[i % 5], c.x, c.y - 0.06, c.z, buildRoot, false); f.rotation.set(0, ang, rnd(-0.12, 0.12)); }
+    prev = c;
+  }
+}
+function placeRole(sc, name, kind, look, role, x, z, face, prop, y = FY) { const pp = addPerson(sc, name, kind, look, role); pp.p.root.position.set(x, y, z); pp.face = face; pp.p.root.rotation.y = face; if (prop) setProp(pp, prop); setAct(pp, 'wait', rnd(0.5, 2)); return pp; }
+function shoeKeeper(sc, name, look) { const sk = placeRole(sc, name, 'elder', look, 'shoes', 4.3, -0.22, -Math.PI / 2, null, FY + SEAT); setLegs(sk, 'seat'); return sk; }
+function sitter(pp, legs) { setLegs(pp, legs); setAct(pp, 'sit', 999); return pp; }
+function eyesTex() {
+  const [c, g] = canvas(256, 192); g.fillStyle = '#f6f3ec'; g.fillRect(0, 0, 256, 192);
+  g.strokeStyle = '#1d2a4a'; g.lineWidth = 7; g.lineCap = 'round';
+  for (const s of [-1, 1]) {
+    const cx = 128 + s * 58;
+    g.beginPath(); g.moveTo(cx - 40, 62); g.quadraticCurveTo(cx, 36, cx + 40, 62); g.stroke();
+    g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(cx - 38, 98); g.quadraticCurveTo(cx, 72, cx + 38, 98); g.quadraticCurveTo(cx, 110, cx - 38, 98); g.fill(); g.stroke();
+    g.fillStyle = '#1d2a4a'; g.beginPath(); g.arc(cx - s * 4, 94, 10, 0, Math.PI * 2); g.fill();
+  }
+  g.fillStyle = '#c0392b'; g.beginPath(); g.arc(128, 70, 7, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#c0392b'; g.lineWidth = 7; g.beginPath(); g.moveTo(116, 114); g.quadraticCurveTo(144, 104, 138, 128); g.quadraticCurveTo(130, 144, 126, 162); g.stroke();
+  return tex(c);
+}
+function apronTex() { const [c, g] = canvas(64, 128), C = ['#c0392b', '#f39c12', '#27ae60', '#2980b9', '#8e44ad', '#f1c40f', '#16a085', '#e84393', '#f4f1ea']; for (let i = 0; i < 16; i++) { g.fillStyle = C[i % C.length]; g.fillRect(0, i * 8, 64, 8); } return tex(c); }
+function jaaliTex() {
+  const [c, g] = canvas(512, 256); g.fillStyle = '#f1ede4'; g.fillRect(0, 0, 512, 256); g.fillStyle = '#7b7366';
+  for (let y = 16; y < 256; y += 32) for (let x = 16; x < 512; x += 32) { g.beginPath(); g.moveTo(x, y - 11); g.lineTo(x + 11, y); g.lineTo(x, y + 11); g.lineTo(x - 11, y); g.closePath(); g.fill(); }
+  g.fillStyle = '#9a9184'; for (let y = 0; y <= 256; y += 32) for (let x = 0; x <= 512; x += 32) { g.beginPath(); g.arc(x, y, 4, 0, Math.PI * 2); g.fill(); }
+  return tex(c);
+}
+function roseTex() {
+  const [c, g] = canvas(128, 128), C = ['#c0392b', '#2f6fd6', '#f1c40f', '#27ae60', '#8e44ad', '#2f6fd6', '#e67e22', '#2f6fd6'];
+  for (let i = 0; i < 16; i++) { g.fillStyle = C[i % 8]; g.beginPath(); g.moveTo(64, 64); g.arc(64, 64, 64, (i / 16) * Math.PI * 2, ((i + 1) / 16) * Math.PI * 2); g.closePath(); g.fill(); }
+  g.strokeStyle = '#2a2421'; g.lineWidth = 3;
+  for (let i = 0; i < 16; i++) { g.beginPath(); g.moveTo(64, 64); g.lineTo(64 + 64 * Math.cos((i / 16) * Math.PI * 2), 64 + 64 * Math.sin((i / 16) * Math.PI * 2)); g.stroke(); }
+  g.beginPath(); g.arc(64, 64, 30, 0, Math.PI * 2); g.stroke(); g.fillStyle = '#f6e7a8'; g.beginPath(); g.arc(64, 64, 14, 0, Math.PI * 2); g.fill();
+  return tex(c);
+}
+const EYES = M('#ffffff', { map: eyesTex() }), APRON = M('#ffffff', { map: apronTex() });
+const GRAY = ['#dcd9d4', '#c9c5bf', '#e6e3de'], KID = ['#ff6f91', '#3ec1d3', '#f2c14e', '#7fc8a9', '#a78bfa'];
+const MONK = { skin: '#c88e63', bald: true, shirt: '#8e2a2a', skirt: '#7a2323', pants: '#7a2323', sash: '#e0a43a' };
+const LAYOUT = [-4.95, 4.88, -3.8, 3.75];
+const BUILD = {};
+
+/* ==================== the church ==================== */
+function churchLook(kind) {
+  const woman = rand() < 0.55, skin = pick(SKINS), elder = kind === 'elder', hair = elder ? pick(GRAY) : pick(HAIRS.concat(['#7a5236', '#c79a5b', '#5b3a26']));
+  if (kind === 'kid') return { skin, hair, shirt: pick(KID), pants: '#3d405b', bun: woman };
+  if (woman) {
+    if (!elder && rand() < 0.06) return { skin, hair, shirt: '#2d3142', skirt: '#2d3142', pants: '#2d3142', scarf: '#2d3142' };
+    const c = pick(['#c3a6e0', '#e07a8f', '#4fb3a9', '#f2cc8f', '#5e7ec2', '#ef8f6b', '#f4f1ea', '#7fc8a9', '#b5523b']);
+    return { skin, hair, bun: rand() < 0.6, shirt: c, skirt: rand() < 0.55 ? pick([c, '#2b2d42', '#5a4652', '#3d405b']) : null, pants: pick(['#3d405b', '#2b2d42', '#5a4e44']), scarf: (elder && rand() < 0.5) || rand() < 0.1 ? '#f1ece2' : null, glasses: elder && rand() < 0.5 };
+  }
+  return { skin, hair, shirt: pick(['#5e7ec2', '#2f9f8f', '#f4f1ea', '#7b8794', '#81b29a', '#c96b3b', '#3a3a40', '#d6dde6']), pants: pick(['#3d405b', '#2b2d42', '#5a4e44', '#4b4f6b']), cap: rand() < 0.12 ? pick(['#2b2d42', '#e07a5f', '#f2c14e']) : null, glasses: elder && rand() < 0.6, beard: rand() < 0.15 ? hair : null };
+}
+const C_NAMES = ['Maria', 'John', 'Grace', 'Joseph', 'Anna', 'Peter', 'Rosa', 'Luke', 'Teresa', 'Paul', 'Clara', 'James', 'Lucia', 'Mark', 'Elena', 'David', 'Sofia', 'Thomas', 'Isabel', 'Daniel', 'Carmen', 'Michael', 'Ruth', 'Andrew', 'Martha', 'Simon', 'Agnes', 'Francis', 'Lydia', 'Matthew', 'Ines', 'Gabriel', 'Rita', 'Anthony', 'Cecilia', 'Patrick', 'Monica', 'Stephen', 'Veronica', 'Joel', 'Esther', 'Philip', 'Miriam', 'Samuel', 'Irene', 'Victor', 'Eva', 'Leo', 'Pilar', 'Felix', 'Nora', 'Hugo', 'Joan', 'Oscar', 'Alma', 'Pedro', 'Ana', 'Jorge', 'Celia', 'Ramon', 'Beatriz', 'Mateo', 'Paula', 'Diego', 'Lourdes', 'Tobias'];
+BUILD.church = function* () {
+  const sc = makeScene('church', 'Church');
+  Object.assign(sc, {
+    follow: 'Maria', topY: 3.8, GLIM: V(SX, FY, -1.05), EXIT: V(12, FY, CZ), SG: V(SX, 0.75, -1.5), lampIcon: '🕯️', wide: LAYOUT, tall: LAYOUT,
+    calls: ['Candles!', 'Rosaries!', '🕯️', 'Candles, candles!'], teaCalls: ['Coffee!', 'Hot coffee!', '☕'], guardCalls: ['Keep moving, please', 'Move along', 'Next, please', 'Keep moving'],
+    after1: ['🙏', 'Was that it?', 'I saw it!', 'So quick…', 'Amen', 'Did you see?'],
+  });
+  Object.assign(sc.L, { light: 'Lighting a candle', bless: 'Touching the holy water', pray: 'Kneeling at the grotto', sell: 'Selling candles', tea: 'Selling coffee', sit: 'On the bench with her rosary, eyes closed', guard: 'Keeping the line moving', photo: 'Taking photos of the church', feed: 'Feeding the pigeons' });
+  beginBuild(sc);
+  const stone = M('#cfc6b8'), cream = M('#e6dccb'), slate = M('#5d6470'), dark = M('#2f3340'), iron = M('#3b3f4a', { metalness: 0.4, roughness: 0.5 }), rock = M('#8f8a82'), rock2 = M('#a39e95');
+  courtyard(sc, { slab: M('#f1ece4'), floor: M('#c9c0b2', { roughness: 0.9 }), road: M('#a49a8c', { roughness: 0.95 }), wall: M('#e3dacb'), cap: M('#b8ad9c'), wallH: 1.0, runner: M('#7a1f2b', { roughness: 0.95 }) });
+  railings(M('#8e1b2c', { roughness: 0.6 }), mat.brass, [0.8], 1.0);
+  // the chapel: a nave under a pitched roof, a bell tower with a cross, a pointed door and a rose window
+  box(2.5, 0.12, 2.3, 0.02, stone, SX, FY + 0.06, SZ);
+  box(1.8, 1.45, 1.6, 0.02, cream, SX, 0.15 + 0.725, SZ);
+  const tri = new THREE.Shape(); tri.moveTo(-0.9, 0); tri.lineTo(0.9, 0); tri.lineTo(0, 0.72); tri.closePath();
+  const gab = new THREE.ExtrudeGeometry(tri, { depth: 1.6, bevelEnabled: false }); gab.translate(0, 0, -0.8);
+  mesh(gab, cream, SX, 1.6, SZ);
+  for (const s of [-1, 1]) box(1.26, 0.07, 1.8, 0.02, slate, SX + s * 0.45, 1.6 + 0.395, SZ).rotation.z = -s * 0.675;
+  box(0.56, 1.25, 0.56, 0.02, cream, SX, 1.6 + 0.625, -1.82);
+  box(0.3, 0.36, 0.58, 0.01, dark, SX, 2.5, -1.82); box(0.58, 0.36, 0.3, 0.01, dark, SX, 2.5, -1.82);
+  mesh(GEO.bell, mat.brass, SX, 2.34, -1.82).scale.setScalar(0.6);
+  const tr = mesh(new THREE.ConeGeometry(0.44, 0.62, 4), slate, SX, 2.85 + 0.31, -1.82); tr.rotation.y = Math.PI / 4;
+  box(0.045, 0.36, 0.045, 0.01, mat.gold, SX, 3.47 + 0.18, -1.82); box(0.2, 0.045, 0.045, 0.01, mat.gold, SX, 3.72, -1.82);
+  mesh(ARCH_RIM, stone, SX, 0.15, -1.497, buildRoot, false);
+  mesh(new THREE.TorusGeometry(0.18, 0.025, 8, 32), stone, SX, 1.36, -1.49);
+  for (const x of [-0.62, 0.62]) { box(0.1, 0.16, 0.1, 0.02, iron, SX + x, 0.98, -1.44); sc.flames.push({ p: V(SX + x, 0.98, -1.38), ph: rand() * 6 }); }
+  // holy water by the door
+  mesh(new THREE.CylinderGeometry(0.07, 0.11, 0.72, 14), stone, -1.05, FY + 0.36, -1.8);
+  mesh(new THREE.CylinderGeometry(0.21, 0.13, 0.13, 20), stone, -1.05, FY + 0.78, -1.8);
+  mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.01, 20), M('#8fbfe0', { roughness: 0.1 }), -1.05, FY + 0.845, -1.8, buildRoot, false);
+  // a stand of votive candles
+  box(2.1, 0.5, 0.3, 0.02, iron, 0.5, FY + 0.25, -3.12); box(2.1, 0.8, 0.28, 0.02, iron, 0.5, FY + 0.4, -3.42);
+  const sand = M('#d8c9a3'); box(2.05, 0.03, 0.26, 0.01, sand, 0.5, FY + 0.51, -3.12); box(2.05, 0.03, 0.24, 0.01, sand, 0.5, FY + 0.81, -3.42);
+  // the grotto: a stone arch, a statue, flowers and candles, and a rail to kneel at
+  box(0.95, 0.26, 0.5, 0.04, rock, 2.6, FY + 0.13, -2.95);
+  mesh(new THREE.SphereGeometry(0.5, 16, 12), dark, 2.6, 0.62, -3.14).scale.set(1.0, 1.25, 0.35);
+  for (let i = 0; i <= 8; i++) { const a = (i / 8) * Math.PI; mesh(new THREE.SphereGeometry(0.2, 12, 10), i % 2 ? rock : rock2, 2.6 + Math.cos(a) * 0.6, FY + 0.22 + Math.sin(a) * 0.82, -3.0).scale.setScalar(rnd(0.9, 1.3)); }
+  box(0.22, 0.2, 0.2, 0.02, stone, 2.6, FY + 0.36, -2.95);
+  const robe = M('#f6f3ec');
+  mesh(new THREE.CapsuleGeometry(0.1, 0.32, 6, 14), robe, 2.6, FY + 0.72, -2.95); mesh(new THREE.SphereGeometry(0.075, 16, 12), mc('#f0d9c4'), 2.6, FY + 1.05, -2.94);
+  mesh(new THREE.SphereGeometry(0.085, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.6), robe, 2.6, FY + 1.06, -2.955);
+  box(0.06, 0.42, 0.02, 0.008, M('#5b8fd6'), 2.62, FY + 0.72, -2.85).rotation.z = 0.3;
+  mesh(new THREE.TorusGeometry(0.11, 0.008, 6, 24), mat.gold, 2.6, FY + 1.08, -3.0);
+  for (let i = 0; i < 9; i++) mesh(GEO.flower, i % 3 ? mat.rose : mat.white, 2.25 + i * 0.09, FY + 0.3, -2.72, buildRoot, false);
+  for (const x of [2.32, 2.46, 2.74, 2.88]) { mesh(GEO.votive, mat.wax, x, FY + 0.31, -2.62, buildRoot, false); sc.flames.push({ p: V(x, FY + 0.39, -2.62), ph: rand() * 6 }); }
+  box(1.25, 0.05, 0.06, 0.01, mat.wood, 2.6, FY + 0.5, -2.05); for (const x of [2.05, 3.15]) box(0.05, 0.5, 0.05, 0.01, mat.wood, x, FY + 0.25, -2.05);
+  // a bench under a street lamp
+  box(1.1, 0.06, 0.4, 0.02, mat.wood, 4.05, FY + 0.44, -3.05); box(1.1, 0.4, 0.05, 0.02, mat.wood, 4.05, FY + 0.72, -3.24);
+  for (const x of [3.58, 4.52]) for (const z of [-3.2, -2.9]) box(0.05, 0.44, 0.05, 0.01, iron, x, FY + 0.22, z);
+  mesh(new THREE.CylinderGeometry(0.035, 0.05, 2.1, 10), iron, 4.62, FY + 1.05, -2.75); box(0.18, 0.24, 0.18, 0.03, iron, 4.62, FY + 2.15, -2.75);
+  sc.flames.push({ p: V(4.62, FY + 2.15, -2.62), ph: 0 });
+  stallAt(-2.3, (x) => { for (let i = 0; i < 14; i++) mesh(GEO.candle, mat.wax, x - 0.35 + (i % 7) * 0.11, FY + 0.64, 3.04 + Math.floor(i / 7) * 0.14, buildRoot, false); for (let i = 0; i < 4; i++) mesh(new THREE.TorusGeometry(0.06, 0.008, 6, 20), i % 2 ? mat.wood : mat.white, x - 0.3 + i * 0.2, FY + 1.06, 3.33, buildRoot, false); });
+  yield* endBuildG();
+  sanctum(sc, ARCH, SX, 0.15, -1.49);
+  const rose = new THREE.Mesh(new THREE.CircleGeometry(0.17, 32), new THREE.MeshBasicMaterial({ map: roseTex(), toneMapped: false, color: '#d9c9a0' })); rose.position.set(SX, 1.36, -1.494); sc.root.add(rose);
+  lampRow(sc, [...Array(20)].map((_, i) => { const t = i < 10, x = -0.4 + (i % 10) * 0.2; return [x, FY + (t ? 0.57 : 0.87), t ? -3.08 : -3.4, x, -2.55]; }), GEO.votive, mat.wax, 0.08, 0.5);
+  warmRows(sc, V(0.5, 1.1, -2.6));
+  sc.Q = { path: makePath(QPTS), list: [], glimpser: null, nextAt: 1 };
+  sc.ST = { font: spotStation(spots([[-1.05, -1.38]], Math.PI), 'bless', 3.4, 'Going to the holy water'), candle: lampStation(sc, 'Going to light a candle'), grotto: spotStation(spots([[2.25, -1.72], [2.6, -1.72], [2.95, -1.72]], Math.PI), 'pray', 6, 'Going to kneel at the grotto', 'kneel') };
+  sc.planAfter = () => { const r = []; if (rand() < 0.65) r.push(sc.ST.font); if (rand() < 0.6) r.push(sc.ST.candle); if (rand() < 0.45) r.push(sc.ST.grotto); return r; };
+  sc.offer = () => { const r = rand(); return r < 0.35 ? 'candle' : r < 0.5 ? 'bouquet' : r < 0.58 ? 'phone' : null; };
+  yield* populateG(sc, shuffle(C_NAMES), churchLook, NQ, 8);
+  yield;
+  const usher = placeRole(sc, 'Joseph', 'adult', { skin: '#c88e63', hair: '#231c1a', shirt: '#2b2d42', pants: '#2b2d42', glasses: true }, 'guard', -3.6, -1.36, 0.55, null, FY + 0.12);
+  const nana = sitter(placeRole(sc, 'Rosa', 'elder', { skin: '#e8b48f', hair: '#e6e3de', shirt: '#5a4652', skirt: '#2b2d42', pants: '#2b2d42', scarf: '#f1ece2', glasses: true }, 'sitter', 3.85, -3.0, 0.25, null, FY + 0.47), 'seat');
+  placeRole(sc, 'Lucia', 'adult', { skin: '#d9a07a', hair: '#3a2a20', shirt: '#f2cc8f', skirt: '#5a4652', pants: '#5a4652', bun: true }, 'vendor', -2.3, 3.45, Math.PI, 'candle');
+  placeRole(sc, 'Tomas', 'adult', { skin: '#e2b08a', hair: '#3a2a20', shirt: '#81b29a', pants: '#3d405b' }, 'tea', 0, 3.05, Math.PI, 'kettle');
+  placeRole(sc, 'Kenji', 'adult', { skin: '#f0c8a8', hair: '#1d1a24', shirt: '#ef8f6b', pants: '#5a4e44', cap: '#2b2d42' }, 'photo', 0.9, 3.25, Math.atan2(SX - 0.9, SZ - 3.25), 'camera');
+  const fd = placeRole(sc, 'Nonna', 'elder', { skin: '#f0c8a8', hair: '#e6e3de', shirt: '#2b2d42', skirt: '#2b2d42', pants: '#2b2d42', scarf: '#2b2d42', glasses: true }, 'feed', 3.25, 3.32, Math.PI + 0.35);
+  placeRole(sc, 'Paco', 'adult', { skin: '#c48a64', hair: '#1c1818', shirt: '#f4f1ea', pants: '#3d405b', cap: '#e07a5f' }, 'vendor', 4.3, 1.4, -1.9, 'balloons').calls = ['Balloons!', '🎈', 'Balloons, balloons!'];
+  Object.assign(sc, { priest: usher, sitter: nana, feeder: fd, feedPt: V(3.05, FY, 3.0) });
+  pigeonFlock(sc, 6, -0.4, 1.6, -2.4, -1.5); pigeonFlock(sc, 8, 2.4, 4.4, 2.95, 3.5);
+  sc.onStep = () => { if (rand() < 0.3) say(usher, pick(['Next, please', 'Come', 'Next']), 1.2); };
+  sc.tick = () => { for (const l of sc.lamps) if (l.lit && now > l.until && !l.res) l.lit = false; };
+  sc.amb = (dt, busy) => { drone(null, 0, 0); if (busy > 0.5 && rand() < dt / 16) sfx('organ'); if (busy > 0.5 && rand() < dt / 30) sfx('toll'); };
+};
+
+/* ==================== the shrine ==================== */
+function shrineLook(kind) {
+  const woman = rand() < 0.5, skin = pick(SKINS), elder = kind === 'elder', hair = elder ? pick(GRAY) : pick(HAIRS);
+  if (kind === 'kid') return { skin, hair, shirt: pick(KID), pants: '#f4f1ea', kufi: !woman && rand() < 0.5 ? '#f4f1ea' : null, scarf: woman && rand() < 0.4 ? pick(['#e84393', '#f39c12']) : null };
+  if (woman) { const c = pick(['#0f6e56', '#c0392b', '#2d3142', '#8e44ad', '#e67e22', '#f4f1ea', '#b0306a', '#1f6f8b', '#e3b505']); return { skin, hair, bun: true, shirt: c, skirt: rand() < 0.5 ? c : null, pants: pick(['#f4f1ea', c, '#2d3142']), scarf: rand() < 0.85 ? pick(['#0f6e56', '#c0392b', '#2d3142', '#8e44ad', '#f4f1ea', '#e67e22', '#1f6f8b', '#e84393']) : null, glasses: elder && rand() < 0.4 }; }
+  return { skin, hair, shirt: pick(['#f4f1ea', '#e8e0cc', '#cfe0d6', '#d6dde6', '#1f6f5c', '#7b8794', '#c9b38f']), pants: rand() < 0.6 ? '#f4f1ea' : pick(['#3a3a40', '#4b4f6b']), kufi: rand() < 0.65 ? pick(['#f4f1ea', '#f4f1ea', '#2d3142', '#1e6b47']) : null, beard: rand() < (elder ? 0.7 : 0.35) ? hair : null, glasses: elder && rand() < 0.5 };
+}
+const S_NAMES = ['Ayesha', 'Imran', 'Fatima', 'Yusuf', 'Zainab', 'Bilal', 'Noor', 'Hamza', 'Sana', 'Omar', 'Mariam', 'Ali', 'Hina', 'Faisal', 'Rukhsana', 'Tariq', 'Salma', 'Irfan', 'Nadia', 'Arif', 'Shabana', 'Kamran', 'Farah', 'Javed', 'Rubina', 'Asif', 'Saira', 'Nadeem', 'Amina', 'Rashid', 'Huma', 'Sohail', 'Shazia', 'Waseem', 'Bushra', 'Adil', 'Naila', 'Zubair', 'Samina', 'Khalid', 'Afreen', 'Rehan', 'Iqra', 'Junaid', 'Lubna', 'Sajid', 'Uzma', 'Yasir', 'Asma', 'Danish', 'Kausar', 'Fahad', 'Tabassum', 'Nasir', 'Hafsa', 'Zahid', 'Mehnaz', 'Shahid', 'Rabia', 'Anwar', 'Gulnar', 'Sameer', 'Tahira', 'Wajid', 'Yasmin', 'Feroz'];
+BUILD.shrine = function* () {
+  const sc = makeScene('shrine', 'Mosque');
+  Object.assign(sc, {
+    follow: 'Ayesha', topY: 3.3, GLIM: V(SX, FY, -1.05), EXIT: V(12, FY, CZ), SG: V(SX, 0.75, -1.44), wide: LAYOUT, tall: LAYOUT,
+    calls: ['Attar!', 'Prayer beads!', 'Dates!', 'Attar, attar!'], teaCalls: ['Chai!', 'Tea!', '☕', 'Hot chai!'], guardCalls: ['Keep moving', 'Move on', 'Next', 'Keep moving, please'],
+    after1: ['🙏', 'Was that it?', 'I saw it!', 'So quick…', '🤲', 'Did you see?'],
+  });
+  Object.assign(sc.L, { wash: 'Washing before prayer', salah: 'At prayer', recite: 'Reading the Quran', sell: 'Selling attar and prayer beads', tea: 'Selling chai', sit: 'Sitting under the tree, eyes closed', guard: 'Keeping the line moving', feed: 'Feeding the pigeons', shoes: 'Minding everyone’s shoes' });
+  beginBuild(sc);
+  const marble = M('#f6f3ec'), sand = M('#b5523b'), green = M('#2f8f5b'), greenDark = M('#1e6b47');
+  courtyard(sc, { slab: M('#f3efe8'), floor: M('#e2dcd2', { roughness: 0.6 }), road: M('#a39b90', { roughness: 0.95 }), wall: M('#efe9df'), cap: sand, wallH: 1.0, runner: greenDark });
+  railings(mat.steel, mat.steel);
+  // the mosque: white marble, a green dome, four small minarets, an arched door hung with green
+  box(2.5, 0.12, 2.3, 0.02, M('#ece7de'), SX, FY + 0.06, SZ);
+  box(1.9, 1.3, 1.7, 0.02, marble, SX, 0.15 + 0.65, SZ);
+  box(2.02, 0.1, 1.82, 0.02, sand, SX, 1.5, SZ);
+  mesh(new THREE.CylinderGeometry(0.64, 0.68, 0.22, 28), marble, SX, 1.66, SZ);
+  mesh(lathe([[0, 0], [0.64, 0], [0.73, 0.18], [0.75, 0.38], [0.67, 0.62], [0.46, 0.85], [0.22, 1.02], [0.08, 1.12], [0, 1.18]], 32), green, SX, 1.77, SZ);
+  mesh(new THREE.SphereGeometry(0.06, 12, 10), mat.gold, SX, 3.0, SZ); mesh(new THREE.TorusGeometry(0.1, 0.017, 6, 20, Math.PI * 1.45), mat.gold, SX, 3.16, SZ).rotation.set(0, 0, Math.PI * 0.78);
+  for (const [dx, dz] of [[-0.95, -0.85], [0.95, -0.85], [-0.95, 0.85], [0.95, 0.85]]) { mesh(new THREE.CylinderGeometry(0.075, 0.095, 1.5, 12), marble, SX + dx, 0.15 + 0.75, SZ + dz); mesh(new THREE.SphereGeometry(0.11, 14, 10), green, SX + dx, 1.68, SZ + dz).scale.y = 1.3; mesh(new THREE.ConeGeometry(0.025, 0.14, 8), mat.gold, SX + dx, 1.87, SZ + dz); }
+  mesh(ARCH_RIM, sand, SX, 0.15, -1.447, buildRoot, false);
+  for (const s of [-1, 1]) { box(0.09, 0.92, 0.04, 0.01, greenDark, SX + s * 0.34, 0.15 + 0.46, -1.42); mesh(ARCH_BLIND, M('#e4ddd0'), SX + s * 0.66, 0.42, -1.446, buildRoot, false); }
+  // a long marble trough with taps, where people wash before prayer
+  box(1.7, 0.3, 0.42, 0.04, marble, 2.7, FY + 0.15, -1.85);
+  for (const dz of [-0.2, 0.2]) box(1.7, 0.06, 0.05, 0.01, marble, 2.7, FY + 0.33, -1.85 + dz);
+  box(1.55, 0.02, 0.3, 0.01, M('#8fbfe0', { roughness: 0.1 }), 2.7, FY + 0.31, -1.85, buildRoot);
+  box(1.7, 0.62, 0.06, 0.01, marble, 2.7, FY + 0.31, -2.12);
+  for (const x of [2.15, 2.7, 3.25]) mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.12, 8), mat.brass, x, FY + 0.5, -2.03).rotation.x = Math.PI / 2;
+  // prayer mats in a row, and a rug to read on
+  [-0.3, 0.25, 0.8, 1.35].forEach((x, i) => { box(0.5, 0.015, 0.95, 0.005, M(['#1e6b47', '#8e2b23', '#2d4a8a', '#1e6b47'][i], { roughness: 0.95 }), x, FY + 0.01, -2.75); box(0.34, 0.017, 0.3, 0.005, mat.gold, x, FY + 0.012, -2.95); });
+  box(1.7, 0.02, 0.9, 0.005, M('#6d2b2b', { roughness: 0.95 }), 2.75, FY + 0.01, -2.85);
+  treeAt(4.08, -3.0, M('#c9b7a0'), M('#f2ede4'));
+  shoeRack();
+  stallAt(-2.3, (x) => {
+    ['#2d6a8a', '#8e2b23', '#1e6b47', '#c9a45c', '#6d3a8a'].forEach((c, i) => mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.12 + (i % 2) * 0.04, 10), mc(c, { roughness: 0.25 }), x - 0.38 + i * 0.1, FY + 0.65, 3.04));
+    for (let i = 0; i < 4; i++) mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.05, 14), mc(['#6b4a35', '#8e5c3f'][i % 2]), x + 0.1 + (i % 2) * 0.17, FY + 0.6, 3.04 + Math.floor(i / 2) * 0.17);
+    for (let i = 0; i < 4; i++) mesh(new THREE.TorusGeometry(0.07, 0.012, 6, 16), mc(['#6b4a35', '#1e6b47', '#c9a45c', '#2b2d42'][i]), x - 0.3 + i * 0.2, FY + 0.95, 3.33, buildRoot, false);
+  });
+  yield* endBuildG();
+  sanctum(sc, ARCH, SX, 0.15, -1.44, '#ffdf9a');
+  warmRows(sc);
+  sc.Q = { path: makePath(QPTS), list: [], glimpser: null, nextAt: 1 };
+  sc.ST = {
+    wash: spotStation(spots([[2.15, -1.45], [2.7, -1.45], [3.25, -1.45]], Math.PI), 'wash', 4.2, 'Going to wash before prayer'),
+    pray: spotStation(spots([[-0.3, -2.55], [0.25, -2.55], [0.8, -2.55], [1.35, -2.55]], Math.PI), 'salah', 9.2, 'Going to pray'),
+    recite: spotStation(spots([[2.25, -2.85], [2.75, -2.85], [3.25, -2.85]], Math.PI), 'recite', 7, 'Going to read the Quran', 'cross', 'quran'),
+  };
+  sc.planAfter = () => { const r = []; if (rand() < 0.7) r.push(sc.ST.wash); if (rand() < 0.75) r.push(sc.ST.pray); if (rand() < 0.35) r.push(sc.ST.recite); return r; };
+  sc.offer = () => { const r = rand(); return r < 0.18 ? 'quran' : r < 0.46 ? 'tasbih' : r < 0.5 ? 'phone' : null; };
+  yield* populateG(sc, shuffle(S_NAMES), shrineLook, NQ, 8);
+  yield;
+  const kh = placeRole(sc, 'Rashid', 'adult', { skin: '#a8714f', hair: '#1c1818', shirt: '#f4f1ea', pants: '#f4f1ea', kufi: '#1e6b47', beard: '#1c1818', sash: '#1e6b47' }, 'guard', -3.6, -1.36, 0.55, 'fan', FY + 0.12);
+  const fk = sitter(placeRole(sc, 'Baba', 'elder', { skin: '#8e5c3f', hair: '#e6e3de', shirt: '#f4f1ea', skirt: '#f4f1ea', pants: '#f4f1ea', bald: true, beard: '#e6e3de', sash: '#1e6b47' }, 'sitter', 4.0, -2.55, 0.5, null, FY + 0.35), 'cross');
+  placeRole(sc, 'Zubair', 'adult', { skin: '#c48a64', hair: '#1c1818', shirt: '#cfe0d6', pants: '#f4f1ea', kufi: '#f4f1ea', beard: '#1c1818' }, 'vendor', -2.3, 3.45, Math.PI, 'tasbih');
+  placeRole(sc, 'Imran', 'adult', { skin: '#a8714f', hair: '#1c1818', shirt: '#d6dde6', pants: '#4b4f6b' }, 'tea', 0, 3.05, Math.PI, 'kettle');
+  const fd = placeRole(sc, 'Amma', 'elder', { skin: '#c88e63', hair: '#e6e3de', shirt: '#8e44ad', skirt: '#8e44ad', pants: '#8e44ad', scarf: '#f4f1ea', glasses: true }, 'feed', 1.2, 3.32, Math.PI - 0.2);
+  shoeKeeper(sc, 'Chacha', { skin: '#b07650', hair: '#c9c5bf', shirt: '#7b8794', pants: '#f4f1ea', kufi: '#f4f1ea', beard: '#c9c5bf' });
+  Object.assign(sc, { priest: kh, sitter: fk, feeder: fd, feedPt: V(1.0, FY, 3.0) });
+  pigeonFlock(sc, 10, 0.0, 2.6, 2.95, 3.5); pigeonFlock(sc, 6, -0.4, 1.6, -2.45, -1.5);
+  sc.onStep = () => { if (rand() < 0.3) say(kh, pick(['Next', 'Come', 'Next!']), 1.2); };
+  sc.amb = (dt, busy) => { drone(null, 0, 0); if (busy > 0.5 && Math.random() < dt * 0.4) sfx('water'); };
+};
+
+/* ==================== the stupa ==================== */
+function stupaLook(kind) {
+  const woman = rand() < 0.52, skin = pick(['#e8b48f', '#d9a07a', '#c88e63', '#b07650', '#c48a64', '#a8714f', '#f0c8a8']), elder = kind === 'elder', hair = elder ? pick(GRAY) : pick(HAIRS);
+  if (kind === 'kid') return { skin, hair, shirt: pick(KID), pants: '#3d405b', bun: woman };
+  if (rand() < 0.16) return { ...MONK, skin };
+  if (woman) { const c = pick(['#3b2f2f', '#2d3142', '#4a2c2a', '#5b4636', '#1f3b4d', '#6b2d3c']); return { skin, hair, bun: true, shirt: c, skirt: c, pants: c, apron: rand() < 0.7 ? APRON : null, glasses: elder && rand() < 0.4 }; }
+  return { skin, hair, shirt: pick(['#3b2f2f', '#5b4636', '#2d3142', '#7a5236', '#d6dde6', '#c96b3b', '#4b4f6b']), pants: pick(['#3a3a40', '#4b4f6b', '#2b2b30']), cap: rand() < 0.15 ? pick(['#c9a45c', '#2b2d42']) : null, glasses: elder && rand() < 0.5 };
+}
+const B_NAMES = ['Pema', 'Tenzin', 'Dolma', 'Karma', 'Sonam', 'Lhamo', 'Norbu', 'Dawa', 'Yangchen', 'Jigme', 'Dechen', 'Tashi', 'Kunsang', 'Lobsang', 'Chodon', 'Ngawang', 'Tsering', 'Dorje', 'Wangmo', 'Phurba', 'Nyima', 'Choden', 'Gyatso', 'Kelsang', 'Rinchen', 'Sangye', 'Yeshe', 'Dolkar', 'Thinley', 'Pasang', 'Lhakpa', 'Mingma', 'Chhiring', 'Dhondup', 'Tseten', 'Namgyal', 'Samten', 'Palden', 'Yonten', 'Kalden', 'Diki', 'Tsomo', 'Jampa', 'Gyaltsen', 'Lhundup', 'Topgyal', 'Rigzin', 'Metok', 'Sherab', 'Tenpa', 'Zangmo', 'Kunga', 'Dekyi', 'Thupten', 'Pemba', 'Tsedon', 'Ugyen', 'Choying', 'Losel', 'Nawang', 'Dickey', 'Tamding', 'Yudron', 'Gelek', 'Sonam', 'Pasang'];
+BUILD.stupa = function* () {
+  const sc = makeScene('stupa', 'Stupa');
+  const cz = SZ - 0.15;
+  Object.assign(sc, {
+    follow: 'Pema', topY: 3.0, GLIM: V(SX, FY, -1.05), EXIT: V(12, FY, CZ), SG: V(SX, 0.45, -1.3), lampIcon: '🪔', wide: LAYOUT, tall: LAYOUT, teaX: [0.3, 1.9],
+    calls: ['Khata!', 'Butter lamps!', 'Incense!', 'Khata, khata!'], teaCalls: ['Butter tea!', 'Tea!', '☕'], guardCalls: ['Keep moving', 'Next', 'Move on, please'],
+    after1: ['🙏', 'Was that it?', 'I saw it!', 'So quick…', '🙏', 'Did you see?'],
+  });
+  Object.assign(sc.L, { light: 'Lighting a butter lamp', kora: 'Walking round the prayer wheels', sell: 'Selling khata and butter lamps', tea: 'Selling butter tea', sit: 'Sitting by the wall, eyes closed', guard: 'Keeping the line moving', photo: 'Taking photos of the stupa', feed: 'Feeding the pigeons', chant: 'Chanting', prostrate: 'Prostrating' });
+  beginBuild(sc);
+  const white = M('#f6f3ec'), maroon = M('#8e2a2a'), wood = M('#a8774f');
+  courtyard(sc, { slab: M('#eee9e1'), floor: M('#968e82', { roughness: 0.9 }), road: M('#7f786d', { roughness: 0.95 }), wall: white, cap: maroon, wallH: 0.9, runner: M('#7a2323', { roughness: 0.95 }) });
+  railings(wood, wood);
+  // the stupa: three white terraces, a dome, the eyes, thirteen gilded rings
+  box(2.6, 0.16, 2.3, 0.03, white, SX, FY + 0.08, cz); box(2.2, 0.16, 1.95, 0.03, white, SX, FY + 0.24, cz); box(1.85, 0.16, 1.65, 0.03, white, SX, FY + 0.4, cz);
+  mesh(new THREE.SphereGeometry(0.9, 36, 18, 0, Math.PI * 2, 0, Math.PI / 2), white, SX, FY + 0.48, cz).scale.y = 0.88;
+  const hy = FY + 0.48 + 0.79;
+  mesh(new THREE.BoxGeometry(0.46, 0.34, 0.46), [EYES, EYES, mat.gold, mat.gold, EYES, EYES], SX, hy + 0.17, cz);
+  box(0.56, 0.05, 0.56, 0.01, mat.gold, SX, hy + 0.365, cz);
+  for (let i = 0; i < 13; i++) mesh(new THREE.CylinderGeometry(0.2 - i * 0.011, 0.215 - i * 0.011, 0.055, 18), mat.gold, SX, hy + 0.42 + i * 0.062, cz);
+  const ty = hy + 0.42 + 13 * 0.062;
+  mesh(new THREE.ConeGeometry(0.2, 0.12, 18), mat.gold, SX, ty + 0.04, cz); mesh(new THREE.SphereGeometry(0.05, 12, 10), mat.gold, SX, ty + 0.14, cz); mesh(new THREE.ConeGeometry(0.03, 0.16, 10), mat.gold, SX, ty + 0.25, cz);
+  // a small gilded shrine at the stupa's foot: the door the line is for
+  box(0.84, 0.86, 0.32, 0.02, maroon, SX, FY + 0.43, -1.45);
+  box(1.0, 0.07, 0.48, 0.02, mat.gold, SX, FY + 0.9, -1.45); box(0.66, 0.12, 0.22, 0.02, mat.gold, SX, FY + 0.99, -1.45);
+  box(0.56, 0.72, 0.02, 0.005, mat.gold, SX, FY + 0.38, -1.29);
+  // prayer flags from the spire to the walls, and one long string over the line to the gate
+  const top = V(SX, ty, cz);
+  for (const b of [V(-4.75, 0.98, -0.6), V(-4.75, 0.98, 1.7), V(-1.2, 0.95, -3.66), V(1.8, 0.95, -3.66), V(-3.9, 2.12, 3.62), V(4.6, 0.95, -3.66)]) flagLine(top, b, 0.35);
+  // a wall of prayer wheels, tiers of butter lamps, a board for prostrations, a mat for the monks
+  box(2.6, 0.72, 0.26, 0.03, white, 1.2, FY + 0.36, -2.3); box(2.72, 0.08, 0.36, 0.02, maroon, 1.2, FY + 0.76, -2.3);
+  box(1.1, 0.3, 0.9, 0.02, white, 4.05, FY + 0.15, -3.15); box(1.1, 0.6, 0.6, 0.02, white, 4.05, FY + 0.3, -3.3); box(1.1, 0.9, 0.3, 0.02, white, 4.05, FY + 0.45, -3.45);
+  box(0.5, 0.05, 1.7, 0.01, wood, 4.25, FY + 0.025, 0.8);
+  box(1.7, 0.02, 0.6, 0.005, maroon, -2.5, FY + 0.01, 3.22);
+  stallAt(2.7, (x) => {
+    for (let i = 0; i < 5; i++) box(0.1, 0.02, 0.32, 0.005, mat.white, x - 0.35 + i * 0.12, FY + 0.565, 3.1);
+    for (let i = 0; i < 8; i++) mesh(GEO.lamp, mat.brass, x + 0.12 + (i % 4) * 0.09, FY + 0.57, 3.02 + Math.floor(i / 4) * 0.12, buildRoot, false);
+    for (let i = 0; i < 4; i++) box(0.08, 0.55, 0.01, 0.003, mat.white, x - 0.3 + i * 0.2, FY + 0.86, 3.33);
+  });
+  yield* endBuildG();
+  sanctum(sc, new THREE.PlaneGeometry(0.42, 0.6), SX, FY + 0.36, -1.282);
+  sc.wheels = [];
+  for (const side of [-1, 1]) for (let i = 0; i < 9; i++) {
+    const x = 0.08 + i * 0.28, g = new THREE.Group(); g.position.set(x, FY + 0.4, -2.3 + side * 0.205); sc.root.add(g);
+    mesh(GEO.pwheel, mat.gold, 0, 0, 0, g); mesh(GEO.pband, maroon, 0, 0.07, 0, g, false); mesh(GEO.pband, maroon, 0, -0.07, 0, g, false);
+    sc.wheels.push({ g, p: V(x, FY, -2.3 + side * 0.55), av: 0 });
+  }
+  lampRow(sc, [...Array(21)].map((_, i) => { const k = i % 7, t = Math.floor(i / 7), x = 3.62 + k * 0.143; return [x, FY + 0.3 * (t + 1) + 0.018, [-2.82, -3.1, -3.38][t], x, -2.45]; }), GEO.lamp, mat.brass, 0.05, 0.5);
+  warmRows(sc, V(4.05, 1.2, -2.7));
+  sc.Q = { path: makePath(QPTS), list: [], glimpser: null, nextAt: 1 };
+  sc.ST = { kora: koraStation([V(2.75, FY, -1.75), V(-0.35, FY, -1.75), V(-0.35, FY, -2.85), V(2.75, FY, -2.85)], 2, 'Going to turn the prayer wheels'), lamp: lampStation(sc, 'Going to light a butter lamp') };
+  sc.planAfter = () => { const r = []; if (rand() < 0.75) r.push(sc.ST.kora); if (rand() < 0.55) r.push(sc.ST.lamp); return r; };
+  sc.offer = () => { const r = rand(); return r < 0.3 ? 'wheel' : r < 0.48 ? 'khata' : r < 0.54 ? 'phone' : null; };
+  yield* populateG(sc, shuffle(B_NAMES), stupaLook, NQ, 8);
+  yield;
+  const gm = placeRole(sc, 'Lama', 'adult', MONK, 'guard', -3.6, -1.1, 0.55);
+  const ama = sitter(placeRole(sc, 'Ama', 'elder', { skin: '#c88e63', hair: '#c9c5bf', shirt: '#3b2f2f', skirt: '#3b2f2f', pants: '#3b2f2f', apron: APRON, bun: true }, 'sitter', -1.1, -3.2, 0.7), 'cross');
+  ['Tenzin', 'Lobsang', 'Jampa'].forEach((n, i) => setLegs(placeRole(sc, n, 'adult', { ...MONK, skin: pick(SKINS) }, 'chant', -3.05 + i * 0.55, 3.22, Math.PI), 'cross'));
+  const pr = placeRole(sc, 'Dolkar', 'adult', { skin: '#c48a64', hair: '#1d1a24', shirt: '#2d3142', skirt: '#2d3142', pants: '#2d3142', apron: APRON, bun: true }, 'prostrate', 4.25, 1.55, Math.PI);
+  pr.p.root.rotation.order = 'YXZ'; pr.count = 23;
+  placeRole(sc, 'Dawa', 'adult', { skin: '#b07650', hair: '#1c1818', shirt: '#5b4636', pants: '#3a3a40' }, 'vendor', 2.7, 3.45, Math.PI, 'khata');
+  placeRole(sc, 'Norbu', 'adult', { skin: '#c88e63', hair: '#1c1818', shirt: '#7a5236', pants: '#2b2b30' }, 'tea', 1.0, 3.05, Math.PI, 'kettle');
+  placeRole(sc, 'Emma', 'adult', { skin: '#f3cfae', hair: '#c79a5b', shirt: '#4fb3a9', pants: '#5a4e44', cap: '#e07a5f', bun: true }, 'photo', 3.95, 3.28, Math.atan2(SX - 3.95, cz - 3.28), 'camera');
+  const fd = placeRole(sc, 'Mola', 'elder', { skin: '#c88e63', hair: '#e6e3de', shirt: '#4a2c2a', skirt: '#4a2c2a', pants: '#4a2c2a', apron: APRON, bun: true }, 'feed', -0.75, 3.32, Math.PI);
+  Object.assign(sc, { priest: gm, sitter: ama, feeder: fd, feedPt: V(-0.85, FY, 3.0) });
+  pigeonFlock(sc, 10, -1.6, 0.25, 2.95, 3.5); pigeonFlock(sc, 6, -1.5, -0.55, -3.0, -1.4);
+  sc.onStep = () => { if (rand() < 0.3) say(gm, pick(['Next', 'Come', 'Next!']), 1.2); };
+  sc.tick = (dt) => { for (const w of sc.wheels) { w.g.rotation.y += w.av * dt; w.av = damp(w.av, 0, 0.7, dt); } for (const l of sc.lamps) if (l.lit && now > l.until && !l.res) l.lit = false; };
+  sc.amb = (dt, busy) => drone([98, 147, 196], 380, 0.014 * busy);
+};
+
+/* ---------- roles: what the people who are not in line do ---------- */
+const TALK = ['…', '😊', '💬', '…', '🙂', 'Hmm', '😄'];
+function roleAct(pp) {
+  const sc = pp.sc, r = pp.role;
+  if (r === 'guard') { const g = sc.Q.glimpser; setAct(pp, 'guard', rnd(1.5, 3), { wave: !!g && rand() < 0.6 }); if (g && rand() < 0.5) say(pp, pick(sc.guardCalls || ['Keep moving', 'Move on, please', 'Keep moving!', 'Next']), 1.4); return; }
+  if (r === 'sitter') return setAct(pp, 'sit', 999);
+  if (r === 'vendor') { const c = rand() < 0.45; setAct(pp, 'sell', rnd(2.5, 5), { call: c, pt: V(rnd(-3.5, 0), 1.2, rnd(1.6, 2.5)) }); if (c) say(pp, pick(pp.calls || sc.calls || ['Flowers!', 'Garlands!', '🌼', 'Flowers, flowers!']), 1.6); return; }
+  if (r === 'photo') { const chk = rand() < 0.3; setAct(pp, 'photo', rnd(2, 4), { chk }); if (!chk && rand() < 0.6) { say(pp, '📸', 1.0); sfx('click'); } return; }
+  if (r === 'feed') return setAct(pp, 'feed', rnd(3, 6));
+  if (r === 'sing') { setAct(pp, 'sing', rnd(3, 6)); if (pp.lead && rand() < 0.4) say(pp, pick(['🎶', '♪']), 1.4); else if (!pp.lead && rand() < 0.12) say(pp, '👏', 1); return; }
+  if (r === 'chant') { setAct(pp, 'chant', rnd(3, 7)); if (rand() < 0.2) say(pp, '🎶', 1.2); return; }
+  if (r === 'prostrate') return setAct(pp, 'prostrate', 1e9, { n: 0 });
+  if (r === 'shoes') return setAct(pp, 'shoes', rnd(2, 5), { pt: rand() < 0.5 ? V(rnd(-1, 3), 1, rnd(0, 2.4)) : V(4.2, 0.4, rnd(0.4, 1.8)) });
+  if (r === 'tea') {
+    const [x0, x1] = sc.teaX || [-1.4, 4.3], x = rnd(x0, x1);
+    setAct(pp, 'tea', Infinity, { walking: true });
+    walkTo(pp, [V(x, FY, 3.04)], 0.7, () => { pp.face = Math.PI; setAct(pp, 'tea', rnd(2.5, 4.5), { walking: false }); if (rand() < 0.75) say(pp, pick(sc.teaCalls || ['Tea!', 'Hot tea!', '☕', 'Tea, tea!']), 1.5); });
+  }
+}
+/* a moment of life while waiting in line */
+function queueAct(pp) {
+  const Q = pp.sc.Q, k = pp.q.slot, ahead = Q.list[k - 1], behind = Q.list[k + 1];
+  const L = [{ id: 'wait', w: 3 }, { id: 'look', w: 2 }, { id: 'crane', w: k > 6 ? 1.3 : 0.4 }, { id: 'sigh', w: 0.5 }];
+  if (ahead && !paused(ahead) && ahead.act.id !== 'talk' && ahead.legs === 'stand') L.push({ id: 'talk', w: 0.7 });
+  if (pp.prop && pp.prop.kind === 'phone') L.push({ id: 'phone', w: 5 });
+  if (pp.kind === 'kid') L.push({ id: 'squat', w: 2.5 });
+  else if (!pp.prop || !pp.prop.vis || pp.prop.kind === 'phone') L.push({ id: 'fan', w: 0.8 });
+  const c = pickW(L.filter((o) => o.id !== pp.act.id || o.id === 'wait')).id, d = rnd(2.5, 6);
+  if (c === 'talk') { setAct(pp, 'talk', d, { partner: ahead, leader: true }); setAct(ahead, 'talk', d, { partner: pp, leader: false }); return; }
+  if (c === 'look') {
+    const r = rand(), who = pp.sc.people.filter((o) => o !== pp && o.p.root.visible && !o.q);
+    if (r < 0.55 && who.length) return setAct(pp, 'look', d, { who: pick(who) });
+    return setAct(pp, 'look', d, { pt: V(rnd(-4, 4), rnd(0.6, 2), rnd(-3, 3.5)) });
+  }
+  if (c === 'squat') { setLegs(pp, 'cross'); say(pp, pick(['Still?', '😩', 'How long?', 'I’m tired']), 1.6); return setAct(pp, 'squat', rnd(4, 8)); }
+  setAct(pp, c, c === 'phone' ? rnd(4, 9) : d);
+  if (c === 'crane' && rand() < 0.4) say(pp, '👀', 1.2);
+  else if (c === 'sigh' && rand() < 0.6) say(pp, pick(['😮‍💨', '⏳', 'So long…', '😓']), 1.4);
+  else if (c === 'fan' && rand() < 0.5) say(pp, '🥵', 1.2);
+  else if (c === 'wait' && rand() < 0.08) say(pp, pick(['⏳', 'Almost…', '🙏']), 1.4);
+}
+function labelOf(pp) {
+  const a = pp.act, L = pp.sc.L;
+  if (pp.role === 'sitter') return L.sit;
+  const inw = isIn(pp) && pp.lit > 0.4;
+  if (pp.q) {
+    const n = 'In line, #' + (pp.q.slot + 1);
+    if (inw) return n + ' · eyes closed, looking within';
+    if (pp.moving) return n + ' · shuffling forward';
+    return n + ({ talk: ' · chatting', phone: ' · on the phone', crane: ' · craning to see', look: ' · looking around', squat: ' · tired of standing', fan: ' · fanning', sigh: ' · sighing' }[a.id] || '');
+  }
+  if (inw) return 'Eyes closed, looking within';
+  if (pp.role === 'sing') return pp.lead ? L.sing : L.clap;
+  if (pp.role === 'prostrate') return L.prostrate + ', ' + (pp.count || 23) + ' of 108';
+  if (a.id === 'kora') return L.kora + ', round ' + Math.min(a.laps, a.lap + 1) + ' of ' + a.laps;
+  if (a.id === 'step') return 'Stepping up to the door';
+  if (a.id === 'glimpse') return 'At the front: a two-second glimpse';
+  if (a.id === 'go') return a.lab;
+  if (a.id === 'leave') return 'Heading home';
+  if (a.id === 'circle') return L.circle + ', round ' + Math.min(a.laps, a.lap + 1) + ' of ' + a.laps;
+  return L[a.id] || L[pp.role] || 'Looking around';
+}
+
+/* ---------- per-frame motion ---------- */
+function lookAngles(root, eyeY, world, out) {
+  tmpLA.copy(world); root.worldToLocal(tmpLA);
+  const dx = tmpLA.x, dy = tmpLA.y - eyeY, dz = tmpLA.z;
+  out.yaw = Math.atan2(dx, dz); out.pitch = Math.atan2(-dy, Math.hypot(dx, dz) + 1e-6); return out;
+}
+function walkStep(o, dt) {
+  const w = o.walk; if (!w) return;
+  if (paused(o)) { o.moving = 0; return; }
+  if (w.delay > 0) { w.delay -= dt; o.moving = 0; return; }
+  const R = o.p.root.position, tg = w.pts[w.i];
+  tmpW.set(tg.x - R.x, 0, tg.z - R.z); const d = tmpW.length();
+  if (d < 0.04) { w.i++; if (w.i >= w.pts.length) { o.walk = null; o.moving = 0; if (w.then) w.then(); } return; }
+  R.addScaledVector(tmpW.normalize(), Math.min(d, w.speed * dt));
+  o.p.root.rotation.y = dampAngle(o.p.root.rotation.y, Math.atan2(tmpW.x, tmpW.z), 9, dt);
+  o.phase += dt * w.speed * 8; o.moving = 1;
+}
+function poseAct(pp, a) {
+  const el = now - a.t0, sc = pp.sc, pr = pp.prop && pp.prop.vis ? pp.prop.kind : null, free = !pr || pr === 'phone';
+  switch (a.id) {
+    case 'wait': if (rand() < 0.002) a.fwd = !a.fwd; if (a.fwd) return null; P.tgt = sc.SG; return;
+    case 'look': P.tgt = a.who ? a.who.head : a.pt; return;
+    case 'crane': P.lift = 0.045 + Math.sin(el * 3) * 0.015; P.tgt = sc.SG; return;
+    case 'talk': P.tgt = a.partner.head; if (free) { P.aR = -0.6 - Math.max(0, Math.sin(el * 4 + pp.phase)) * 0.5; P.aRz = 0.2; } return;
+    case 'phone': P.pitch = 0.6; P.aR = -1.75 + Math.sin(now * 7 + pp.phase) * 0.04; P.aRz = 0.35; P.aL = -1.2; P.aLz = -0.3; P.noLook = true; return;
+    case 'fan': P.aR = -2.0 + Math.sin(el * 13) * 0.22; P.aRz = 0.62; P.tgt = sc.SG; return;
+    case 'sigh': P.pitch = 0.4; P.bow = 0.05; P.noLook = true; return;
+    case 'squat': P.pitch = 0.2; P.tgt = sc.SG; return;
+    case 'step': case 'go': case 'leave': return;
+    case 'glimpse': {
+      if (free) { P.aL = -1.3; P.aLz = -0.62; P.aR = -1.3; P.aRz = 0.62; }
+      P.bow = 0.32 * smooth01(el / 0.5) * (el > 1.5 ? 1 - smooth01((el - 1.5) / 0.4) : 1); P.tgt = sc.sanct.p; P.lift = el < 0.6 ? 0.03 : 0; return;
+    }
+    case 'ring': {
+      P.aR = -2.55 + Math.sin(el * 6) * 0.1; P.aRz = 0.1; P.tgt = tmpA.copy(a.B ? sc.bell.pv.position : sc.SG).setY(1.5);
+      if (!a.rang && el > 0.5) { a.rang = true; sc.bell.v += 4.5; sfx('tbell'); if (rand() < 0.4) say(pp, '🔔', 1.2); }
+      if (el > 1.4) { P.aR = -1.3; P.aL = -1.3; P.aLz = -0.62; P.aRz = 0.62; P.bow = 0.15; }
+      return;
+    }
+    case 'light': {
+      P.bow = 0.32; P.aR = -0.85; P.aRz = 0.12; P.tgt = a.l.p;
+      if (!a.done && el > 1.0) { a.done = true; a.l.lit = true; a.l.until = now + rnd(45, 90); sfx('fft'); if (rand() < 0.3) say(pp, sc.lampIcon || '🪔', 1.2); }
+      if (el > 1.5) { P.aL = -1.3; P.aLz = -0.62; P.aR = -1.3; P.aRz = 0.62; P.bow = 0.18; P.closed = true; }
+      return;
+    }
+    case 'circle': if (a.nam && free) { P.aL = -1.3; P.aLz = -0.62; P.aR = -1.3; P.aRz = 0.62; } P.tgt = tmpA.copy(a.C).setY(0.9); P.soft = true; return;
+    case 'guard': { const g = sc.Q.glimpser; P.tgt = g ? g.head : sc.Q.list[0] ? sc.Q.list[0].head : null; if (a.wave) { P.aL = -1.2 + Math.sin(el * 7) * 0.35; P.aLz = 0.75; } return; }
+    case 'sit': P.aL = -0.55; P.aLz = 0.3; P.aR = -0.55; P.aRz = -0.3; P.closed = true; P.pitch = 0.12; P.noLook = true; return;
+    case 'sell': P.tgt = a.pt || null; if (a.call) { P.aR = -2.4 + Math.sin(el * 5) * 0.15; P.aRz = 0.1; } return;
+    case 'tea': if (!a.walking) { P.tgt = tmpA.set(pp.p.root.position.x, 1.2, 2.4); P.aR = -1.35 + Math.sin(el * 2) * 0.1; } return;
+    case 'photo': if (a.chk) { P.aL = -1.3; P.aLz = -0.4; P.aR = -1.3; P.aRz = 0.4; P.pitch = 0.5; P.noLook = true; } else { P.aL = -2.2; P.aLz = -0.5; P.aR = -2.2; P.aRz = 0.5; P.tgt = sc.SG; } return;
+    case 'feed': { P.tgt = sc.feedPt; P.bow = 0.12; const k = Math.max(0, Math.sin(el * 3.4)); P.aR = -0.35 - 1.2 * k; P.aRz = 0.2; P.aL = -1.0; P.aLz = -0.25; if (k > 0.98 && !a.thrown) { a.thrown = true; sc.feedAt = now; } if (k < 0.5) a.thrown = false; return; }
+    case 'shoes': P.tgt = a.pt; return;
+    case 'bless': {
+      P.tgt = tmpA.set(-1.05, 0.8, -1.8); const k = el < 0.9 ? -1 : Math.floor((el - 0.9) / 0.42);
+      if (k < 0) { P.bow = 0.22; P.aR = -0.8; P.aRz = 0.2; }
+      else if (k < 4) { const C = [[-2.55, 0.8], [-1.35, 0.7], [-1.45, 1.05], [-1.6, 0.2]][k]; P.aR = C[0]; P.aRz = C[1]; P.noLook = true; P.pitch = 0.2; }
+      else { P.aL = -1.3; P.aLz = -0.62; P.aR = -1.3; P.aRz = 0.62; P.closed = true; P.bow = 0.1; }
+      return;
+    }
+    case 'pray': P.aL = -1.3; P.aLz = -0.62; P.aR = -1.3; P.aRz = 0.62; P.closed = el > 1; P.bow = 0.12; P.pitch = 0.2; P.noLook = true; return;
+    case 'wash': {
+      P.bow = 0.28; P.pitch = 0.35; P.noLook = true; P.aR = -1.85 + Math.sin(el * 8) * 0.2; P.aRz = 0.25; P.aL = -1.25; P.aLz = -0.25;
+      if (!a.wd && el > 0.3) { a.wd = true; sfx('water'); }
+      return;
+    }
+    case 'salah': {
+      P.noLook = true; P.pitch = 0.3; P.aL = -1.15; P.aLz = -0.4; P.aR = -1.15; P.aRz = 0.4;
+      let want = 'stand', bow = 0;
+      const down = () => { P.aL = -2.85; P.aR = -2.85; P.aLz = -0.1; P.aRz = 0.1; P.pitch = 0.15; };
+      const sit = () => { P.aL = -0.55; P.aR = -0.55; P.aLz = -0.05; P.aRz = 0.05; };
+      if (el > 1.8 && el <= 2.9) { bow = 1.1; P.aL = -0.45; P.aR = -0.45; P.aLz = -0.05; P.aRz = 0.05; }
+      else if (el > 3.9 && el <= 4.5) want = 'kneel';
+      else if (el > 4.5 && el <= 5.9) { want = 'kneel'; bow = 1.4; down(); }
+      else if (el > 5.9 && el <= 6.6) { want = 'kneel'; sit(); }
+      else if (el > 6.6 && el <= 7.9) { want = 'kneel'; bow = 1.4; down(); }
+      else if (el > 7.9) { want = 'kneel'; sit(); P.yaw = el < 8.6 ? 0.9 : -0.9; }
+      P.bow = bow; if (pp.legs !== want) setLegs(pp, want);
+      return;
+    }
+    case 'recite': P.aL = -1.25; P.aLz = -0.18; P.aR = -1.25; P.aRz = 0.18; P.pitch = 0.5; P.bow = 0.1 + Math.sin(el * 1.7 + pp.phase) * 0.05; P.noLook = true; return;
+    case 'tie': {
+      P.tgt = tmpA.set(a.s.p.x, 0.65, -3.45); const k = Math.sin(el * 9) * 0.08; P.aL = -1.7 + k; P.aLz = -0.4; P.aR = -1.7 - k; P.aRz = 0.4; P.bow = 0.05;
+      if (!a.done && el > 1.6) { a.done = true; sc.addThread(a.s.p.x); if (rand() < 0.3) say(pp, '🧵', 1.2); }
+      if (el > 2.4) { P.aL = -1.3; P.aLz = -0.62; P.aR = -1.3; P.aRz = 0.62; P.closed = true; }
+      return;
+    }
+    case 'listen': P.roll = Math.sin(el * 2.2 + pp.phase) * 0.12; P.tgt = tmpA.set(2.75, 0.7, -2.6); if (Math.sin(el * 0.9 + pp.phase) > 0.85) { P.aR = -2.5; P.aRz = 0.1; } return;
+    case 'kora': if (free) { P.aR = -0.75 + Math.sin(el * 8) * 0.12; P.aRz = -0.55; } return;
+    case 'sing': {
+      P.roll = Math.sin(now * 2.3 + pp.phase) * 0.1; P.pitch = -0.05; P.noLook = true;
+      if (pp.lead) { P.aL = -0.95 + Math.sin(now * 2.3) * 0.12; P.aLz = -0.2; P.aR = -1.0; P.aRz = 0.3; }
+      else { const b = beatPulse(); P.aL = -1.25; P.aR = -1.25; P.aLz = -0.25 - 0.42 * b; P.aRz = 0.25 + 0.42 * b; }
+      return;
+    }
+    case 'chant': P.aL = -0.55; P.aLz = 0.3; P.aR = -0.55; P.aRz = -0.3; P.bow = 0.06 + Math.sin(now * 1.6 + pp.phase) * 0.04; P.pitch = 0.15; P.noLook = true; return;
+    case 'prostrate': {
+      const u = el % 7.5; let pr = 0;
+      if (u < 0.7) { P.aL = -2.9; P.aR = -2.9; P.aLz = -0.3; P.aRz = 0.3; }
+      else if (u < 1.2) { P.aL = -2.3; P.aR = -2.3; P.aLz = -0.62; P.aRz = 0.62; }
+      else if (u < 1.7) { P.aL = -1.3; P.aR = -1.3; P.aLz = -0.62; P.aRz = 0.62; }
+      else if (u < 3.0) { pr = smooth01((u - 1.7) / 1.3); P.aL = -2.95; P.aR = -2.95; P.aLz = -0.15; P.aRz = 0.15; }
+      else if (u < 4.2) { pr = 1; P.aL = -3.0; P.aR = -3.0; P.aLz = -0.15; P.aRz = 0.15; }
+      else if (u < 5.6) { const k = smooth01((u - 4.2) / 1.4); pr = 1 - k; P.aL = -2.95 * (1 - k); P.aR = -2.95 * (1 - k); }
+      P.prone = pr; P.noLook = true; P.pitch = -0.2 * pr;
+      const n = Math.floor(el / 7.5); if (n !== a.n) { a.n = n; if (n > 0) pp.count = (pp.count || 23) + 1; if (n > 0 && rand() < 0.35) say(pp, pp.count + '/108', 1.4); }
+      return;
+    }
+  }
+}
+function posePerson(pp, dt) {
+  const S = pp.S, p = pp.p, a = pp.act, pr = pp.prop && pp.prop.vis ? pp.prop.kind : null;
+  Object.assign(P, { aL: 0, aR: 0, aLz: 0.07, aRz: -0.07, pitch: 0.05, yaw: 0, roll: 0, bow: 0, lift: 0, prone: 0, closed: false, tgt: null, noLook: false, soft: false });
+  if (pr === 'plate' || pr === 'garland' || pr === 'khata' || pr === 'quran') { P.aL = -0.95; P.aLz = -0.28; P.aR = -0.95; P.aRz = 0.28; }
+  else if (pr === 'candle' || pr === 'bouquet' || pr === 'tasbih') { P.aR = -0.95; P.aRz = 0.28; }
+  else if (pr === 'balloons') { P.aR = -1.5; P.aRz = 0.15; }
+  else if (pr === 'chadar') { P.aL = -2.85; P.aLz = -0.32; P.aR = -2.85; P.aRz = 0.32; }
+  else if (pr === 'basket') { P.aL = -0.2; P.aLz = 0.2; }
+  else if (pr === 'wheel' || pr === 'fan') { P.aR = -1.1; P.aRz = 0.15; }
+  else if (pr === 'baby') { P.aL = -1.0; P.aLz = -0.55; P.aR = -1.05; P.aRz = 0.6; }
+  else if (pr === 'kettle') { P.aL = -0.1; P.aLz = 0.2; P.aR = -0.95; P.aRz = 0.28; }
+  poseAct(pp, a);
+  if ((isIn(pp) && pp.lit > 0.15) || (everyoneIn && pp.role !== 'sitter')) {
+    const keep = pr === 'chadar' || pr === 'baby' || pp.role === 'sitter';
+    if (!keep) { P.aL = -1.05; P.aLz = -0.75; P.aR = -0.95; P.aRz = 0.72; }
+    if (pp.role !== 'sitter') { P.pitch = 0.32; P.bow = 0.04; P.lift = 0; }
+    P.closed = true; P.tgt = null; P.noLook = true; P.prone = 0;
+  }
+  const eyeY = LEG_Y[pp.legs] + 0.77;
+  if (P.tgt && !P.noLook) { lookAngles(p.root, eyeY, P.tgt, LA); P.yaw = LA.yaw; P.pitch = LA.pitch; }
+  const still = !pp.moving, tor = still ? clamp(P.yaw * 0.35, -0.55, 0.55) : 0, r = 6;
+  S.torso = damp(S.torso, tor, r, dt);
+  S.yaw = damp(S.yaw, clamp(P.yaw - tor, -1.35, 1.35), r, dt);
+  S.pitch = damp(S.pitch, clamp(P.pitch, -0.6, 0.8), r, dt);
+  S.roll = damp(S.roll, P.roll, r, dt);
+  S.bow = damp(S.bow, P.bow, 5, dt); S.lift = damp(S.lift, P.lift, 6, dt);
+  S.aL = damp(S.aL, P.aL, 7, dt); S.aR = damp(S.aR, P.aR, 7, dt); S.aLz = damp(S.aLz, P.aLz, 7, dt); S.aRz = damp(S.aRz, P.aRz, 7, dt);
+  const walk = pp.moving, swing = Math.sin(pp.phase) * walk;
+  const freeL = Math.abs(P.aL) < 0.3, freeR = Math.abs(P.aR) < 0.3;
+  p.neck.rotation.set(S.pitch, S.yaw, S.roll);
+  p.body.rotation.set(S.bow, S.torso, 0);
+  p.body.position.y = LEG_Y[pp.legs] + S.lift + Math.abs(Math.sin(pp.phase)) * 0.02 * walk;
+  p.armL.p.rotation.set(S.aL + (freeL ? swing * 0.45 : 0), 0, S.aLz);
+  p.armR.p.rotation.set(S.aR - (freeR ? swing * 0.45 : 0), 0, S.aRz);
+  if (pp.legs === 'stand') { p.legs[0].rotation.x = swing * 0.5; p.legs[1].rotation.x = -swing * 0.5; }
+  const blink = ((now + pp.phase) % 4.1) < 0.11 ? 0.1 : 1;
+  for (const e of p.eyes) e.scale.y = P.closed ? 0.12 : blink;
+  if (!pp.walk && !pp.q && pp.act.id !== 'circle' && pp.act.id !== 'kora') p.root.rotation.y = dampAngle(p.root.rotation.y, pp.face, 5, dt);
+  if (pp.role === 'prostrate') { S.prone = damp(S.prone || 0, P.prone, 5, dt); p.root.rotation.x = 1.42 * S.prone; p.root.position.y = FY + 0.17 * S.prone; }
+  if (pp.prop && pp.prop.sway) pp.prop.sway.rotation.z = Math.sin(now * 1.3 + pp.phase) * 0.04;
+  p.body.scale.y = 1 + Math.sin(now * 1.7 + pp.phase) * 0.01;
+  p.shirtM.emissiveIntensity = 0.32 * pp.lit;
+  if (pp.prop && pp.prop.spin) pp.prop.spin.rotation.y += dt * 7 * (paused(pp) ? 0.2 : 1);
+}
+
+/* ---------- pigeons: peck, hop, and take off when someone walks too close ---------- */
+function pigeonStep(sc, dt) {
+  for (const b of sc.pigeons) {
+    const g = b.g;
+    if (b.dur > 0) {
+      const u = clamp((now - b.t0) / b.dur, 0, 1);
+      g.position.lerpVectors(b.from, b.to, u); g.position.y = FY + Math.sin(Math.PI * u) * b.h;
+      if (u >= 1) { b.dur = 0; b.pos.copy(b.to); b.next = now + rnd(0.6, 3); }
+      continue;
+    }
+    if (everyoneIn) { b.hd.rotation.x = 0.1; continue; }
+    b.hd.rotation.x = Math.max(0, Math.sin((now + b.peck) * 5)) > 0.85 ? 0.9 : 0.1;
+    let scare = false;
+    for (const o of sc.people) if (o.moving && o.p.root.visible && o.p.root.position.distanceToSquared(g.position) < 0.2) { scare = true; break; }
+    const fed = sc.feedAt && now - sc.feedAt < 2 && sc.feedPt && b.area[2] > 2;
+    if (scare || now > b.next || (fed && rand() < dt * 2)) {
+      const [x0, x1, z0, z1] = b.area;
+      b.from.copy(g.position);
+      if (scare) { b.to.set(rnd(x0, x1), FY, rnd(z0, z1)); b.h = rnd(0.6, 1.1); b.dur = rnd(0.9, 1.4); if (rand() < 0.3) sfx('flutter'); }
+      else if (fed) { b.to.set(clamp(sc.feedPt.x + rnd(-0.4, 0.4), x0, x1), FY, clamp(sc.feedPt.z + rnd(-0.15, 0.4), z0, z1)); b.h = 0.06; b.dur = 0.35; }
+      else { b.to.set(clamp(g.position.x + rnd(-0.3, 0.3), x0, x1), FY, clamp(g.position.z + rnd(-0.3, 0.3), z0, z1)); b.h = 0.05; b.dur = 0.3; }
+      b.t0 = now; g.rotation.y = Math.atan2(b.to.x - b.from.x, b.to.z - b.from.z);
+    }
+  }
+}
+
+/* ---------- lights: chests, lamps, the sanctum, the strings on the walls ---------- */
+let inFrac = 0, dim = 0, dimT = -1, nextStrike = 0, tinged = false, gridBase = 0.16, catchBase = 0.2;
+function updateGlow(sc) {
+  const fl = (ph, k) => 0.85 + 0.15 * Math.sin(now * 9 + ph) * Math.sin(now * 5.3 + ph * 2) * k;
+  for (const pp of sc.people) {
+    if (!pp.p.root.visible) continue;
+    pp.p.chest.getWorldPosition(pp.chestW);
+    const L = pp.lit, s = pp.p.root.scale.x;
+    cores.add(pp.chestW, (0.12 + 0.08 * L + 0.1 * dim * L) * s, (0.5 + 0.5 * L) * fl(pp.phase, 1), C_CORE);
+    if (L > 0.02) halos.add(pp.chestW, (0.9 + 0.5 * L - 0.3 * dim * L) * s, 0.85 * L * fl(pp.phase, 0.5), C_HALO);
+    if (pp.prop && pp.prop.vis) for (const f of pp.prop.flames) { tmpA.copy(f); pp.p.body.localToWorld(tmpA); halos.add(tmpA, 0.16, 0.9 * fl(pp.phase + 1, 1), C_FLAME); halos.add(tmpA, 0.06, 0.9, C_FLAME2); }
+  }
+  let litN = 0;
+  for (const l of sc.lamps) if (l.lit) { litN++; halos.add(l.p, 0.2, 0.95 * fl(l.ph, 1), C_FLAME); halos.add(l.p, 0.07, 1, C_FLAME2); }
+  for (const f of sc.flames) { halos.add(f.p, 0.22, 0.95 * fl(f.ph, 1), C_FLAME); halos.add(f.p, 0.07, 1, C_FLAME2); }
+  for (const s of sc.strings) halos.add(s.p, 0.13, (0.55 + 0.35 * Math.sin(now * 1.3 + s.ph)) * (1 - 0.8 * dim), C_STR);
+  const k = (1 - 0.72 * inFrac) * (1 - 0.85 * dim);
+  halos.add(sc.sanct.p, 2.6, 0.55 * k, C_SANCT);
+  sc.sanct.m.color.copy(sc.sanct.base).multiplyScalar(0.35 + 0.65 * k);
+  sc.sanct.light.intensity = 6 * k;
+  if (sc.lampLight) sc.lampLight.intensity = 0.4 + litN * 0.12;
+  for (const l of sc.rowLights) l.intensity = 5.5 * inFrac;
+  halos.flush(); cores.flush();
+}
+
+/* ---------- bubbles (HTML, so they stay sharp) ---------- */
+const proj = V(), PICTO = /\p{Extended_Pictographic}/u;
+function showDom(b, anchor, on, shape, text, me) {
+  const d = b.db, cls = 'bb ' + shape + (me ? ' me' : '');
+  if (on && (d.txt !== text || d.cls !== cls)) { d.i.textContent = text; d.txt = text; d.cls = cls; d.o.className = cls + (d.on ? ' on' : ''); }
+  if (on !== d.on) { d.on = on; d.o.classList.toggle('on', on); if (!on) d.offAt = now; }
+  if (on || now - d.offAt < 0.35) {
+    proj.copy(anchor).project(camera);
+    d.o.style.transform = 'translate(' + ((proj.x + 1) * 0.5 * innerWidth).toFixed(1) + 'px,' + ((1 - proj.y) * 0.5 * innerHeight).toFixed(1) + 'px)';
+  }
+}
+function updateBubbles() {
+  for (const pp of people) {
+    let on = pp.p.root.visible && now < pp.bubUntil && !everyoneIn && !(isIn(pp) && pp.lit > 0.3), shape = pp.bubShape, text = pp.bubText;
+    const a = pp.act;
+    if (a.id === 'talk' && !on && pp.p.root.visible && !paused(pp)) {
+      const k = Math.floor((now - a.t0) / 0.9);
+      if ((k + (a.leader ? 0 : 1)) % 2 === 0 && (k * 7 + pp.i) % 3 === 0) { on = true; text = TALK[(k * 3 + pp.i) % TALK.length]; shape = PICTO.test(text) ? 'pop' : 'say'; }
+    }
+    tmpB.copy(pp.head); tmpB.y += 0.36 * pp.p.root.scale.y;
+    showDom(pp, tmpB, on, shape, text, pp === sel);
+  }
+}
+function hideBubbles(sc) { for (const o of sc.people) { o.db.on = false; o.db.o.classList.remove('on'); } }
+
+/* ---------- sound: a crowd, bells, lamps, pigeons, and the hush when everyone looks within ---------- */
+const AU = { ctx: null, out: null, fx: null, noise: null, murmur: null, bedG: null, bedF: null, on: false, active: false };
+function env(g, t, a, d, v) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + d); }
+function tone(f0, f1, dur, type, vol, w = 0, attack = 0.005, lp = 0, dest = AU.fx) {
+  const c = AU.ctx, t = c.currentTime + w, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  env(g, t, attack, dur, vol);
+  if (lp) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp; o.connect(f); f.connect(g); } else o.connect(g);
+  g.connect(dest); o.start(t); o.stop(t + dur + 0.05);
+}
+function noise(dur, type, f0, f1, q, vol, w = 0, attack = 0) {
+  const c = AU.ctx, t = c.currentTime + w, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = AU.noise; s.loop = true; f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  env(g, t, attack || Math.min(0.02, dur / 3), dur, vol);
+  s.connect(f); f.connect(g); g.connect(AU.fx); s.start(t, Math.random() * 0.8); s.stop(t + dur + 0.05);
+}
+const SFX = {
+  // a temple bell: a struck brass note with inharmonic partials that rings for a long time
+  tbell: (w) => { const f = 470 + Math.random() * 30; [[1, 0.07, 4.5], [2.32, 0.035, 3], [3.86, 0.02, 2], [5.4, 0.012, 1.2], [0.5, 0.03, 3.5]].forEach(([k, v, d]) => tone(f * k, f * k * 0.998, d, 'sine', v, w, 0.003)); noise(0.03, 'bandpass', 2500, 0, 1.2, 0.05, w); },
+  fft: (w) => { noise(0.18, 'bandpass', 2400, 900, 0.9, 0.04, w, 0.01); tone(180, 160, 0.4, 'sine', 0.015, w + 0.05, 0.05); },
+  click: (w) => { noise(0.02, 'highpass', 3000, 0, 1, 0.06, w); noise(0.03, 'bandpass', 1500, 0, 2, 0.04, w + 0.06); },
+  flutter: (w) => { for (let i = 0; i < 6; i++) noise(0.05, 'bandpass', 700 + Math.random() * 300, 0, 1.4, 0.03, w + i * 0.06); },
+  bowl: (w, a = 1) => { const f = 293.7; tone(f, f, 8, 'sine', 0.07 * a, w, 0.02, 0, AU.out); tone(f * 1.003, f * 1.003, 8, 'sine', 0.045 * a, w, 0.02, 0, AU.out); tone(f * 2.71, f * 2.71, 5, 'sine', 0.02 * a, w, 0.02, 0, AU.out); tone(f * 5.15, f * 5.15, 2.5, 'sine', 0.007 * a, w, 0.02, 0, AU.out); tone(f * 8.3, f * 8.3, 1.2, 'sine', 0.003 * a, w, 0.02, 0, AU.out); noise(0.02, 'bandpass', 3200, 0, 2, 0.02 * a, w); },
+  ting: (w) => { tone(1568, 1568, 4, 'sine', 0.03, w, 0.002, 0, AU.out); tone(2349, 2349, 2.6, 'sine', 0.012, w, 0.002, 0, AU.out); tone(3136, 3136, 1.4, 'sine', 0.005, w, 0.002, 0, AU.out); },
+  water: (w) => { noise(0.4, 'bandpass', 3500, 2500, 0.8, 0.02, w, 0.06); noise(0.25, 'highpass', 5200, 0, 1, 0.01, w + 0.1); },
+  warm: (w) => [261.6, 329.6, 392].forEach((f, i) => tone(f, f, 2.4, 'sine', 0.025, w + i * 0.08, 0.3, 0, AU.out)),
+  clap: (w) => { noise(0.05, 'bandpass', 1250, 0, 1.1, 0.05, w); noise(0.045, 'bandpass', 1700, 0, 1.4, 0.035, w + 0.012); noise(0.04, 'bandpass', 1050, 0, 1.2, 0.03, w + 0.025); },
+  ding: (w) => { const f = 1900 + Math.random() * 400; tone(f, f, 0.9, 'sine', 0.025, w, 0.002); tone(f * 2.7, f * 2.7, 0.3, 'sine', 0.008, w, 0.002); },
+  organ: (w) => [130.8, 196, 261.6, 329.6, 392].forEach((f, i) => tone(f, f, 6, 'triangle', 0.011, w + i * 0.05, 1.2, 1400, AU.out)),
+  toll: (w) => { const f = 196; [[1, 0.06, 6], [2.0, 0.03, 4], [2.4, 0.02, 3], [3.0, 0.012, 2], [0.5, 0.03, 5]].forEach(([k, v, d]) => tone(f * k, f * k * 0.999, d, 'sine', v, w, 0.004)); },
+};
+const audible = () => AU.on && AU.active && started && !prerolling;
+function sfx(k, w = 0, a) { if (!audible() || !SFX[k]) return; try { SFX[k](w, a); } catch (e) { /* audio is optional */ } }
+function initAudio() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  const c = (AU.ctx = new AC()), comp = c.createDynamicsCompressor();
+  comp.connect(c.destination); AU.out = c.createGain(); AU.out.gain.value = 0; AU.out.connect(comp); AU.fx = c.createGain(); AU.fx.connect(AU.out);
+  AU.noise = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+  const d = AU.noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = c.createBufferSource(), bp = c.createBiquadFilter(), lp = c.createBiquadFilter(), swell = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+  src.buffer = AU.noise; src.loop = true; bp.type = 'bandpass'; bp.frequency.value = 520; bp.Q.value = 0.9; lp.type = 'lowpass'; lp.frequency.value = 1400;
+  AU.murmur = c.createGain(); AU.murmur.gain.value = 0; swell.gain.value = 1; lfo.frequency.value = 0.3; lg.gain.value = 0.3;
+  src.connect(bp); bp.connect(lp); lp.connect(swell); swell.connect(AU.murmur); AU.murmur.connect(AU.out); lfo.connect(lg); lg.connect(swell.gain); src.start(); lfo.start();
+  const s2 = c.createBufferSource(); AU.bedF = c.createBiquadFilter(); AU.bedG = c.createGain();
+  s2.buffer = AU.noise; s2.loop = true; AU.bedF.type = 'lowpass'; AU.bedF.frequency.value = 220; AU.bedG.gain.value = 0;
+  s2.connect(AU.bedF); AU.bedF.connect(AU.bedG); AU.bedG.connect(AU.out); s2.start(0.3);
+  // a soft singing-bowl hum that sits under everything once the lights are on
+  AU.pad = c.createGain(); AU.pad.gain.value = 0; AU.pad.connect(AU.out);
+  [[293.7, 1], [294.6, 0.7], [796, 0.18], [1512, 0.05]].forEach(([f, v]) => { const o = c.createOscillator(), gg = c.createGain(); o.frequency.value = f; gg.gain.value = v; o.connect(gg); gg.connect(AU.pad); o.start(); });
+  // a drone each place tunes: a harmonium, monks chanting
+  const dr = (AU.drone = { g: c.createGain(), f: c.createBiquadFilter(), o: [] });
+  dr.g.gain.value = 0; dr.f.type = 'lowpass'; dr.f.frequency.value = 700; dr.f.connect(dr.g); dr.g.connect(AU.out);
+  for (let i = 0; i < 3; i++) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 110 * (i + 1); o.connect(dr.f); o.start(); dr.o.push(o); }
+  return true;
+}
+function drone(f, lp, gain) { if (!audible() || !AU.drone) return; const c = AU.ctx, d = AU.drone; if (f) f.forEach((v, i) => d.o[i].frequency.setTargetAtTime(v, c.currentTime, 0.4)); if (lp) d.f.frequency.setTargetAtTime(lp, c.currentTime, 0.4); d.g.gain.setTargetAtTime(gain, c.currentTime, 0.7); }
+function setSound(on) {
+  if (on && !AU.ctx && !initAudio()) return;
+  AU.on = on;
+  const c = AU.ctx;
+  if (on) { c.resume(); AU.out.gain.setTargetAtTime(0.7, c.currentTime, 0.1); }
+  else { AU.out.gain.setTargetAtTime(0, c.currentTime, 0.06); setTimeout(() => { if (!AU.on) c.suspend(); }, 400); }
+  elSnd.classList.toggle('on', on); elSnd.setAttribute('aria-pressed', String(on));
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && AU.ctx) { AU.active = false; AU.ctx.suspend(); } });
+function ambience(dt) {
+  if (!audible()) return;
+  const busy = 1 - inFrac;
+  AU.murmur.gain.setTargetAtTime(0.004 + 0.07 * busy, AU.ctx.currentTime, 0.9);
+  AU.bedG.gain.setTargetAtTime(0.01 + 0.02 * busy, AU.ctx.currentTime, 0.9);
+  const within = everyoneIn && inFrac > 0.5;
+  AU.pad.gain.setTargetAtTime(within ? 0.018 + 0.014 * dim : 0, AU.ctx.currentTime, 1.4);
+  if (within && now >= nextStrike) { sfx('bowl', 0, 0.5); nextStrike = now + 6 + Math.random() * 3; }
+  ACTIVE.amb(dt, busy);
+}
+
+/* ---------- the followed person and the meter ---------- */
+let lastLabel = '', meterT = -9, lastBtn = null, hovered = null;
+const hm = (m) => { m = Math.max(0, Math.round(m)); return m >= 60 ? Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm' : m + 'm'; };
+function updateFollow() {
+  if (prerolling) return;
+  const s = sel, lab = s.p.root.visible ? labelOf(s) : 'Gone home';
+  if (lab !== lastLabel) { elTarget.textContent = lab; lastLabel = lab; }
+  if (everyoneIn !== lastBtn) { lastBtn = everyoneIn; elIn.classList.toggle('on', everyoneIn); elInL.textContent = everyoneIn ? 'Back to the line' : 'Look within'; }
+}
+function updateMeter() {
+  const s = sel, inLine = s.q || s.act.id === 'step' || s.act.id === 'glimpse' || s.seen >= 0;
+  elWait.textContent = s.role ? '–' : hm(s.waited); elWaitBar.style.width = (s.role ? 0 : Math.min(100, (s.waited / 420) * 100)).toFixed(1) + '%';
+  let g = -1; if (s.act.id === 'glimpse') g = Math.min(GLIMPSE, now - s.act.t0); else if (s.seen >= 0) g = s.seen;
+  elSeen.textContent = g < 0 || !inLine ? '–' : g.toFixed(g < GLIMPSE ? 1 : 0) + ' sec';
+  elSeenBar.style.width = (g <= 0 ? 0 : Math.max(0.8, (g / 60 / 240) * 100)).toFixed(2) + '%';
+  let n = 0, tot = 0; for (const pp of people) if (pp.p.root.visible) { tot++; if (pp.lit > 0.5) n++; }
+  elInN.textContent = n + '/' + tot; elInBar.style.width = (tot ? (100 * n) / tot : 0).toFixed(0) + '%';
+}
+
+/* ---------- one step ---------- */
+let frameNo = 0;
+function inView(pp) { proj.copy(pp.p.root.position); proj.y += 0.8; proj.project(camera); return proj.x > -1.15 && proj.x < 1.15 && proj.y > -1.25 && proj.y < 1.2; }
+function update(t, dt) {
+  now = t;
+  const sc = ACTIVE;
+  queueStep(sc, dt);
+  for (const pp of people) {
+    const a = pp.act;
+    if (paused(pp)) { if (a.until !== Infinity) a.until += dt; a.t0 += dt; }
+    else if (now >= a.until) {
+      if (a.end) { const e = a.end; a.end = null; e(); }
+      else if (pp.q) queueAct(pp);
+      else if (pp.role) roleAct(pp);
+    }
+    if (pp.act.id === 'circle') circleStep(pp, dt); else if (pp.act.id === 'kora') koraStep(pp, dt); else walkStep(pp, dt);
+    pp.lit = damp(pp.lit, isIn(pp) ? 1 : 0, isIn(pp) ? 1.8 : 2.4, dt);
+  }
+  // someone who stops in line holds up everyone behind them
+  for (const o of sc.Q.list) if (!everyoneIn && o.forced && o.lit > 0.6) { const b = sc.Q.list[o.q.slot + 1]; if (b && !b.forced && now > (b.bubUntil + 2) && rand() < dt * 0.25) say(b, pick(['Move!', 'Hello?', 'Keep going!', '😤']), 1.5); }
+  for (const pp of people) {
+    if (pp.q && pp.q.s > 8) pp.p.root.visible = inView(pp);
+    else if (!pp.q && pp.act.id === 'leave' && pp.p.root.position.x > 4.9) pp.p.root.visible = inView(pp);
+    else if (!pp.p.root.visible && (pp.q || pp.route)) pp.p.root.visible = true;
+    if (QL >= 2 && pp.q && pp.q.slot > 16 && pp.i % 2) pp.p.root.visible = false;
+    if (pp.p.root.visible) posePerson(pp, dt);
+  }
+  let n = 0, tot = 0; for (const pp of people) if (pp.p.root.visible) { tot++; n += pp.lit; }
+  inFrac = tot ? n / tot : 0;
+  // once every light is on and the room has held it for a while, the room itself goes dark
+  if (everyoneIn && inFrac > 0.95) { if (dimT < 0) dimT = now; } else dimT = -1;
+  const wantDim = dimT >= 0 && now - dimT > HOLD ? 1 : 0;
+  dim = damp(dim, wantDim, DARKEN, dt);
+  if (dim > 0.55 && !tinged) { tinged = true; sfx('ting'); } else if (dim < 0.1) tinged = false;
+  renderer.toneMappingExposure = 1.05 * (1 - 0.985 * dim);
+  gridMat.uniforms.uOpacity.value = gridBase * (1 - dim); catcher.material.opacity = catchBase * (1 - dim);
+  elBk.style.opacity = (dim * 0.985).toFixed(3);
+  sc.tick(dt); pigeonStep(sc, dt);
+  hemi.color.copy(COLD).lerp(WARM, inFrac); hemi.intensity = 0.45 + 0.2 * inFrac; fill.intensity = 0.3 + 0.35 * inFrac; moon.intensity = 0.75 - 0.25 * inFrac;
+  scene.updateMatrixWorld();
+  for (const pp of people) if (pp.p.root.visible) { pp.p.neck.getWorldPosition(pp.head); pp.head.y += 0.22 * pp.p.root.scale.y; }
+  updateGlow(sc);
+  updateFollow();
+  if (prerolling) return;
+  updateBubbles();
+  if (now - meterT > 0.2) { meterT = now; updateMeter(); }
+  ambience(dt);
+}
+
+/* ---------- framing and rendering ---------- */
+const LOOK0 = V(0.2, 0.6, -0.35), LOOK = LOOK0.clone(), DIR = V(1.0, 0.95, 1.12).normalize(), UP = V(0, 1, 0), camRight = V(), camUp = V(), tmpP = V(), tmpCD = V();
+const box8 = ([x0, x1, z0, z1], top) => { const out = []; for (const x of [x0, x1]) for (const y of [-0.32, top]) for (const z of [z0, z1]) out.push(V(x, y, z)); return out; };
+let camDist = 30;
+function placeCamera(dist, yawOff = 0) {
+  tmpCD.copy(DIR).applyAxisAngle(UP, yawOff);
+  camera.position.copy(LOOK).addScaledVector(tmpCD, dist);
+  camera.lookAt(LOOK); camera.updateMatrixWorld();
+}
+function fitCamera() {
+  camera.updateProjectionMatrix();
+  LOOK.copy(LOOK0);
+  const corners = box8(camera.aspect < 1 ? ACTIVE.tall : ACTIVE.wide, ACTIVE.topY);
+  const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), bottom = -0.97 + (innerWidth < 640 ? 0.42 : 0.16), top = innerWidth < 640 ? 0.62 : 0.78;
+  for (let pass = 0; pass < 3; pass++) {
+    let lo = 5, hi = 90;
+    for (let i = 0; i < 32; i++) {
+      const dd = (lo + hi) / 2; placeCamera(dd);
+      let ok = true;
+      for (const c of corners) { tmpP.copy(c).project(camera); if (Math.abs(tmpP.x) > 0.97 || tmpP.y > top || tmpP.y < bottom) { ok = false; break; } }
+      if (ok) hi = dd; else lo = dd;
+    }
+    camDist = hi; placeCamera(camDist);
+    if (pass === 2) break;
+    let x0 = 1, x1 = -1, y0 = 1, y1 = -1;
+    for (const c of corners) { tmpP.copy(c).project(camera); x0 = Math.min(x0, tmpP.x); x1 = Math.max(x1, tmpP.x); y0 = Math.min(y0, tmpP.y); y1 = Math.max(y1, tmpP.y); }
+    camRight.setFromMatrixColumn(camera.matrixWorld, 0); camUp.setFromMatrixColumn(camera.matrixWorld, 1);
+    LOOK.addScaledVector(camRight, ((x0 + x1) / 2) * camDist * th * camera.aspect).addScaledVector(camUp, ((y0 + y1) / 2 - (top + bottom) / 2) * camDist * th);
+  }
+}
+function layout() {
+  renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; fitCamera();
+  const sc = (innerHeight * renderer.getPixelRatio()) / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+  halos.m.uniforms.uScale.value = cores.m.uniforms.uScale.value = sc;
+}
+function render(force) {
+  renderer.shadowMap.needsUpdate = force || frameNo++ % 2 === 0;
+  renderer.setClearColor(0x000000, 0);
+  renderer.render(scene, camera);
+}
+function isDark() { const a = document.documentElement.getAttribute('data-theme'); return a ? a === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
+function applyTheme() {
+  const dk = isDark();
+  gridMat.uniforms.uColor.value.set(dk ? '#8b9bd8' : '#a69481'); gridBase = dk ? 0.22 : 0.16;
+  catchBase = dk ? 0.34 : 0.2; gridMat.uniforms.uOpacity.value = gridBase * (1 - dim); catcher.material.opacity = catchBase * (1 - dim);
+  if (!playing && started) render(true);
+}
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+const mq = matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+
+/* ---------- click someone to let them look within ---------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); ray.layers.set(2);
+function personAt(x, y) {
+  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const h = ray.intersectObjects(ACTIVE.picks, false).filter((x) => x.object.userData.pp.p.root.visible);
+  return h.length ? h[0].object.userData.pp : null;
+}
+function follow(o) { sel = o; lastLabel = ''; elName.textContent = o.name; meterT = -9; }
+function followSomeone() { const c = people.filter((o) => o.q && o.p.root.visible && o.q.s < 25); follow(c.length ? c[Math.floor(c.length * 0.4)] : people[0]); }
+function clickPerson(o) {
+  auto = false;
+  elTip.classList.add('gone');
+  if (o.role !== 'sitter') { o.forced = !o.forced; if (o.forced) sfx('warm'); }
+  follow(o);
+  if (!playing && started) { update(t, 1 / 60); render(true); }
+}
+function placeTag() {
+  if (!hovered) { elTag.classList.remove('on'); return; }
+  proj.copy(hovered.head); proj.y -= 0.34; proj.project(camera);
+  elTag.textContent = hovered.name + ' · ' + labelOf(hovered).replace(/^In line, /, '').toLowerCase();
+  elTag.style.transform = 'translate(' + ((proj.x + 1) * 0.5 * innerWidth).toFixed(1) + 'px,' + ((1 - proj.y) * 0.5 * innerHeight).toFixed(1) + 'px) translate(-50%,0)';
+  elTag.classList.add('on');
+}
+renderer.domElement.addEventListener('click', (e) => { const o = personAt(e.clientX, e.clientY); if (o) clickPerson(o); });
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  hovered = personAt(e.clientX, e.clientY); renderer.domElement.style.cursor = hovered ? 'pointer' : ''; placeTag();
+});
+renderer.domElement.addEventListener('pointerleave', () => { hovered = null; placeTag(); });
+function setWithin(on) {
+  everyoneIn = on;
+  const src = ACTIVE.sitter ? ACTIVE.sitter.p.root.position : V();
+  for (const sc of Object.values(SC)) for (const pp of sc.people) { if (on) pp.inAt = now + STILL + pp.p.root.position.distanceTo(src) * RIPPLE + rand() * 0.2; else { pp.forced = false; pp.inAt = Infinity; } }
+  nextStrike = now + 7.5;
+  if (on) sfx('bowl');
+}
+elIn.addEventListener('click', () => { auto = false; elNudge.classList.add('gone'); setWithin(!everyoneIn); if (!playing && started) { update(t, 1 / 60); render(true); } });
+elSnd.addEventListener('click', () => setSound(!AU.on));
+const QUOTES = {
+  temple: { em: 'Tat Tvam Asi', q: '“You are That.”', s: 'Chandogya Upanishad 6.8.7' },
+  church: { em: '', q: '“The kingdom of God is within you.”', s: 'Luke 17:21' },
+  shrine: { em: '', q: '“We are closer to him than his jugular vein.”', s: 'Qur’an 50:16' },
+  stupa: { em: '', q: '“Be a lamp unto yourself.”', s: 'The Buddha, Mahaparinibbana Sutta' },
+};
+// on its own page the quote shows on a card, and the four take turns whatever place is on screen; inside a post the post shows them itself
+function showQuote(id) {
+  const q = QUOTES[id]; if (!q) return;
+  elQuoteT.textContent = (q.em ? q.em + ': ' : '') + q.q; elQuoteS.textContent = q.s;
+  elQuote.style.animation = 'none'; void elQuote.offsetWidth; elQuote.style.animation = '';
+}
+const QUOTE_IDS = Object.keys(QUOTES);
+let qIdx = 0;
+showQuote(QUOTE_IDS[0]);
+setInterval(() => { if (document.hidden) return; qIdx = (qIdx + 1) % QUOTE_IDS.length; showQuote(QUOTE_IDS[qIdx]); }, 4200);
+/* the other courtyards are built a little at a time while the first one runs; a place someone asks for early is finished at once */
+let curBuild = null;
+function stepBuild(budgetMs) {
+  const t0 = performance.now();
+  while (curBuild) {
+    if (curBuild.gen.next().done) { const id = curBuild.id; curBuild = null; built.add(id); applyQuality(); if (everyoneIn) for (const pp of SC[id].people) pp.inAt = now + rand() * 0.6; return true; }
+    if (performance.now() - t0 > budgetMs) return false;
+  }
+  return true;
+}
+function ensureBuilt(id) {
+  if (built.has(id) || !BUILD[id]) return;
+  if (curBuild && curBuild.id !== id) stepBuild(1e9);
+  if (!built.has(id)) { if (!curBuild) curBuild = { id, gen: BUILD[id]() }; stepBuild(1e9); }
+}
+function switchScene(id) {
+  ensureBuilt(id);
+  const n = SC[id];
+  if (!n || n === ACTIVE) return;
+  if (ACTIVE) { ACTIVE.root.visible = false; hideBubbles(ACTIVE); }
+  ACTIVE = n; n.root.visible = true; people = n.people; hovered = null; placeTag();
+  for (const b of elSeg.querySelectorAll('button')) b.classList.toggle('on', b.dataset.s === id);
+  follow(people.find((pp) => pp.name === n.follow) || people[0]);
+  if (started) { layout(); if (!playing) { update(t, 1 / 60); render(true); } }
+}
+const ORDER = ['temple', 'church', 'shrine', 'stupa'];
+let auto = !qs.has('stay'), autoAt = 5;
+for (const b of elSeg.querySelectorAll('button')) b.addEventListener('click', () => { auto = false; switchScene(b.dataset.s); });
+function autoTick() {
+  if (!auto || !started || everyoneIn || now < autoAt) return;
+  const nx = ORDER[(ORDER.indexOf(ACTIVE.id) + 1) % ORDER.length];
+  if (!built.has(nx)) { autoAt = now + 0.5; return; }
+  autoAt = now + 4.2; switchScene(nx);
+}
+
+/* ---------- lighter devices: start lower on weak hardware, and step down if frames run slow ---------- */
+let QL = 0, qCool = 0, slowFor = 0, ema = 1 / 60;
+const qLocked = qs.has('q');
+const lowEnd = smallScreen || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+function applyQuality() {
+  for (const sc of Object.values(SC)) for (const pp of sc.people) pp.p.root.traverse((o) => { if (o.isMesh) o.castShadow = QL === 0; });
+}
+function setQuality(n) {
+  const was = QL; QL = Math.max(0, Math.min(2, n));
+  const dpr = window.devicePixelRatio || 1;
+  renderer.setPixelRatio(QL >= 2 ? 1 : QL === 1 ? Math.min(dpr, 1.5) : Math.min(dpr, 2));
+  applyQuality();
+  if (QL >= 2 && was < 2) { renderer.shadowMap.enabled = false; moon.castShadow = false; scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; }); }
+  if (started) layout();
+}
+function governor(raw, active) {
+  if (!active || qLocked || QL >= 2 || raw > 0.25) return;
+  ema = ema * 0.92 + raw * 0.08;
+  slowFor = ema > 0.034 ? slowFor + raw : 0;
+  if (slowFor > 2.5 && t > qCool) { setQuality(QL + 1); qCool = t + 5; slowFor = 0; ema = 1 / 60; }
+}
+
+/* ---------- run ---------- */
+let playing = !reduceMotion && fixedT === null, started = false, onScreen = true, t = 0, last = performance.now();
+if (qs.has('play')) playing = true;
+switchScene(SC[qs.get('scene')] || BUILD[qs.get('scene')] ? qs.get('scene') : 'temple');
+if (qs.get('sel')) { const o = people.find((pp) => pp.name.toLowerCase() === qs.get('sel').toLowerCase()); if (o) follow(o); }
+if (everyoneIn) setWithin(true);
+if (everyoneIn) elNudge.classList.add('gone');
+applyTheme();
+setQuality(qLocked ? parseInt(qs.get('q'), 10) || 0 : lowEnd ? 1 : 0);
+layout();
+addEventListener('resize', () => { layout(); if (!playing && started) { updateBubbles(); render(true); } });
+setInterval(() => {
+  try { const fe = window.frameElement; if (fe) { const r = fe.getBoundingClientRect(), vh = window.parent.innerHeight; onScreen = r.bottom > 0 && r.top < vh; } }
+  catch (e) { onScreen = true; }
+}, 400);
+const startAt = fixedT !== null ? fixedT : reduceMotion ? 20 : 0;
+prerolling = true;
+for (let s = 0; s < startAt; s += 1 / 30) update(s, 1 / 30);
+prerolling = false;
+t = startAt; update(t, 1 / 60); render(true);
+started = true; note.hidden = true; document.body.classList.add('ready'); window.__sceneStarted = true;
+window.__scene = { renderer, SC, get people() { return people; }, get now() { return now; }, get sel() { return sel.name; }, camera, AU, sfx, switchScene, setWithin, get dim() { return dim; }, built, get building() { return curBuild && curBuild.id; }, get QL() { return QL; }, setQuality, step(sec) { for (let i = 0; i < sec * 60; i++) { t += 1 / 60; autoTick(); update(t, 1 / 60); } render(true); } };
+// the other places are built in short slices once the first one is on screen
+{ const later = ORDER.filter((id) => id !== ACTIVE.id); const pump = () => { if (!curBuild) { const id = later.find((x) => !built.has(x)); if (!id) return; curBuild = { id, gen: BUILD[id]() }; } stepBuild(4); setTimeout(pump, 24); }; setTimeout(pump, 1200); }
+if (reduceMotion && fixedT === null) elPlay.hidden = false;
+elPlay.addEventListener('click', () => { playing = true; elPlay.hidden = true; last = performance.now(); });
+function frame(ms) {
+  const raw = (ms - last) / 1000, dt = Math.min(0.05, raw); last = ms;
+  const active = playing && onScreen && !document.hidden;
+  governor(raw, active);
+  if (AU.ctx && active !== AU.active) { AU.active = active; if (AU.on) { if (active) AU.ctx.resume(); else AU.ctx.suspend(); } }
+  if (active) {
+    t += dt; autoTick(); placeCamera(camDist, Math.sin(t * 0.13) * 0.035); update(t, dt); render(false);
+    if (hovered) placeTag();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

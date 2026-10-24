@@ -5,10 +5,14 @@
   Optional: height="82vh"
 */ -}}
 {{- $src := .Get "src" | relURL -}}
+{{- /* a changed file gets a new address, so visitors never keep an old copy of the scene */ -}}
+{{- $file := printf "static%s" (.Get "src") -}}
+{{- $ver := "" -}}
+{{- if fileExists $file -}}{{- with os.Stat $file -}}{{- $ver = printf "&v=%d" .ModTime.Unix -}}{{- end -}}{{- end -}}
 {{- $title := .Get "title" | default "Interactive walkthrough" -}}
 {{- $height := .Get "height" | default "82vh" -}}
 <figure class="walkthrough" style="margin:2rem 0;">
-  <iframe src="{{ $src }}?embed" title="{{ $title }}" loading="lazy" allow="fullscreen; autoplay"
+  <iframe src="{{ printf "%s?embed%s" $src $ver | safeURL }}" title="{{ $title }}" loading="lazy" allow="fullscreen; autoplay"
     style="display:block;width:100%;height:{{ $height }};min-height:560px;max-height:820px;border:0;border-radius:12px;"></iframe>
   <figcaption style="font-size:.9em;margin-top:.5rem;">
     <a href="{{ $src }}" target="_blank" rel="noopener">Open full screen</a>
