@@ -1143,6 +1143,24 @@
           "prashish2": true
         }
       }
+    },
+    "ai/recursive-self-improvement.md": {
+      "audio": "ai/recursive-self-improvement/",
+      "seconds": {
+        "v4": {
+          "prashish2": 365.6
+        }
+      },
+      "hashes": {
+        "v4": {
+          "prashish2": "1ab91985e9cab2d9"
+        }
+      },
+      "words": {
+        "v4": {
+          "prashish2": true
+        }
+      }
     }
   }
 }
