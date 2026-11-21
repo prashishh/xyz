@@ -883,12 +883,12 @@ p.title-margin-top {
 }
 
 .content ul li, .content ol li {
-  line-height: 1.8em;
-  font-size: 16px;
+  line-height: 1.6;
+  font-size: 15px;
 }
 
 .common-body ul li, .common-body ol li {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 /* Nav External Link (left nav): the links to other sites, after the sections */
